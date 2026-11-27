@@ -1,0 +1,149 @@
+@import "tailwindcss";
+/* ============================================================================
+   FIMAAC — Styles globaux (lot 9, fusionné avec le socle des lots 1-8)
+   Conservation du @theme (fonts) du lot 1 + toutes les classes utilitaires
+   maison référencées par les pages.
+   ============================================================================ */
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Sora", "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+:root { color-scheme: light; }
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #f8fafc;
+  color: #0f172a;
+}
+* { box-sizing: border-box; }
+
+/* ---------------- Police display ---------------- */
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+/* ---------------- Texte dégradé ---------------- */
+.text-gradient {
+  background-image: linear-gradient(120deg, #6366f1 0%, #8b5cf6 45%, #ec4899 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ---------------- Glassmorphism (nav) ---------------- */
+.glass {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+}
+
+/* ---------------- Aurora (blobs animés) ---------------- */
+.aurora {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(60px);
+  pointer-events: none;
+  will-change: transform;
+}
+.aurora-1 { animation: aurora-drift-1 18s ease-in-out infinite; }
+.aurora-2 { animation: aurora-drift-2 22s ease-in-out infinite; }
+@keyframes aurora-drift-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(40px, -30px) scale(1.12); }
+  66% { transform: translate(-30px, 25px) scale(0.92); }
+}
+@keyframes aurora-drift-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-50px, 30px) scale(1.1); }
+  66% { transform: translate(35px, -25px) scale(0.95); }
+}
+
+/* ---------------- Live dot (indicateur temps réel) ----------------
+   Deux mécanismes coexistent selon l'usage :
+   • pastille seule (span rond) → halo pulsé via ::before
+   • bloc avec texte (Radio/Dashboard) → box-shadow pulsée            */
+.live-dot { position: relative; }
+.live-dot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: inherit;
+  animation: live-ring 2s ease-out infinite;
+}
+.live-dot:not(:empty) {
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5);
+  animation: live-pulse 2s infinite;
+}
+@keyframes live-ring {
+  0%   { transform: scale(1); opacity: 0.7; }
+  70%  { transform: scale(2.4); opacity: 0; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+@keyframes live-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.55); }
+  70%  { box-shadow: 0 0 0 7px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+/* ---------------- Shimmer (boutons) ---------------- */
+.shimmer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 25%, rgba(255, 255, 255, 0.35) 50%, transparent 75%);
+  background-size: 220% 100%;
+  animation: shimmer-slide 2.6s linear infinite;
+  pointer-events: none;
+}
+@keyframes shimmer-slide {
+  0% { background-position: 220% 0; }
+  100% { background-position: -120% 0; }
+}
+
+/* ---------------- Ring gradient (cards) ---------------- */
+.ring-gradient {
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+.ring-gradient::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.9), rgba(226, 232, 240, 0.35) 40%, rgba(255, 255, 255, 0.6));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ---------------- Floats (landing) ---------------- */
+.animate-float { animation: float-soft 7s ease-in-out infinite; }
+.animate-float2 { animation: float-soft 5.5s ease-in-out infinite reverse; }
+@keyframes float-soft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+/* ---------------- Scrollbar discrète ---------------- */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.3); border-radius: 9999px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.5); background-clip: padding-box; }
+
+/* ---------------- Sélection ---------------- */
+::selection { background: rgba(99, 102, 241, 0.2); }
+
+/* ---------------- Impression ---------------- */
+@media print {
+  .aurora, .glass, .no-print, aside, header { display: none !important; }
+  body { background: #fff; }
+}

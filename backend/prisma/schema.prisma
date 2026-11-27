@@ -1,0 +1,374 @@
+// FIMAAC — Prisma schema (PostgreSQL)
+// Multi-tenant SaaS · OHADA/SYSCOHADA · Togo (XOF)
+// Run: npx prisma migrate dev --name init && npx prisma db seed
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+// ---------------- Tenancy & IAM ----------------
+model Organization {
+  id          String             @id @default(uuid())
+  name        String
+  type        OrganizationType
+  legalForm   String?
+  nif         String?
+  rccm        String?
+  email       String
+  country     String             @default("TG")
+  plan        Plan               @default(TRIAL)
+  createdAt   DateTime           @default(now())
+  users       OrganizationUser[]
+  companies   Company[]
+  entries     JournalEntry[]     @relation("OrgEntries")
+  auditLogs   AuditLog[]
+  reconRules  ReconRule[]
+}
+enum OrganizationType {
+  PLATFORM
+  CABINET
+  COMPANY_CLIENT
+}
+enum Plan {
+  TRIAL
+  STARTER
+  PRO
+  ENTERPRISE
+}
+model User {
+  id             String             @id @default(uuid())
+  email          String             @unique
+  passwordHash   String
+  firstName      String
+  lastName       String
+  role           Role
+  userType       UserType
+  twoFactor      Boolean            @default(false)
+  active         Boolean            @default(true)
+  lastLoginAt    DateTime?
+  createdAt      DateTime           @default(now())
+  orgMemberships OrganizationUser[]
+  auditLogs      AuditLog[]
+}
+enum Role {
+  SUPER_ADMIN
+  CABINET_ADMIN
+  PARTNER
+  DIRECTOR
+  MANAGER
+  ACCOUNTANT
+  TAX_SPECIALIST
+  PAYROLL_MANAGER
+  ASSISTANT
+  AUDITOR
+  CLIENT_ADMIN
+  CLIENT_ACCOUNTANT
+  CLIENT_USER
+}
+enum UserType {
+  ADMIN
+  CABINET
+  CLIENT
+}
+model OrganizationUser {
+  id             String       @id @default(uuid())
+  user           User         @relation(fields: [userId], references: [id])
+  userId         String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId String
+  role           Role
+  assignedAt     DateTime     @default(now())
+  @@unique([userId, organizationId])
+}
+// ---------------- Companies ----------------
+model Company {
+  id              String           @id @default(uuid())
+  organizationId  String
+  organization    Organization     @relation(fields: [organizationId], references: [id])
+  name            String
+  tradeName       String?
+  legalForm       String
+  nif             String?
+  rccm            String?
+  sector          String?
+  taxRegime       TaxRegime        @default(RI)
+  vatPayer        Boolean          @default(true)
+  capital         Int              @default(0)
+  currency        String           @default("XOF")
+  fiscalYearStart Int              @default(1)
+  riskLevel       RiskLevel        @default(LOW)
+  createdAt       DateTime         @default(now())
+  journals        Journal[]
+  fiscalYears     FiscalYear[]
+  entries         JournalEntry[]
+  documents       DocumentItem[]
+  bankAccounts    BankAccount[]
+  fixedAssets     FixedAsset[]
+  taxProfile      TaxProfile?
+  taxDeclarations TaxDeclaration[]
+  employees       Employee[]
+  @@index([organizationId])
+}
+enum TaxRegime {
+  RS
+  RI
+  RSMI
+  RNC
+  EXEMPT
+}
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+// ---------------- Accounting framework ----------------
+model AccountingFramework {
+  id       String           @id @default(uuid())
+  name     String
+  version  String
+  country  String           @default("TG")
+  accounts ChartOfAccount[]
+}
+model ChartOfAccount {
+  id            String              @id @default(uuid())
+  frameworkId   String
+  framework     AccountingFramework @relation(fields: [frameworkId], references: [id])
+  code          String
+  label         String
+  classNumber   Int
+  parentCode    String?
+  normalBalance NormalBalance
+  postable      Boolean             @default(true)
+  @@unique([frameworkId, code])
+}
+enum NormalBalance {
+  DEBIT
+  CREDIT
+}
+model Journal {
+  id        String         @id @default(uuid())
+  companyId String
+  company   Company        @relation(fields: [companyId], references: [id])
+  code      String
+  name      String
+  type      JournalType
+  entries   JournalEntry[]
+  @@unique([companyId, code])
+}
+enum JournalType {
+  SALES
+  PURCHASES
+  BANK
+  CASH
+  MISC
+  WAGES
+  FIXED_ASSETS
+}
+model FiscalYear {
+  id        String             @id @default(uuid())
+  companyId String
+  company   Company            @relation(fields: [companyId], references: [id])
+  label     String
+  startDate DateTime
+  endDate   DateTime
+  status    PeriodStatus       @default(OPEN)
+  periods   AccountingPeriod[]
+}
+enum PeriodStatus {
+  OPEN
+  CLOSED
+}
+model AccountingPeriod {
+  id           String       @id @default(uuid())
+  fiscalYearId String
+  fiscalYear   FiscalYear   @relation(fields: [fiscalYearId], references: [id])
+  month        Int
+  year         Int
+  status       PeriodStatus @default(OPEN)
+  @@unique([fiscalYearId, month, year])
+}
+// RULE ABSOLUE : TOTAL DEBIT = TOTAL CREDIT. Enforced in the service layer
+// (Prisma cannot sum-aggregate in a DB constraint). Lines also have CHECK >= 0.
+model JournalEntry {
+  id             String             @id @default(uuid())
+  organizationId String
+  organization   Organization       @relation("OrgEntries", fields: [organizationId], references: [id])
+  companyId      String
+  company        Company            @relation(fields: [companyId], references: [id])
+  journalId      String
+  journal        Journal            @relation(fields: [journalId], references: [id])
+  fiscalYearId   String?
+  periodId       String?
+  number         String
+  date           DateTime
+  reference      String?
+  label          String
+  status         EntryStatus        @default(DRAFT)
+  authorId       String
+  validatorId    String?
+  lines          JournalEntryLine[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  @@index([organizationId])
+  @@index([companyId])
+}
+enum EntryStatus {
+  DRAFT
+  IN_REVIEW
+  VALIDATED
+  REJECTED
+  CANCELLED
+}
+model JournalEntryLine {
+  id        String       @id @default(uuid())
+  entryId   String
+  entry     JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  accountId String
+  label     String
+  debit     Int          @default(0) @db.Integer
+  credit    Int          @default(0) @db.Integer
+  letter    String?
+  @@index([accountId])
+}
+// ---------------- Documents / OCR ----------------
+model DocumentItem {
+  id         String   @id @default(uuid())
+  companyId  String
+  company    Company  @relation(fields: [companyId], references: [id])
+  name       String
+  category   String
+  status     String
+  storageKey String?
+  extraction Json?
+  uploadedAt DateTime @default(now())
+  @@index([companyId])
+}
+// ---------------- Banking ----------------
+model BankAccount {
+  id             String            @id @default(uuid())
+  companyId      String
+  company        Company           @relation(fields: [companyId], references: [id])
+  bankName       String
+  iban           String
+  openingBalance Int               @default(0)
+  transactions   BankTransaction[]
+}
+model BankTransaction {
+  id             String      @id @default(uuid())
+  bankAccountId  String
+  bankAccount    BankAccount @relation(fields: [bankAccountId], references: [id])
+  companyId      String
+  date           DateTime
+  label          String
+  amount         Int
+  reconciled     Boolean     @default(false)
+  matchedEntryId String?
+}
+model ReconRule {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  label          String
+  pattern        String
+  accountId      String
+}
+// ---------------- Fixed assets ----------------
+model FixedAsset {
+  id              String     @id @default(uuid())
+  companyId       String
+  company         Company    @relation(fields: [companyId], references: [id])
+  name            String
+  accountCode     String
+  cost            Int
+  residualValue   Int        @default(0)
+  usefulLifeYears Int
+  method          String     @default("LINEAR")
+  status          String     @default("ACTIVE")
+  acquisitionDate DateTime
+}
+// ---------------- Tax engine ----------------
+model TaxRule {
+  id       String  @id @default(uuid())
+  code     String  @unique
+  name     String
+  rate     Float
+  base     String
+  country  String  @default("TG")
+  source   String
+  version  String
+  verified Boolean @default(false)
+}
+model TaxProfile {
+  id          String           @id @default(uuid())
+  companyId   String           @unique
+  company     Company          @relation(fields: [companyId], references: [id])
+  regime      TaxRegime
+  vatPayer    Boolean          @default(true)
+  obligations String[]
+}
+model TaxDeclaration {
+  id          String   @id @default(uuid())
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id])
+  taxCode     String
+  periodLabel String
+  base        Int
+  amount      Int
+  status      String   @default("READY")
+  dueDate     DateTime
+  createdAt   DateTime @default(now())
+}
+// ---------------- Payroll ----------------
+model Employee {
+  id           String    @id @default(uuid())
+  companyId    String
+  company      Company   @relation(fields: [companyId], references: [id])
+  firstName    String
+  lastName     String
+  position     String
+  grossSalary  Int
+  contractType String    @default("CDI")
+  startDate    DateTime
+  payslips     Payslip[]
+}
+model Payslip {
+  id           String   @id @default(uuid())
+  companyId    String
+  employeeId   String
+  employee     Employee @relation(fields: [employeeId], references: [id])
+  periodLabel  String
+  gross        Int
+  cnssEmployee Int
+  cnssEmployer Int
+  withholding  Int
+  net          Int
+  createdAt    DateTime @default(now())
+}
+// ---------------- Workflow & audit ----------------
+model Mission {
+  id             String   @id @default(uuid())
+  organizationId String
+  companyId      String
+  title          String
+  type           String
+  status         String   @default("TODO")
+  progress       Int      @default(0)
+  dueDate        DateTime
+}
+model AuditLog {
+  id             String       @id @default(uuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id])
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  action         String
+  entity         String
+  entityId       String
+  before         Json?
+  after          Json?
+  ip             String?
+  createdAt      DateTime     @default(now())
+  @@index([organizationId])
+}

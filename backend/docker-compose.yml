@@ -1,0 +1,57 @@
+# FIMAAC — Backend stack (PostgreSQL + Redis + NestJS + Next.js)
+# Usage: docker compose up -d
+version: "3.9"
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: fimaac
+      POSTGRES_PASSWORD: fimaac_pass
+      POSTGRES_DB: fimaac
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fimaac"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports: ["6379:6379"]
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: ["redisdata:/data"]
+  minio: # S3-compatible object storage (documents)
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: fimaac
+      MINIO_ROOT_PASSWORD: fimaac_pass
+    ports: ["9000:9000", "9001:9001"]
+    volumes: ["miniodata:/data"]
+  api: # NestJS — build from ./apps/api
+    build: { context: ./apps/api, dockerfile: Dockerfile }
+    restart: unless-stopped
+    depends_on: { postgres: { condition: service_healthy }, redis: { condition: service_started } }
+    environment:
+      DATABASE_URL: "postgresql://fimaac:fimaac_pass@postgres:5432/fimaac?schema=public"
+      REDIS_URL: "redis://redis:6379"
+      JWT_SECRET: "change-me"
+      S3_ENDPOINT: "http://minio:9000"
+      S3_ACCESS_KEY: "fimaac"
+      S3_SECRET_KEY: "fimaac_pass"
+      S3_BUCKET: "fimaac-docs"
+    ports: ["4000:4000"]
+  web: # Next.js — build from ./apps/web
+    build: { context: ./apps/web, dockerfile: Dockerfile }
+    restart: unless-stopped
+    depends_on: [api]
+    environment:
+      NEXT_PUBLIC_API_URL: "http://api:4000"
+    ports: ["3000:3000"]
+volumes:
+  pgdata:
+  redisdata:
+  miniodata:

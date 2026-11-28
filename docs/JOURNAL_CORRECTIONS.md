@@ -356,3 +356,12 @@
 | Livré | `balance6.ts` (`parseBalance6Grid`, `parseAmount`, `normalizeHeader`) ; `liasseEngine.parseBalance6` délègue et expose le diagnostic ; `Liasse.tsx` refuse explicitement et affiche les réserves ; 11 tests. |
 | Mesures | 4111 → **15 167 298 au débit** ; 601 soldé 9 000 000/9 000 000 → **0/0** (mouvements non confondus) · N-1 lu séparément · solde signé 520 000 → débit, −774 000 → crédit · totaux 15 167 298 / 15 000 000 → écart **167 298** annoncé · grille vide ou illisible → `ok: false` |
 | Vérifications | `tsc` 0 erreur · `vitest` **303/303** (11 nouveaux) |
+
+## P23 — Parcours d'amorçage (PR #38)
+| Point | Détail |
+|---|---|
+| Symptôme | Rien ne disait par où commencer : le premier écran d'un cabinet neuf ne distinguait pas « dossier vide » de « dossier prêt », et l'ordre réel (organisation → NIF → exercice → écritures → contrôles → liasse) se devinait. |
+| Décision | Le parcours est **déduit de l'état réel** — aucune case à cocher, donc aucun moyen de le déclarer fini sans l'avoir fait. |
+| Livré | `onboarding.ts` (6 étapes, indice chiffré, première manquante = courante) ; `OnboardingCard` (repliable, `aria-expanded`, barre de progression, disparaît à 6/6) ; montage dans le tableau de bord ; 7 tests. |
+| Mesures | dossier vide → **0/6**, étape cabinet · écriture déséquilibrée de 100 → étape contrôles courante, indice « Écart de 100 » · dossier de démonstration → **6/6**, « Parcours complet » · dossier inconnu → jamais complet |
+| Vérifications | `tsc` 0 erreur · `vitest` **310/310** (7 nouveaux) |

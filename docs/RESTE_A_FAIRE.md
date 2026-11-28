@@ -2,7 +2,7 @@
 
 > Registre tenu à jour à chaque lot livré. Il sert de point de reprise : tout ce
 > qui est ici est **non fait**, avec sa raison et son blocage éventuel.
-> Dernière mise à jour : 28/11/2026, après les PR #5 à #19.
+> Dernière mise à jour : 28/11/2026, après les PR #5 à #20.
 
 ## Déjà réglé (ne plus y revenir)
 
@@ -22,6 +22,7 @@
 | P3 | Export FEC conforme (18 colonnes, point décimal, contrôles) | #17 |
 | P4 | Échéances légales reportées aux jours ouvrés + calendrier affiché | #18 |
 | P5 | Ventilation de la TVA par taux (18 / 9 / exonéré) | #19 |
+| P6 | Numérotation des pièces sans recyclage + contrôle affiché | #20 |
 
 ## 1. Bloqué par une décision d'infrastructure (à arbitrer par le porteur)
 
@@ -80,8 +81,11 @@ Ces points ne peuvent pas avancer sans base de données et hébergement d'API.
 
 ## 4. Qualité technique (audit §F)
 
-18. **Numérotation des pièces** — `count + 1` par journal : doublons possibles
-    après suppression ou import.
+18. ~~**Numérotation des pièces**~~ — **fait (PR #20)** : séquence reprise après
+    le maximum du journal, unicité vérifiée, extournes exclues, contrôle
+    « doublons / trous / illisibles » affiché dans l'onglet Écritures. Reste :
+    les **trous d'import** du seed (ex. ACH 0106-0114) à expliquer pièce par
+    pièce.
 19. **Écriture hors exercice** — rattachée silencieusement à `periods[0]`.
 20. **Moteurs encore dormants** — `financialStatements`, `liasseEngine`
     (partiellement), `obligations.generateObligationInstances`, `notes`.

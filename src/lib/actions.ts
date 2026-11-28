@@ -14,6 +14,7 @@ import { hashPassword, verifyPassword } from "./hash";
 import { TEMPLATE_BY_ID, scaleTemplate } from "./entryTemplates";
 import { extractFromDocument, OCR_FIELD_DEFS } from "./ocr";
 import { getDocumentFile, putDocumentFile } from "./documentStore";
+import { nextEntryNumber } from "./entryNumbering";
 
 function audit(s: DBState, userId: string, orgId: string, action: string, entity: string, entityId: string, after: string) {
   // P2 — chaque trace est scellée à la suite de la précédente : une altération
@@ -164,7 +165,10 @@ export function addEntry(companyId: string, data: { date: string; journalId: str
   const id = uid();
   const journal = db.journals.find((j) => j.id === data.journalId);
   const prefix = journal?.code || "OD";
-  const seq = String(db.entries.filter((e) => e.companyId === companyId && e.journalId === data.journalId).length + 1).padStart(4, "0");
+  // P6 : le numéro reprend après le plus grand existant du journal (et non
+  // « nombre d'écritures + 1 », qui recyclait les numéros après suppression).
+  const existingNumbers = db.entries.filter((e) => e.companyId === companyId).map((e) => e.number);
+  const nextNumber = nextEntryNumber(existingNumbers, prefix);
   mutate((s) => {
     s.entries.push({
       id,
@@ -172,7 +176,7 @@ export function addEntry(companyId: string, data: { date: string; journalId: str
       fiscalYearId: fy?.id || "",
       periodId: period?.id || "",
       journalId: data.journalId,
-      number: `${prefix}-${seq}`,
+      number: nextNumber,
       date: data.date,
       reference: data.reference,
       label: data.label,
@@ -185,7 +189,7 @@ export function addEntry(companyId: string, data: { date: string; journalId: str
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
-    audit(s, currentUserId() || "", currentOrgId() || "", data.status === "validated" ? "VALIDATE_ENTRY" : "CREATE_ENTRY", "JournalEntry", id, `${prefix}-${seq} : ${data.label}`);
+    audit(s, currentUserId() || "", currentOrgId() || "", data.status === "validated" ? "VALIDATE_ENTRY" : "CREATE_ENTRY", "JournalEntry", id, `${nextNumber} : ${data.label}`);
   });
   return id;
 }

@@ -201,3 +201,12 @@
 | Mesures (seed) | Base **20 190 000** · collectée **3 634 200** · déductible **1 160 868** dont **576 000** d'immobilisations · net **2 473 332** — identiques au moteur fiscal existant, ce qui vaut contrôle croisé. |
 | Limites affichées | Pas d'éclatement ligne à ligne d'une facture à deux taux (signalée) ; autoliquidation non traitée ; 13 écritures du seed sans code taxe (taux déduit, mentionné). |
 | Vérifications | `tsc` 0 erreur · `npm run build` 11,27 s · `vitest` **127/127** (12 nouveaux) |
+
+## P6 — Numérotation des pièces (PR #20)
+| Point | Détail |
+|---|---|
+| Symptôme | `addEntry` numérotait avec `nombre d'écritures du journal + 1` : une écriture supprimée libérait son numéro (réutilisation → doublon), et un historique importé (seed : 0104→195) rendait la suite inatteignable. Aucun contrôle n'existait. |
+| Livré | `src/lib/entryNumbering.ts` : `parseEntryNumber`, `maxSequence`, `nextEntryNumber` (max + 1, saut des numéros pris), `auditNumbering` (doublons, trous par journal/année, numéros illisibles, séries). `addEntry` branché dessus. Carte « Numérotation des pièces » dans l'onglet Écritures. |
+| Mesures (seed) | 102 écritures contrôlées, **0 doublon**, 0 numéro illisible, 7 séries, 348 trous d'import (conséquence de la numérotation manuelle du seed, désormais mesurée au lieu d'être invisible). |
+| Règle | Un trou est une information (reprise d'historique) ; un doublon est une erreur. Les deux sont distingués à l'écran. |
+| Vérifications | `tsc` 0 erreur · `npm run build` 12,03 s · `vitest` **139/139** (12 nouveaux) |

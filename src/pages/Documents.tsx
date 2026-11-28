@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
-import { UploadCloud, FileText, Search, Folder, FolderOpen, ChevronRight, ChevronDown, AlertTriangle, Wand2, CheckCircle2, RefreshCw, Inbox, Layers, Eye, Pencil, Check, AlertOctagon } from "lucide-react";
+import { UploadCloud, FileText, Search, Folder, FolderOpen, ChevronRight, ChevronDown, AlertTriangle, Wand2, CheckCircle2, RefreshCw, Inbox, Layers, Eye, Pencil, Check, AlertOctagon, Archive } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDB } from "../lib/store";
 import { useCompanyScope, Page } from "../components/Layout";
 import { Card, Button, Badge, EmptyState, Modal, Field, Input, Select } from "../components/ui";
-import { addDocument, runOcr, postFromDocument, reclassifyDocument, setExtractionField } from "../lib/actions";
+import { addDocument, runOcr, postFromDocument, reclassifyDocument, setExtractionField, setDocCategory, setDocStatus } from "../lib/actions";
 import { relativeTime } from "../lib/format";
 import { OCR_FIELD_DEFS, type OcrFieldStatus } from "../lib/ocr";
 import { DocumentViewer } from "../components/DocumentViewer";
@@ -202,6 +202,12 @@ export default function Documents() {
                   {!ex && <Button size="sm" onClick={() => doExtract(d)}><Wand2 size={13} /> Lire</Button>}
                   {ex && <Button size="sm" onClick={() => setEditDoc(d)}><Pencil size={13} /> Données</Button>}
                   {d.docStatus === "non_classe" && <Button size="sm" variant="outline" onClick={() => setReclassify(d.id)}><RefreshCw size={13} /> Classer</Button>}
+                  {/* P29 — fermer une pièce : jusqu'ici rien ne permettait de la sortir de la liste des travaux. */}
+                  {d.docStatus !== "archive" && d.docStatus !== "non_classe" && (
+                    <Button size="sm" variant="outline" onClick={() => { setDocStatus(d.id, "archive"); toast("Pièce archivée.", "Elle sort des travaux en cours ; son historique reste consultable.", "success"); }}>
+                      <Archive size={13} /> Archiver
+                    </Button>
+                  )}
                   {d.extraction && d.docStatus !== "comptabilise" && d.folder === "achat" && <Button size="sm" variant="outline" onClick={() => { const e = postFromDocument(d.id, companyId!); if (e) toast("Écriture générée et liée."); }}><CheckCircle2 size={13} /> Comptabiliser</Button>}
                 </div>
               </Card>
@@ -210,7 +216,7 @@ export default function Documents() {
         </div>
       </div>
       <UploadModal open={uploadOpen} onClose={() => setUploadOpen(false)} companyId={companyId!} defaultExercise={String(new Date().getFullYear())} defaultMonth={new Date().getMonth() + 1} />
-      {reclassify && <ReclassifyModal docId={reclassify} current={{ exercise: db.documents.find((d) => d.id === reclassify)?.exercise || String(new Date().getFullYear()), month: db.documents.find((d) => d.id === reclassify)?.month || new Date().getMonth() + 1, folder: db.documents.find((d) => d.id === reclassify)?.folder || "achat" }} onClose={() => setReclassify(null)} />}
+      {reclassify && <ReclassifyModal docId={reclassify} current={{ exercise: db.documents.find((d) => d.id === reclassify)?.exercise || String(new Date().getFullYear()), month: db.documents.find((d) => d.id === reclassify)?.month || new Date().getMonth() + 1, folder: db.documents.find((d) => d.id === reclassify)?.folder || "achat", category: db.documents.find((d) => d.id === reclassify)?.category || "other" }} onClose={() => setReclassify(null)} />}
       <AnimatePresence>{editDoc && <ExtractionEditor doc={db.documents.find((d) => d.id === editDoc.id) || editDoc} onClose={() => setEditDoc(null)} />}</AnimatePresence>
       <AnimatePresence>{viewerDoc && <DocumentViewer doc={db.documents.find((d) => d.id === viewerDoc.id) || viewerDoc} onClose={() => setViewerDoc(null)} />}</AnimatePresence>
     </Page>
@@ -303,10 +309,22 @@ function UploadModal({ open, onClose, companyId, defaultExercise, defaultMonth }
     </Modal>
   );
 }
-function ReclassifyModal({ docId, current, onClose }: { docId: string; current: { exercise: string; month: number; folder: DocFolder }; onClose: () => void }) {
+const DOC_CATEGORIES: { id: DocumentItem["category"]; label: string }[] = [
+  { id: "invoice", label: "Facture" },
+  { id: "receipt", label: "Reçu / ticket" },
+  { id: "bank", label: "Relevé bancaire" },
+  { id: "contract", label: "Contrat" },
+  { id: "legal", label: "Acte juridique" },
+  { id: "tax", label: "Document fiscal" },
+  { id: "social", label: "Document social" },
+  { id: "other", label: "Autre" },
+];
+
+function ReclassifyModal({ docId, current, onClose }: { docId: string; current: { exercise: string; month: number; folder: DocFolder; category: DocumentItem["category"] }; onClose: () => void }) {
   const [ex, setEx] = useState(current.exercise);
   const [m, setM] = useState(current.month);
   const [f, setF] = useState<DocFolder>(current.folder);
+  const [cat, setCat] = useState<DocumentItem["category"]>(current.category);
   return (
     <Modal open onClose={onClose} title="Reclasser la pièce">
       <div className="space-y-4">
@@ -315,7 +333,12 @@ function ReclassifyModal({ docId, current, onClose }: { docId: string; current: 
           <Field label="Mois"><Select value={m} onChange={(e) => setM(Number(e.target.value))}>{MONTHS.map((mo, i) => <option key={i} value={i + 1}>{mo}</option>)}</Select></Field>
         </div>
         <Field label="Catégorie"><Select value={f} onChange={(e) => setF(e.target.value as DocFolder)}>{FOLDERS.map((fo) => <option key={fo.id} value={fo.id}>{fo.icon} {fo.label}</option>)}</Select></Field>
-        <div className="flex justify-end gap-2"><Button variant="outline" onClick={onClose}>Annuler</Button><Button onClick={() => { reclassifyDocument(docId, ex, m, f); onClose(); }}>Enregistrer</Button></div>
+        <Field label="Nature de la pièce" hint="Facture, reçu, relevé… — décide du traitement comptable proposé.">
+          <Select value={cat} onChange={(e) => setCat(e.target.value as DocumentItem["category"])}>
+            {DOC_CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+          </Select>
+        </Field>
+        <div className="flex justify-end gap-2"><Button variant="outline" onClick={onClose}>Annuler</Button><Button onClick={() => { reclassifyDocument(docId, ex, m, f); setDocCategory(docId, cat); onClose(); }}>Enregistrer</Button></div>
       </div>
     </Modal>
   );

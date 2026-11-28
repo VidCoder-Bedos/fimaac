@@ -410,3 +410,12 @@
 | Livré | `openFiscalYearIn` + `ensureFiscalYear` (audit `FISCAL_YEAR_OPEN`, bornes, refus explicites) ; `addCompanyWithAccess` passe par le même code (fin du 28 corrigée) ; onglet Clôture : bandeau + bouton « Ouvrir l'exercice N » ; 7 tests. |
 | Mesures | 2031 → **2031-01-01 → 2031-12-31**, 12 périodes, janvier **2031-01-31**, février **2031-02-28** · second appel → `created: false`, **0** doublon, **0** audit · dossier créé en 2035 → janvier finissant le **31** (et non le 28) · date du 15/01/2034 → période trouvée dès l'ouverture · hors exercices → refus nommant l'année |
 | Vérifications | `tsc` 0 erreur · `vitest` **342/342** (7 nouveaux) |
+
+## P29 — Les cinq dernières actions sans appelant (PR #44)
+| Point | Détail |
+|---|---|
+| Symptôme | `setDocStatus` et `setDocCategory` mutaient **sans audit** ; rien dans l'écran ne permettait d'archiver une pièce ni de corriger sa nature. `setDocumentRequestStatus` laissait les demandes de pièces en lecture seule, donc impossible de savoir ce qui restait dû. `runAllSubscriptions` **ne concernait pas les abonnements** — elle exécute les modèles d'écriture — et son nom trompeur la rendait introuvable. `togglePlanActive` n'écrivait qu'un audit, sans effet sur l'état. |
+| Décision | Trois mutations branchées **et** tracées (avant → après, silence si rien ne change, tolérance aux identifiants inconnus) ; un renommage qui dit la vérité ; et une suppression : un audit qui annonce un changement inexistant est pire que pas d'audit. |
+| Livré | Audits `DOC_STATUS`, `DOC_CATEGORY`, `DOC_REQUEST_STATUS` ; bouton « Archiver » (jamais sur une pièce non classée) ; sélecteur de nature dans la modale de classement (8 natures) ; sélecteur de statut côté cabinet (5 états réels) ; `runAllEntryTemplates` + bouton « Tout exécuter » ; 9 tests. |
+| Mesures | `a_traiter → archive` auditée · statut identique → **0** ligne · `invoice → bank` auditée, redite → **0** · pièce inconnue → **0** audit, aucune exception · demande `sent → received` auditée · exécution en lot = nombre exact de modèles avec journal, autant d'écritures créées · anciens noms **absents** de l'API |
+| Vérifications | `tsc` 0 erreur · `vitest` **351/351** (9 nouveaux) · exports sans usage **376 → 370** |

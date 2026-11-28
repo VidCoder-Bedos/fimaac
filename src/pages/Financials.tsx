@@ -11,7 +11,7 @@ import { buildStatements, runChecks } from "../lib/liasse";
 import { runCrossChecks } from "../lib/crossCheck";
 import PrintSheet from "../components/PrintSheet";
 import StatementsPrint from "../components/StatementsPrint";
-import { buildFec } from "../lib/fec";
+import { buildFec, fecScopeFromFiscalYear, type FecScope } from "../lib/fec";
 import { toast } from "../lib/toast";
 
 function downloadCSV(name: string, rows: (string | number)[][]) {
@@ -120,6 +120,8 @@ export function Reports() {
   const { id: companyId } = useCompanyScope();
   const company = db.companies.find((c) => c.id === companyId);
   const [tab, setTab] = useState("apercu");
+  // P13 — un FEC se dépose par exercice. L'export couvrait tout l'historique.
+  const [fecYear, setFecYear] = useState<string>("");
   if (!company) return <Page><EmptyState icon={<BarChart3 />} title="Sélectionnez une entreprise" /></Page>;
   const entries = db.entries.filter((e) => e.companyId === companyId);
   const sum = financialSummary(entries);
@@ -128,7 +130,10 @@ export function Reports() {
   const aux = auxiliaryLedger(entries, db.journals, tiers);
   const aged = agedBalance(entries, tiers);
   const eche = echeancier(entries, tiers);
-  const fec = buildFec(entries, db.journals, db.accounts, tiers);
+  const companyYears = db.fiscalYears.filter((fy) => fy.companyId === companyId);
+  const activeYear = companyYears.find((fy) => fy.label === fecYear) || companyYears[0];
+  const fecScope: FecScope | null = activeYear ? fecScopeFromFiscalYear(activeYear) : null;
+  const fec = buildFec(entries, db.journals, db.accounts, tiers, fecScope);
   const aPayer = eche.filter((e) => e.type === "supplier");
   const aRecevoir = eche.filter((e) => e.type === "customer");
   const exportBalance = () => downloadCSV(`balance_${company.name}.csv`, [["Compte", "Libellé", "Débit", "Crédit", "Solde D", "Solde C"], ...tb.map((r) => [r.code, r.label, r.debit, r.credit, r.soldeDebit, r.soldeCredit])]);
@@ -147,12 +152,29 @@ export function Reports() {
           <Card className="p-5">
             <SectionHeading
               title="Export FEC (Fichier des Écritures Comptables)"
-              subtitle="18 colonnes normalisées · point décimal · devise renseignée"
-              action={<Button size="sm" onClick={() => exportFEC(entries, db.journals, db.accounts, company.name, tiers)}><Download size={14} /> Générer le FEC (.txt)</Button>}
+              subtitle={fecScope
+                ? `Exercice ${fecScope.label} · du ${formatDate(fecScope.startDate)} au ${formatDate(fecScope.endDate)} · 18 colonnes normalisées`
+                : "Aucun exercice défini : fichier sur tout l'historique · 18 colonnes normalisées"}
+              action={
+                <div className="flex items-center gap-2">
+                  {companyYears.length > 0 && (
+                    <Select
+                      className="w-44"
+                      aria-label="Exercice du fichier FEC"
+                      value={activeYear?.label || ""}
+                      onChange={(e) => setFecYear(e.target.value)}
+                    >
+                      {companyYears.map((fy) => <option key={fy.id} value={fy.label}>{fy.label}{fy.status === "closed" ? " (clôturé)" : ""}</option>)}
+                    </Select>
+                  )}
+                  <Button size="sm" onClick={() => exportFEC(entries, db.journals, db.accounts, company.name, tiers, fecScope)}><Download size={14} /> Générer le FEC (.txt)</Button>
+                </div>
+              }
             />
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-4">
               <Mini label="Écritures validées" value={String(fec.entryCount)} />
               <Mini label="Lignes exportées" value={String(fec.lineCount)} />
+              <Mini label="Hors exercice (exclues)" value={String(fec.excludedCount)} />
               <Mini label="Σ débit / Σ crédit" value={`${fcfa(fec.totals.debit)} / ${fcfa(fec.totals.credit)}`} />
             </div>
             <div className="mt-4 overflow-x-auto rounded-xl bg-slate-50 p-4 font-mono text-[11px] leading-relaxed text-slate-500">

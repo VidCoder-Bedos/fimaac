@@ -50,6 +50,17 @@ export interface FecControl {
   detail: string;
 }
 
+/**
+ * Fenêtre de l'exercice exporté. Un FEC se dépose **par exercice** : exporter
+ * tout l'historique produisait un fichier contenant N et N-1, refusé au
+ * contrôle et impossible à rattacher à une liasse.
+ */
+export interface FecScope {
+  label: string;
+  startDate: string; // AAAA-MM-JJ inclus
+  endDate: string;   // AAAA-MM-JJ inclus
+}
+
 export interface FecReport {
   header: string[];
   rows: string[][];
@@ -62,6 +73,24 @@ export interface FecReport {
   controls: FecControl[];
   blockingCount: number;
   warningCount: number;
+  /** Exercice exporté, ou null si le fichier couvre tout l'historique. */
+  scope: FecScope | null;
+  /** Écritures validées volontairement écartées car hors exercice. */
+  excludedCount: number;
+}
+
+/** Écritures retenues pour un exercice (dates incluses aux deux bornes). */
+export function entriesInScope<T extends { date: string }>(entries: T[], scope: FecScope): T[] {
+  return entries.filter((e) => {
+    const d = String(e.date ?? "").slice(0, 10);
+    return d >= scope.startDate && d <= scope.endDate;
+  });
+}
+
+/** Construit le périmètre depuis un exercice comptable. */
+export function fecScopeFromFiscalYear(fy: { label?: string; startDate: string; endDate: string }): FecScope {
+  const label = (fy.label || "").trim() || `${String(fy.startDate).slice(0, 4)}`;
+  return { label, startDate: String(fy.startDate).slice(0, 10), endDate: String(fy.endDate).slice(0, 10) };
 }
 
 /** Date comptable au format AAAAMMJJ ; vide si la date est inexploitable. */
@@ -96,13 +125,15 @@ export function buildFec(
   journals: { id: string; code: string; type: string }[],
   accounts: Account[],
   tiers: ThirdParty[] = [],
+  scope: FecScope | null = null,
 ): FecReport {
   const accountByCode = new Map(accounts.map((a) => [a.code, a]));
   const tierById = new Map(tiers.map((t) => [t.id, t]));
 
-  const validated = entries
-    .filter((e) => e.status === "validated")
+  const validatedAll = entries.filter((e) => e.status === "validated");
+  const validated = (scope ? entriesInScope(validatedAll, scope) : validatedAll)
     .sort((a, b) => a.date.localeCompare(b.date) || String(a.number).localeCompare(String(b.number)));
+  const excludedCount = validatedAll.length - validated.length;
 
   const rows: string[][] = [];
   const unbalanced: string[] = [];
@@ -262,11 +293,15 @@ export function buildFec(
     controls,
     blockingCount: controls.filter((c) => c.level === "blocking").length,
     warningCount: controls.filter((c) => c.level === "warning").length,
+    scope,
+    excludedCount,
   };
 }
 
 /** Nom de fichier conforme : FEC_AAAAMMJJ_raisonSociale.txt */
-export function fecFileName(companyName: string, date: Date = new Date()): string {
+export function fecFileName(companyName: string, date: Date = new Date(), exercise?: string): string {
   const stamp = date.toISOString().slice(0, 10).replace(/-/g, "");
-  return `FEC_${stamp}_${companyName.replace(/\s+/g, "_")}.txt`;
+  const safe = (v: string) => v.replace(/[^\p{L}\p{N}_-]+/gu, "_").replace(/^_+|_+$/g, "");
+  const suffix = safe(exercise || "") ? `_${safe(exercise!)}` : "";
+  return `FEC_${stamp}_${safe(companyName)}${suffix}.txt`;
 }

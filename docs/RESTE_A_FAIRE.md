@@ -2,7 +2,7 @@
 
 > Registre tenu à jour à chaque lot livré. Il sert de point de reprise : tout ce
 > qui est ici est **non fait**, avec sa raison et son blocage éventuel.
-> Dernière mise à jour : 28/11/2026, après les PR #5 à #27.
+> Dernière mise à jour : 28/11/2026, après les PR #5 à #28.
 
 ## Déjà réglé (ne plus y revenir)
 
@@ -30,6 +30,7 @@
 | P10 | Réintégrations / déductions fiscales persistées et traçables | #25 |
 | P11 | Base fiscale avec classe 8, déclarations TVA ventilée et IS générées | #26 |
 | P12 | Dialogues accessibles (focus, Échap, rôle) et notifications non bloquantes | #27 |
+| P13 | FEC par exercice, périmètre et nom de dépôt affichés | #28 |
 
 ## 1. Bloqué par une décision d'infrastructure (à arbitrer par le porteur)
 
@@ -58,10 +59,11 @@ Ces points ne peuvent pas avancer sans base de données et hébergement d'API.
    version serveur : ancrage hors du poste, acteur et IP réels (point 4).
 7. ~~**Export FEC conforme**~~ — **fait (PR #17)** : 18 colonnes, point décimal,
    `CompAuxNum` alimenté, numérotation continue par journal, contrôles statués.
-   Reste : filtrer par **exercice** (l'export couvre aujourd'hui tout l'historique
-   validé), historiser une **date de validation** et une **date de lettrage**
-   réelles, et **renseigner les tiers** sur les lignes 40x/41x du seed
-   (5 lignes sur 67 aujourd'hui).
+   ~~Reste : filtrer par **exercice**~~ — **fait (PR #28)** : périmètre
+   d'exercice bornes incluses, nombre d'écritures écartées affiché, nom de
+   dépôt suffixé. Reste : historiser une **date de validation** et une **date
+   de lettrage** réelles, et **renseigner les tiers** sur les lignes 40x/41x du
+   seed (5 lignes sur 67 aujourd'hui).
 8. ~~**Obligations : règles de report**~~ — **fait (PR #18)** : jours fériés
    togolais (fixes + Pâques/Ascension/Pentecôte), report au jour ouvré suivant,
    trimestre T4 au 15 janvier N+1, fenêtre glissante 12/24 mois, moteur branché

@@ -121,9 +121,9 @@ export function ledgerForAccount(entries: JournalEntry[], accountCode: string): 
 }
 
 export interface FinancialSummary {
-  produits: number; // class 7
+  produits: number; // classes 7 et 8 (produits HAO)
   ca: number; // M4 — chiffre d'affaires strict (701-707), = sii.XB du SIG
-  charges: number; // class 6
+  charges: number; // classes 6 et 8 (charges HAO)
   resultat: number; // produits - charges
   tresorerie: number; // class 5
   creances: number; // 41
@@ -142,13 +142,25 @@ export function financialSummary(entries: JournalEntry[]): FinancialSummary {
     }
     return t;
   };
-  const produits = sum((c) => c.startsWith("7"), "credit");
+  // P12 — les opérations hors activités ordinaires (classe 8) font partie du
+  // résultat : les exclure faisait diverger le Dashboard de la liasse et de la
+  // base fiscale. Elles restent hors du chiffre d'affaires. Le sens du solde
+  // décide de la nature — additionner les débits et les crédits de la classe 8
+  // compterait deux fois le même solde.
+  let haoProduits = 0;
+  let haoCharges = 0;
+  for (const [code, m] of moves) {
+    if (!code.startsWith("8")) continue;
+    const net = m.credit - m.debit;
+    if (net >= 0) haoProduits += net; else haoCharges += -net;
+  }
+  const produits = sum((c) => c.startsWith("7"), "credit") + haoProduits;
   // M4 — CA strict : comptes 70x uniquement (ventes, travaux, services, produits
   // accessoires). Les subventions (71), production immobilisée (72), autres
   // produits (75), transferts (78-79) restent dans `produits` mais ne sont pas
   // du chiffre d'affaires — sinon le Dashboard contredit le SIG affiché à côté.
   const ca = sum((c) => c.startsWith("70"), "credit");
-  const charges = sum((c) => c.startsWith("6"), "debit");
+  const charges = sum((c) => c.startsWith("6"), "debit") + haoCharges;
   return {
     produits,
     ca,

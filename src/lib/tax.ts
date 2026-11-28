@@ -88,8 +88,8 @@ export function computeIS(
     rule,
     verified: rule.verified,
     breakdown: [
-      { label: "Produits (classe 7)", amount: base.produits },
-      { label: "Charges (classe 6)", amount: -base.charges },
+      { label: "Produits (classes 7 et 8)", amount: base.produits },
+      { label: "Charges (classes 6 et 8)", amount: -base.charges },
       { label: "Résultat comptable", amount: base.resultatComptable },
       { label: "Réintégrations fiscales", amount: is.reintegrations },
       { label: "Déductions fiscales", amount: -is.deductions },

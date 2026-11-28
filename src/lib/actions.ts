@@ -16,6 +16,8 @@ import { extractFromDocument, OCR_FIELD_DEFS } from "./ocr";
 import { getDocumentFile, putDocumentFile } from "./documentStore";
 import { nextEntryNumber } from "./entryNumbering";
 import { resolveAccountingDate } from "./periods";
+import { ventilateVat } from "./tvaVentilation";
+import { computeMonthlyDueDate, computeAnnualDueDate } from "./obligations";
 
 function audit(s: DBState, userId: string, orgId: string, action: string, entity: string, entityId: string, after: string) {
   // P2 — chaque trace est scellée à la suite de la précédente : une altération
@@ -606,31 +608,87 @@ export function updateTaxRate(code: string, rate: number, verified: boolean): vo
   });
 }
 
-export function generateTvaDeclaration(companyId: string): void {
+export function generateTvaDeclaration(companyId: string): { ok: boolean; error?: string } {
   const db = getDB();
   const entries = db.entries.filter((e) => e.companyId === companyId);
   const rule = db.taxRules.find((r) => r.code === "TVA");
-  if (!rule) return;
+  if (!rule) return { ok: false, error: "Aucune règle TVA paramétrée : déclaration impossible." };
   const res = computeTax("TVA", entries, db.taxRules);
-  if (!res) return;
-  const resBase = res.base;
-  const resMontant = res.montant;
-  const resBreakdown = res.breakdown;
+  if (!res) return { ok: false, error: "TVA non calculable sur ce dossier." };
+
+  // P11 : la déclaration reprend la ventilation par taux de l'écran (18 / 9 /
+  // exonéré), et non un décompte à un seul taux.
+  const vent = ventilateVat(entries, db.accounts);
+  const ventilation = vent.bands.flatMap((b) => [
+    { label: `Base HT ${b.label}`, amount: b.base },
+    { label: `TVA ${b.label}`, amount: b.vat },
+  ]);
+
+  const now = new Date();
+  const due = computeMonthlyDueDate(now.getFullYear(), now.getMonth());
+  const label = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(now);
+  const breakdown = [
+    ...ventilation,
+    ...res.breakdown,
+  ].map((b) => ({ label: b.label, amount: b.amount, rule: rule.code, source: rule.source }));
+
   mutate((s) => {
     s.taxDeclarations.push({
       id: uid(),
       companyId,
       taxCode: "TVA",
-      periodLabel: new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(new Date()),
-      base: resBase,
+      periodLabel: label,
+      base: res.base,
       amount: res.montant,
-      breakdown: resBreakdown.map((b) => ({ label: b.label, amount: b.amount, rule: rule.code, source: rule.source })),
+      breakdown,
       status: "ready",
-      dueDate: `${new Date().getFullYear()}-${String(new Date().getMonth() + 2).padStart(2, "0")}-15`,
+      dueDate: due,
       createdAt: new Date().toISOString(),
     });
-    audit(s, currentUserId() || "", currentOrgId() || "", "GEN_TVA", "TaxDeclaration", companyId, `TVA générée : ${resMontant} FCFA`);
+    audit(s, currentUserId() || "", currentOrgId() || "", "GEN_TVA", "TaxDeclaration", companyId,
+      `TVA ${label} générée : ${res.montant} FCFA · échéance ${due}`);
   });
+  return { ok: true };
+}
+
+/**
+ * P11 — Déclaration IS de l'exercice.
+ * Le résultat fiscal vient de `computeTax` (donc des réintégrations et
+ * déductions saisies), l'échéance de la règle de report au jour ouvré, et
+ * l'impôt dû du maximum entre IS calculé et minimum de perception.
+ */
+export function generateIsDeclaration(companyId: string, exercise: string): { ok: boolean; error?: string } {
+  const db = getDB();
+  const entries = db.entries.filter((e) => e.companyId === companyId);
+  const rule = db.taxRules.find((r) => r.code === "IS");
+  if (!rule) return { ok: false, error: "Aucune règle IS paramétrée : déclaration impossible." };
+
+  const adjustments = fiscalAdjustmentsFor(companyId, exercise);
+  const res = computeTax("IS", entries, db.taxRules, { adjustments });
+  if (!res || !res.is) return { ok: false, error: "IS non calculable sur ce dossier." };
+
+  const year = Number.parseInt(exercise, 10);
+  if (!Number.isFinite(year)) return { ok: false, error: "Exercice attendu au format AAAA." };
+  const due = computeAnnualDueDate("IMPOT_BENEFICE", year);
+  const is = res.is;
+
+  mutate((s) => {
+    s.taxDeclarations.push({
+      id: uid(),
+      companyId,
+      taxCode: "IS",
+      periodLabel: `Exercice ${exercise}`,
+      base: Math.max(0, is.resultatFiscalArrondi),
+      amount: is.impotDu,
+      breakdown: res.breakdown.map((b) => ({ label: b.label, amount: b.amount, rule: rule.code, source: rule.source })),
+      status: "ready",
+      dueDate: due,
+      createdAt: new Date().toISOString(),
+    });
+    audit(s, currentUserId() || "", currentOrgId() || "", "GEN_IS", "TaxDeclaration", companyId,
+      `IS ${exercise} généré : ${is.impotDu} FCFA (résultat fiscal ${is.resultatFiscalArrondi}, minimum ${is.minimumPerception}) · échéance ${due}`);
+  });
+  return { ok: true };
 }
 
 export function setDeadlineStatus(id: string, status: DeclarationStatus): void {

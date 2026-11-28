@@ -28,6 +28,7 @@
 | — | Retrait des marqueurs de conflit fusionnés + build bloquant | #23 |
 | P9 | Écriture hors exercice : refus explicite, plus de déplacement | #24 |
 | P10 | Réintégrations / déductions fiscales persistées et traçables | #25 |
+| P11 | Base fiscale avec classe 8, déclarations TVA ventilée et IS générées | #26 |
 
 ## 1. Bloqué par une décision d'infrastructure (à arbitrer par le porteur)
 
@@ -75,8 +76,11 @@ Ces points ne peuvent pas avancer sans base de données et hébergement d'API.
     éclatement par sens du solde serait plus juste (sans effet sur l'équilibre).
 11. ~~**IS : réintégrations / déductions**~~ — **fait (PR #25)** : collection
     persistée (DB_VERSION 4), saisie tracée, calcul unique de l'IS. Reste :
-    **reprendre ces montants dans la déclaration IS générée** et proposer des
-    **réintégrations types** (amendes 658, dons, charges non justifiées).
+    ~~**reprendre ces montants dans la déclaration IS générée**~~ — **fait
+    (PR #26)** : `generateIsDeclaration` produit l'IS de l'exercice (résultat
+    fiscal, IS au taux, minimum de perception, impôt dû, échéance 31/03 reportée).
+    Reste : des **réintégrations types** proposées en un clic (amendes 658, dons,
+    charges non justifiées) et le **crédit d'impôt reporté**.
 
 ## 3. Qualité produit (audit §D)
 

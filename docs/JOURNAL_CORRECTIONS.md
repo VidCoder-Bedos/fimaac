@@ -264,3 +264,11 @@
 | Livré | Base fiscale et `financialSummary` intègrent la classe 8 (solde créditeur = produit, débiteur = charge ; CA toujours strict sur 70x, sans double compte). Déclaration TVA : ventilation par taux + collectée/déductible/crédit/net, échéance **reportée** au jour ouvré. Nouvelle `generateIsDeclaration(companyId, exercise)` : résultat comptable → réintégrations → déductions → résultat fiscal → IS au taux → minimum de perception → impôt dû → échéance **31/03 N+1 reportée**, auditée. Bouton dans Fiscalité ; refus explicite si la règle fiscale manque. |
 | Mesures | Seed : ventilation TVA 18 % (base 20 190 000, TVA 3 634 200), net **2 473 332** ; IS : résultat fiscal **−480 000**, impôt dû **201 900** (minimum), échéance `2027-03-31` ; avec réintégration 1 000 000 → résultat fiscal **520 195**, IS 140 400, impôt dû 201 900. |
 | Vérifications | `tsc` 0 erreur · `vitest` **187/187** (8 nouveaux) |
+
+## P12 — Dialogues accessibles et notifications non bloquantes (PR #27)
+| Point | Détail |
+|---|---|
+| Symptôme | 41 `alert()` bloquants, non relisibles, invisibles pour un lecteur d'écran et pour un test ; une modale sans `role`, sans Échap, sans piège de focus, qui laissait le clavier repartir dans la page ; un `confirm()` natif pour une action destructrice ; des indications de champ jamais rattachées au contrôle. |
+| Livré | `src/lib/toast.ts` (magasin pur : fusion des doublons avec compteur, pile plafonnée à 4, expiration vérifiée au rendu, ton déduit du message, repli « Action impossible ») ; `Toaster` global avec région `aria-live` et `role="alert"` pour les refus ; `focusTrap.ts` + `Modal` (rôle, nom, Échap, focus initial, cycle Tab/Maj+Tab, restitution du focus, défilement figé) ; `Field` (description liée, `aria-required`) ; réinitialisation passée en dialogue explicite. |
+| Mesures | 205 tests (18 nouveaux) · `aria-*` : 1 → **15** · `role=` : 0 → **2** · `alert()`/`confirm()` : **0** |
+| Vérifications | `tsc` 0 erreur · `vitest` **205/205** · build 11,53 s |

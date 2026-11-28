@@ -24,6 +24,7 @@ import { PortalHome, PortalDocuments, PortalRequests, PortalStatements, PortalIn
 import WorkbookExtractor from "./pages/WorkbookExtractor";
 import { changeOwnPassword } from "./lib/actions";
 import { Card, Button, Field, Input } from "./components/ui";
+import Toaster from "./components/Toaster";
 import { KeyRound, AlertTriangle } from "lucide-react";
 import type { User } from "./lib/types";
 
@@ -93,6 +94,7 @@ function ForceChangePassword() {
 export default function App() {
   return (
     <HashRouter>
+      <Toaster />
       <PasswordGate>
         <Routes>
         <Route path="/" element={<Root />} />

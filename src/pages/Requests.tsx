@@ -15,6 +15,7 @@ import { TEMPLATE_CATEGORIES } from "../lib/entryTemplates";
 import { availableTemplates } from "../lib/actions";
 import { fcfa, formatDate, relativeTime } from "../lib/format";
 import type { Journal, Account, DocumentRequest, EntryTemplate, TaxPaymentRequest, ClientRequest, ClientRequestStatus } from "../lib/types";
+import { toast } from "../lib/toast";
 
 type Recurring = DocumentRequest["recurring"];
 
@@ -100,7 +101,7 @@ function TemplatesTab({ companyId, items, accounts, journals }: { companyId: str
         <div className="space-y-2">{items.map((t) => (
           <div key={t.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-100 px-4 py-3">
             <div><p className="font-semibold text-slate-800">{t.name}</p><p className="text-xs text-slate-400">{t.recurring} · {t.lines.length} ligne(s){t.lastRun ? ` · dernière exécution ${relativeTime(t.lastRun)}` : ""}</p></div>
-            <div className="flex items-center gap-2"><Button size="sm" variant="outline" onClick={() => { runEntryTemplate(t.id); alert("Écriture générée (brouillon)."); }}><Play size={13} /> Exécuter</Button><button onClick={() => deleteEntryTemplate(t.id)} className="text-slate-300 hover:text-rose-500"><Trash2 size={15} /></button></div>
+            <div className="flex items-center gap-2"><Button size="sm" variant="outline" onClick={() => { runEntryTemplate(t.id); toast("Écriture générée (brouillon)."); }}><Play size={13} /> Exécuter</Button><button onClick={() => deleteEntryTemplate(t.id)} className="text-slate-300 hover:text-rose-500"><Trash2 size={15} /></button></div>
           </div>
         ))}</div>
       )}

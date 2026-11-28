@@ -16,6 +16,7 @@ import { buildNotesAnnex } from "../lib/notesAnnex";
 import PrintSheet from "../components/PrintSheet";
 import LiassePrint from "../components/LiassePrint";
 import { fcfa, fcfaCompact } from "../lib/format";
+import { toast } from "../lib/toast";
 
 export default function Liasse() {
   const db = useDB();
@@ -67,16 +68,16 @@ export default function Liasse() {
   const info = { name: company.name, nif: company.nif || "—", rccm: company.rccm || "—", form: company.legalForm, exercise: String(new Date().getFullYear()), currency: "FCFA (XOF)" };
 
   const generate = async () => {
-    if (!cur) { alert("Importez d'abord la Balance N."); return; }
+    if (!cur) { toast("Importez d'abord la Balance N."); return; }
     setLoading("gen");
-    try { await exportLiasseXlsx(info, prev || [], cur, checks); } catch { alert("Erreur lors de la génération de la liasse."); }
+    try { await exportLiasseXlsx(info, prev || [], cur, checks); } catch { toast("Erreur lors de la génération de la liasse."); }
     setLoading("");
   };
 
   const fillTpl = async (file: File | null) => {
-    if (!file || !cur) { alert("Importez d'abord la Balance N."); return; }
+    if (!file || !cur) { toast("Importez d'abord la Balance N."); return; }
     setLoading("tpl");
-    try { const { workbook, filled } = await fillTemplate(file, cur); await downloadWorkbook(workbook, `Liasse_GUDEF_remplie_${company.name}.xlsx`); setTplFilled(filled); } catch (e) { alert("Impossible de remplir le modèle :\n\n" + ((e as Error)?.message || String(e))); }
+    try { const { workbook, filled } = await fillTemplate(file, cur); await downloadWorkbook(workbook, `Liasse_GUDEF_remplie_${company.name}.xlsx`); setTplFilled(filled); } catch (e) { toast("Impossible de remplir le modèle :\n\n" + ((e as Error)?.message || String(e))); }
     setLoading("");
   };
 
@@ -89,15 +90,15 @@ export default function Liasse() {
       setBal6(b);
       setPrev(b.n1); setCur(b.n);
       const dN = b.n.reduce((s, r) => s + r.debit, 0), cN = b.n.reduce((s, r) => s + r.credit, 0);
-      if (dN !== cN) alert(`Attention : Balance N déséquilibrée (écart ${fcfa(dN - cN)}).`);
-    } catch { alert("Impossible de lire la balance 6 colonnes. Format attendu : Compte · Libellé · SD N · SC N · SD N-1 · SC N-1."); }
+      if (dN !== cN) toast(`Attention : Balance N déséquilibrée (écart ${fcfa(dN - cN)}).`);
+    } catch { toast("Impossible de lire la balance 6 colonnes. Format attendu : Compte · Libellé · SD N · SC N · SD N-1 · SC N-1."); }
     setLoading("");
   };
 
   // V0.7 — éditer un état fourni (remplissage non destructif)
   const onFillState = async (file: File | null) => {
-    if (!file) { alert("Importez d'abord la balance (6 colonnes ou N-1/N)."); return; }
-    if (!cur) { alert("Importez d'abord la Balance N."); return; }
+    if (!file) { toast("Importez d'abord la balance (6 colonnes ou N-1/N)."); return; }
+    if (!cur) { toast("Importez d'abord la Balance N."); return; }
     setLoading("state");
     try {
       const { blob, filled, unmatched, report } = await fillStateTemplate(file, prev || [], cur);
@@ -112,14 +113,14 @@ export default function Liasse() {
       msg += `📊 Balance N : ${cur.length} comptes lus.\n`;
       if (unmatched.length > 0) msg += `\n⚠️ Références non reconnues : ${unmatched.join(", ")}`;
       if (report.length > 0) msg += `\n\nDétail (10 premières valeurs) :\n${report.slice(0, 10).join("\n")}`;
-      alert(msg);
-    } catch (e) { alert("Impossible de remplir l'état fourni :\n\n" + ((e as Error)?.message || String(e))); }
+      toast(msg);
+    } catch (e) { toast("Impossible de remplir l'état fourni :\n\n" + ((e as Error)?.message || String(e))); }
     setLoading("");
   };
 
   // V0.7 — contrôles de cohérence
   const onRunChecks = () => {
-    if (!cur) { alert("Importez d'abord la Balance N (ou la balance 6 colonnes)."); return; }
+    if (!cur) { toast("Importez d'abord la Balance N (ou la balance 6 colonnes)."); return; }
     setReport(runCoherenceChecks(prev || [], cur));
     setTab("coherence");
   };
@@ -536,7 +537,7 @@ function ReconstitutionView({ cur, prev }: { cur: BalanceRow[] | null; prev: Bal
   const onAudit = async (file: File | null) => {
     if (!file) return;
     setBusy(true);
-    try { setAudit(await auditWorkbook(file)); } catch (e) { alert("Impossible d'auditer ce classeur :\n\n" + ((e as Error)?.message || String(e))); }
+    try { setAudit(await auditWorkbook(file)); } catch (e) { toast("Impossible d'auditer ce classeur :\n\n" + ((e as Error)?.message || String(e))); }
     setBusy(false);
   };
   const onClone = async (file: File | null) => { if (file) { await cloneWorkbook(file); } };
@@ -553,7 +554,7 @@ function ReconstitutionView({ cur, prev }: { cur: BalanceRow[] | null; prev: Bal
       const res = await patchWorkbook(file, inputs);
       await downloadWorkbookWb(res.workbook, `etat_reconstitue_${file.name}`);
       setPatched({ patched: res.patched, preserved: res.preserved, errors: res.errors });
-    } catch (e) { alert("Échec de l'édition non destructive :\n\n" + ((e as Error)?.message || String(e))); }
+    } catch (e) { toast("Échec de l'édition non destructive :\n\n" + ((e as Error)?.message || String(e))); }
     setBusy(false);
   };
   return (
@@ -621,7 +622,7 @@ function UniversalImportView({ onResult }: { onResult: (n: NormalizedDoc) => voi
       const detected = detectColumns(g);
       setCols(detected);
       setNorm(normalize(detected, g));
-    } catch { alert("Fichier illisible. Formats acceptés : .xlsx, .xls, .csv."); }
+    } catch { toast("Fichier illisible. Formats acceptés : .xlsx, .xls, .csv."); }
     setLoading(false);
   };
   const recompute = (newCols: DetectedColumn[]) => { setCols(newCols); if (grid) setNorm(normalize(newCols, grid)); };

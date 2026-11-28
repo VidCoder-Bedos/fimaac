@@ -2,7 +2,7 @@
 
 > Registre tenu à jour à chaque lot livré. Il sert de point de reprise : tout ce
 > qui est ici est **non fait**, avec sa raison et son blocage éventuel.
-> Dernière mise à jour : 28/11/2026, après les PR #5 à #25.
+> Dernière mise à jour : 28/11/2026, après les PR #5 à #27.
 
 ## Déjà réglé (ne plus y revenir)
 
@@ -29,6 +29,7 @@
 | P9 | Écriture hors exercice : refus explicite, plus de déplacement | #24 |
 | P10 | Réintégrations / déductions fiscales persistées et traçables | #25 |
 | P11 | Base fiscale avec classe 8, déclarations TVA ventilée et IS générées | #26 |
+| P12 | Dialogues accessibles (focus, Échap, rôle) et notifications non bloquantes | #27 |
 
 ## 1. Bloqué par une décision d'infrastructure (à arbitrer par le porteur)
 
@@ -84,13 +85,20 @@ Ces points ne peuvent pas avancer sans base de données et hébergement d'API.
 
 ## 3. Qualité produit (audit §D)
 
-12. **Accessibilité AA** — 1 attribut `aria-*`, 0 `role`, 2 `htmlFor` pour des
-    centaines de champs ; modales sans piège de focus. Point le plus faible.
+12. **Accessibilité AA — en cours (PR #27)** : modales avec `role="dialog"`,
+    `aria-modal`, nom accessible, Échap, **piège de focus** et restitution du
+    focus ; champs reliés à leur indication (`aria-describedby`), astérisque
+    décoratif ; notifications dans une région `aria-live`. Reste : **navigation
+    clavier des tableaux** (tri, sélection de ligne), **contraste** à auditer,
+    et `htmlFor` explicite pour les contrôles hors `Field`.
 13. **Densité des écrans** — jusqu'à 9 onglets ; cible ≤ 5 + sous-navigation.
 14. **Parcours d'amorçage** — cabinet → entreprise → exercice → balance →
     contrôles → liasse, en 6 étapes guidées.
 15. **Recherche globale / palette ⌘K** — `GlobalSearch` existe, mal exposé.
-16. **`alert()` natifs restants** — remplacer par les notifications du store.
+16. ~~**`alert()` natifs restants**~~ — **fait (PR #27)** : 41 `alert()` et le
+    dernier `confirm()` remplacés par des notifications non bloquantes et un
+    dialogue de confirmation explicite. Reste : **empiler les erreurs de
+    formulaire au niveau du champ** (aujourd'hui une notification globale).
 17. **Mono-devise / mono-pays** — la promesse « espace OHADA » n'est pas tenue
     au-delà du Togo (country packs à prévoir).
 

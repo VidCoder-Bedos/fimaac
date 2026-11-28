@@ -2,7 +2,7 @@
 
 > Registre tenu à jour à chaque lot livré. Il sert de point de reprise : tout ce
 > qui est ici est **non fait**, avec sa raison et son blocage éventuel.
-> Dernière mise à jour : 28/11/2026, après les PR #5 à #33.
+> Dernière mise à jour : 28/11/2026, après les PR #5 à #34.
 
 ## Déjà réglé (ne plus y revenir)
 
@@ -36,6 +36,7 @@
 | P16 | Notes 04 et 16A éclatées par compte (détail vérifiable) | #31 |
 | P17 | Saisie des notes manuelles persistée, datée et auditée | #32 |
 | P18 | Jours fériés exceptionnels déclarés : les échéances se décalent | #33 |
+| P19 | Palette de commandes ⌘K : navigation, actions, données | #34 |
 
 ## 1. Bloqué par une décision d'infrastructure (à arbitrer par le porteur)
 
@@ -114,7 +115,11 @@ Ces points ne peuvent pas avancer sans base de données et hébergement d'API.
 13. **Densité des écrans** — jusqu'à 9 onglets ; cible ≤ 5 + sous-navigation.
 14. **Parcours d'amorçage** — cabinet → entreprise → exercice → balance →
     contrôles → liasse, en 6 étapes guidées.
-15. **Recherche globale / palette ⌘K** — `GlobalSearch` existe, mal exposé.
+15. ~~**Recherche globale / palette ⌘K**~~ — **fait (PR #34)** : ⌘K / Ctrl+K
+    annoncé par un bouton, navigation et actions avant les données, parcours aux
+    flèches avec Entrée, rôles ARIA. Reste : **commandes contextuelles** (agir sur
+    l'écran courant, ex. valider l'écriture sélectionnée) et historique des
+    dernières commandes.
 16. ~~**`alert()` natifs restants**~~ — **fait (PR #27)** : 41 `alert()` et le
     dernier `confirm()` remplacés par des notifications non bloquantes et un
     dialogue de confirmation explicite. Reste : **empiler les erreurs de

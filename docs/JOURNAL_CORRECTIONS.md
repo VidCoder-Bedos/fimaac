@@ -321,3 +321,11 @@
 | Livré | Collection `holidays` (DB_VERSION 6, migrée à vide, seed vide) ; `holidaysWithExtras` + paramètre `extras` sur `isNonWorkingDay`, `nextBusinessDay`, `computeMonthly/Quarterly/AnnualDueDate`, `prorogationReason`, et `GenerationOptions.holidays` ; actions `addHoliday` / `removeHoliday` / `holidayMonthMap` (`ADD_HOLIDAY`, `REMOVE_HOLIDAY`) ; carte de déclaration dans le Calendrier légal ; déclarations TVA et IS générées sur le même calendrier. |
 | Mesures | Aïd el-Fitr déclaré au 15/04/2026 → échéance **16/04** ; trois jours déclarés 15-17/04 → **20/04** (week-end) ; 31/03/2027 férié → IS au **01/04/2027** ; déclaration un samedi : aucun décalage supplémentaire ; doublon, date non ISO et libellé vide refusés |
 | Vérifications | `tsc` 0 erreur · `vitest` **259/259** (10 nouveaux) |
+
+## P19 — Palette de commandes ⌘K (PR #34)
+| Point | Détail |
+|---|---|
+| Symptôme | `GlobalSearch` n'était accessible que par « / », sans bouton pour l'annoncer, **sans navigation clavier**, sans rôle ARIA, et ne cherchait que des pièces — jamais une page ni une action. Sur une vingtaine d'écrans, personne ne la trouvait. |
+| Livré | `commands.ts` (normalisation sans accents, score exact/préfixe/début de mot/inclusion/sous-séquence, ET multi-mots, plafond par section, 14 navigations + 4 actions) ; `GlobalSearch` réécrit en palette : ⌘K / Ctrl+K, « / » conservé, ↑ ↓ + Entrée avec ligne active visible, `dialog` + `combobox` + `aria-activedescendant` + `listbox`/`option`, données cherchées à partir de 2 caractères dans le périmètre de l'utilisateur. |
+| Mesures | « lia » → **Liasse fiscale** en tête · « liasse paie » → 0 · « liasse notes » → Liasse · « cnss » → Paie · 20 lignes « Écriture » → 3 avec plafond 3 · requête vide → commandes, « qqqqzzz » → vide |
+| Vérifications | `tsc` 0 erreur · `vitest` **270/270** (11 nouveaux) |

@@ -192,3 +192,12 @@
 | Mesures | Année 2026 pleine, dossier type : **92 échéances**, 29 reportées, 0 échéance générée un week-end ou un férié. |
 | Limites affichées | Aïd el-Fitr / Aïd el-Adha (lunaire) non paramétrés ; dates légales indicatives à valider par un fiscaliste ; le statut « en retard » ignore les dépôts hors plateforme. |
 | Vérifications | `tsc` 0 erreur · `npm run build` 12,13 s · `vitest` **115/115** (17 nouveaux) |
+
+## P5 — Ventilation de la TVA par taux (PR #19)
+| Point | Détail |
+|---|---|
+| Symptôme | Un seul taux (18 %) dans tout le moteur : une entreprise mixte (18 %, 9 %, export exonéré) déclarait un net faux et perdait son crédit. Le modèle portait pourtant `TaxRuleV2` et `taxCode` par ligne. |
+| Livré | `src/lib/tvaVentilation.ts` : base = 70x, TVA = 443x, déductible = 445x (dont 4451) ; taux résolu par code taxe, sinon par taux effectif rattaché à 0,5 point, sinon exonération constatée ; 8 contrôles ; écran « Grille TVA » enrichi (tranches, totaux, contrôles, note déductible). |
+| Mesures (seed) | Base **20 190 000** · collectée **3 634 200** · déductible **1 160 868** dont **576 000** d'immobilisations · net **2 473 332** — identiques au moteur fiscal existant, ce qui vaut contrôle croisé. |
+| Limites affichées | Pas d'éclatement ligne à ligne d'une facture à deux taux (signalée) ; autoliquidation non traitée ; 13 écritures du seed sans code taxe (taux déduit, mentionné). |
+| Vérifications | `tsc` 0 erreur · `npm run build` 11,27 s · `vitest` **127/127** (12 nouveaux) |

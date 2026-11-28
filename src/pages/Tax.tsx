@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Receipt, AlertTriangle, Check, FileDown, CalendarClock, ShieldAlert, Info } from "lucide-react";
 import { useDB } from "../lib/store";
 import { useCompanyScope, Page } from "../components/Layout";
@@ -6,6 +6,7 @@ import { Card, Button, Badge, StatusBadge, EmptyState, SectionHeading, Input, Ta
 import { computeTax } from "../lib/tax";
 import { generateTvaDeclaration, updateTaxRate, setDeadlineStatus, tvaGrid } from "../lib/actions";
 import { fcfa, formatDate } from "../lib/format";
+import { ventilateVat } from "../lib/tvaVentilation";
 import type { TaxRuleRef, DeclarationStatus } from "../lib/types";
 
 export default function Tax() {
@@ -18,6 +19,7 @@ export default function Tax() {
   const is = computeTax("IS", entries, db.taxRules)!;
   const deadlines = db.taxDeadlines.filter((d) => d.companyId === companyId);
   const declarations = db.taxDeclarations.filter((d) => d.companyId === companyId);
+  const vat = useMemo(() => ventilateVat(entries, db.accounts), [entries, db.accounts]);
   if (!company) return <Page><EmptyState icon={<Receipt />} title="Sélectionnez une entreprise" /></Page>;
   return (
     <Page>
@@ -92,6 +94,64 @@ export default function Tax() {
             </div>
             <div className="mt-4 flex items-center justify-between rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 p-5 text-white"><span className="text-sm opacity-90">TVA nette à payer {net >= 0 ? "(à reverser)" : "(crédit à reporter)"}</span><span className="text-2xl font-black">{fcfa(Math.abs(net))}</span></div>
             <div className="mt-4 flex items-start gap-2 rounded-xl bg-sky-50 px-3 py-2 text-xs text-sky-700"><Info size={14} className="mt-0.5 shrink-0" /> Calcul explicable, identique à celui de l'onglet Calculs : TVA nette = TVA collectée (443) − TVA déductible (445) − crédit reporté. La base HT est le chiffre d'affaires comptable (comptes 70), et non la TVA collectée.</div>
+            <div className="mt-6">
+              <h4 className="font-bold text-slate-800">Ventilation par taux</h4>
+              <p className="mb-3 text-xs text-slate-500">18 % · 9 % · exonéré — la TVA nette ci-dessus ne peut être juste que si la ventilation l'est.</p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-400">
+                      <th className="px-3 py-2">Taux</th>
+                      <th className="px-3 py-2 text-right">Base HT</th>
+                      <th className="px-3 py-2 text-right">TVA comptabilisée</th>
+                      <th className="px-3 py-2 text-right">TVA théorique</th>
+                      <th className="px-3 py-2 text-right">Écart</th>
+                      <th className="px-3 py-2 text-center">Écritures</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {vat.bands.map((b) => (
+                      <tr key={b.rate} className="border-b border-slate-50">
+                        <td className="px-3 py-2.5 font-semibold text-slate-700">{b.label}</td>
+                        <td className="px-3 py-2.5 text-right tabular-nums">{fcfa(b.base)}</td>
+                        <td className="px-3 py-2.5 text-right tabular-nums text-emerald-600">{fcfa(b.vat)}</td>
+                        <td className="px-3 py-2.5 text-right tabular-nums text-slate-500">{fcfa(b.vatTheorique)}</td>
+                        <td className={`px-3 py-2.5 text-right tabular-nums ${Math.abs(b.ecart) > 1 ? "font-semibold text-rose-600" : "text-slate-400"}`}>{b.ecart === 0 ? "—" : fcfa(b.ecart)}</td>
+                        <td className="px-3 py-2.5 text-center text-xs text-slate-500">{b.entries}{b.inferred > 0 ? ` (dont ${b.inferred} déduit${b.inferred > 1 ? "s" : ""})` : ""}</td>
+                      </tr>
+                    ))}
+                    {vat.bands.length === 0 && (
+                      <tr><td colSpan={6} className="px-3 py-4 text-center text-xs text-slate-400">Aucune vente validée sur le dossier.</td></tr>
+                    )}
+                  </tbody>
+                  <tfoot>
+                    <tr className="border-t border-slate-200 font-bold text-slate-800">
+                      <td className="px-3 py-2.5">Total</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">{fcfa(vat.totals.base)}</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">{fcfa(vat.totals.collectee)}</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">{fcfa(vat.totals.theorique)}</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">{vat.totals.ecart === 0 ? "—" : fcfa(vat.totals.ecart)}</td>
+                      <td className="px-3 py-2.5 text-center text-xs">{vat.bands.reduce((n, b) => n + b.entries, 0)}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+              <div className="mt-4 space-y-2">
+                {vat.controls.map((c) => (
+                  <div key={c.id} className="flex items-start gap-3 rounded-xl border border-slate-100 px-3 py-2.5">
+                    {c.level === "ok" ? <Check size={15} className="mt-0.5 shrink-0 text-emerald-500" /> : <AlertTriangle size={15} className={`mt-0.5 shrink-0 ${c.level === "blocking" ? "text-rose-500" : "text-amber-500"}`} />}
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-slate-800">{c.label}</p>
+                      <p className="text-xs text-slate-500">{c.detail}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-500">
+                La TVA déductible ({fcfa(vat.totals.deductible)}, dont {fcfa(vat.totals.deductibleImmo)} d'immobilisations) n'est pas ventilée par taux : elle n'en dépend pas.
+                Taux paramétrés dans le moteur réglementaire ; les codes taxe des lignes priment sur toute déduction.
+              </p>
+            </div>
             <Button className="mt-4 w-full" onClick={() => { generateTvaDeclaration(company.id); alert("Déclaration TVA pré-remplie et contrôlée générée (voir onglet Échéances & déclarations)."); }}><FileDown size={15} /> Générer la déclaration TVA pré-remplie</Button>
           </Card>
         );

@@ -304,3 +304,11 @@
 | Livré | `NoteDetail` + `NoteRow.details` ; `detailOf` calcule le détail avec **les mêmes préfixes et le même sens** que la ligne (la somme des détails vaut la ligne) ; étiquetage par le plan comptable, repli « Compte {code} » ; sous-lignes indentées dans la liasse ; N-1 repris quand il existe. |
 | Mesures | NOTE_04 **15 167 298**, NOTE_16A **18 570 602** (inchangés) · somme des détails = ligne · aucun détail à zéro · aucune duplication de compte · seules 04 et 16A éclatées · référentiel stable (13 / 15 / 38) |
 | Vérifications | `tsc` 0 erreur · `vitest` **235/235** (7 nouveaux) |
+
+## P17 — Notes manuelles : saisie, persistance et traçabilité (PR #32)
+| Point | Détail |
+|---|---|
+| Symptôme | 15 notes du référentiel (dirigeants, engagements hors bilan, rémunérations, échéances, ventilation du CA, effectifs) ne se déduisent d'aucune balance et **aucun écran ne permettait de les renseigner** : la liasse ne pouvait jamais être déposée complète, alors que le cabinet détient l'information (statuts, bail, registre du personnel). |
+| Livré | Collection `manualNotes` (DB_VERSION 5, migrée à vide), une entrée par société × exercice × note ; `manualNotes.ts` (normalisation « 1 250 000,4 » → 1 250 000, fusion avec les lignes attendues, complétude, totaux rendant `null` plutôt que 0) ; `buildNotesAnnex({ manualValues })` avec `entered` / `complete` / `enteredAt` ; actions `saveManualNote` / `clearManualNote` scellées (`SAISIE_NOTE`, `SUPPR_NOTE`) ; modale de saisie dans la liasse, avec effacement. |
+| Mesures | NOTE_18 saisie (5 000 000 + 1 000 000) → total **6 000 000**, N-1 4 000 000, 2 lignes attendues laissées vides (pas à zéro) · deux saisies successives = **une** entrée · notes calculées inchangées (NOTE_04 15 167 298, 13 calculées) · exercices et sociétés étanches |
+| Vérifications | `tsc` 0 erreur · `vitest` **249/249** (14 nouveaux) |

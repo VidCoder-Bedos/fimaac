@@ -803,6 +803,34 @@ export interface TaxAdjustment {
   createdAt: string;
 }
 
+/**
+ * P17 — Ligne d'une note annexe saisie à la main.
+ *
+ * Les 15 notes « à confirmer » (dirigeants, engagements hors bilan, effectifs,
+ * ventilation du CA…) ne se déduisent d'aucune balance. La règle du référentiel
+ * interdit de les remplir de zéros : elles restent vides **jusqu'à ce qu'un
+ * humain les saisisse** — et cette saisie est datée, attribuée et conservée.
+ */
+export interface ManualNoteRow {
+  label: string;
+  /** Valeur de l'exercice N. `null` = non saisi (jamais 0 par défaut). */
+  n: number | null;
+  n1: number | null;
+}
+
+export interface ManualNote {
+  id: ID;
+  companyId: ID;
+  /** Exercice concerné (AAAA). */
+  exercise: string;
+  /** Code de la note, ex. NOTE_18. */
+  code: string;
+  rows: ManualNoteRow[];
+  authorId: ID;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface DBState {
   version: number;
   accounts: Account[];
@@ -842,6 +870,7 @@ export interface DBState {
   tiers: ThirdParty[];
   fsSessions: FSSession[];
   taxAdjustments: TaxAdjustment[];
+  manualNotes: ManualNote[];
   regulatoryVersions: RegulatoryVersion[];
   taxRulesV2: TaxRuleV2[];
   taxBrackets: TaxBracket[];

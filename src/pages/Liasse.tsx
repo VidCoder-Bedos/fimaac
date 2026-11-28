@@ -2,7 +2,7 @@ import { Fragment, useMemo, useState } from "react";
 import { FileSpreadsheet, Upload, FileDown, AlertTriangle, CheckCircle2, XCircle, Info, Wand2, ShieldCheck } from "lucide-react";
 import { useDB } from "../lib/store";
 import { useCompanyScope, Page } from "../components/Layout";
-import { Card, Button, Badge, EmptyState, SectionHeading, Tabs, Spinner, Input } from "../components/ui";
+import { Card, Button, Badge, EmptyState, SectionHeading, Tabs, Spinner, Input, Field, Modal } from "../components/ui";
 import { parseBalanceReport, buildStatements, runChecks, exportLiasseXlsx, fillTemplate, downloadWorkbook } from "../lib/liasse";
 import type { BalanceImportResult } from "../lib/balanceImport";
 import { parseBalance6, runCoherenceChecks, fillStateTemplate, mappingCoverage, type Balance6, type CoherenceReport } from "../lib/liasseEngine";
@@ -13,6 +13,9 @@ import { auditWorkbook, cloneWorkbook, patchWorkbook, downloadWorkbookWb, type W
 import type { BalanceRow } from "../lib/liasse";
 import { buildTafire } from "../lib/tafire";
 import { buildNotesAnnex } from "../lib/notesAnnex";
+import { manualNotesFor } from "../lib/manualNotes";
+import { saveManualNote, clearManualNote } from "../lib/actions";
+import type { AnnexNote } from "../lib/notesAnnex";
 import PrintSheet from "../components/PrintSheet";
 import LiassePrint from "../components/LiassePrint";
 import { fcfa, fcfaCompact } from "../lib/format";
@@ -36,10 +39,19 @@ export default function Liasse() {
   const stmt = useMemo(() => (cur ? buildStatements(cur) : null), [cur]);
   const checks = useMemo(() => (stmt ? runChecks(stmt) : []), [stmt]);
   const tafire = useMemo(() => (cur ? buildTafire(prev, cur) : null), [prev, cur]);
-  const annex = useMemo(
-    () => (cur ? buildNotesAnnex({ n: cur, n1: prev ?? [], accounts: db.accounts, companyName: company?.name, exercise: String(new Date().getFullYear()) }) : null),
-    [cur, prev, db.accounts, company],
+  // P17 — exercice et saisies manuelles : une note saisie n'est plus « à compléter ».
+  const exercise = String(new Date().getFullYear());
+  const savedNotes = useMemo(
+    () => manualNotesFor(db.manualNotes, companyId || company?.id || "", exercise),
+    [db.manualNotes, companyId, company, exercise],
   );
+  const annex = useMemo(
+    () => (cur
+      ? buildNotesAnnex({ n: cur, n1: prev ?? [], accounts: db.accounts, companyName: company?.name, exercise, manualValues: savedNotes })
+      : null),
+    [cur, prev, db.accounts, company, exercise, savedNotes],
+  );
+  const [entering, setEntering] = useState<AnnexNote | null>(null);
 
   const onFile = async (which: string, file: File | null) => {
     if (!file || !company) return;
@@ -359,17 +371,41 @@ export default function Liasse() {
               )}
               {annex.manualNotes.length > 0 && (
                 <Card className="p-5">
-                  <SectionHeading title="Notes à compléter" subtitle="Aucune donnée de balance ne permet de les déduire — elles ne sont pas remplies de zéros" />
+                  <SectionHeading
+                    title="Notes à compléter"
+                    subtitle={`Aucune donnée de balance ne permet de les déduire · ${annex.manualNotes.filter((n) => n.entered).length}/${annex.manualNotes.length} saisie(s)`}
+                  />
                   <div className="grid gap-2 sm:grid-cols-2">
                     {annex.manualNotes.map((note) => (
                       <div key={note.code} className="rounded-xl border border-amber-100 bg-amber-50/50 px-3 py-2">
-                        <p className="text-sm font-semibold text-slate-800"><span className="font-mono text-xs text-amber-700">{note.code}</span> {note.title}</p>
-                        <p className="text-[11px] text-slate-500">{note.missingInfo[0] || "Saisie manuelle requise."}</p>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-slate-800"><span className="font-mono text-xs text-amber-700">{note.code}</span> {note.title}</p>
+                            <p className="text-[11px] text-slate-500">{note.missingInfo[0] || "Saisie manuelle requise."}</p>
+                            {note.entered && (
+                              <p className="mt-1 text-[11px] font-medium text-emerald-700">
+                                Saisie du {new Date(note.enteredAt || "").toLocaleDateString("fr-FR")}
+                                {note.totalN !== null ? ` · total N ${fcfa(note.totalN)}` : ""}
+                                {note.complete ? " · complète" : " · incomplète"}
+                              </p>
+                            )}
+                          </div>
+                          <Button size="sm" variant={note.entered ? "outline" : "primary"} onClick={() => setEntering(note)}>
+                            {note.entered ? "Modifier" : "Saisir"}
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
                 </Card>
               )}
+              <ManualNoteModal
+                note={entering}
+                companyId={companyId || company.id}
+                exercise={exercise}
+                hasSaved={Boolean(entering && savedNotes.has(entering.code))}
+                onClose={() => setEntering(null)}
+              />
             </>
           )}
         </div>
@@ -742,5 +778,70 @@ function StatMini({ label, value, tone }: { label: string; value: string; tone: 
       <p className="text-[11px] font-semibold uppercase tracking-wide opacity-70">{label}</p>
       <p className="mt-1 font-black tabular-nums">{value}</p>
     </div>
+  );
+}
+
+
+/**
+ * P17 — Saisie d'une note manuelle.
+ *
+ * Le libellé des lignes attendues vient du référentiel : on ne demande pas au
+ * cabinet d'inventer la structure de la note. Une ligne laissée vide reste vide.
+ */
+function ManualNoteModal({
+  note, companyId, exercise, hasSaved, onClose,
+}: { note: AnnexNote | null; companyId: string; exercise: string; hasSaved: boolean; onClose: () => void }) {
+  const [values, setValues] = useState<Record<string, { n: string; n1: string }>>({});
+
+  // Réinitialise à chaque ouverture sur une autre note.
+  const key = note ? `${note.code}-${note.enteredAt || "new"}` : "none";
+  const [loadedKey, setLoadedKey] = useState("");
+  if (note && loadedKey !== key) {
+    const seed: Record<string, { n: string; n1: string }> = {};
+    for (const r of note.rows) seed[r.label] = { n: r.n === null ? "" : String(r.n), n1: r.n1 === null ? "" : String(r.n1) };
+    setValues(seed);
+    setLoadedKey(key);
+  }
+
+  if (!note) return null;
+  const save = () => {
+    const rows = note.rows.map((r) => ({ label: r.label, n: values[r.label]?.n ?? "", n1: values[r.label]?.n1 ?? "" }));
+    const res = saveManualNote(companyId, exercise, note.code, rows);
+    if (!res.ok) { toast(res.error); return; }
+    toast(
+      `${note.code} enregistrée : ${res.filled} ligne(s) renseignée(s).`,
+      "Saisie datée et conservée au journal d'audit.",
+      "success",
+    );
+    onClose();
+  };
+
+  return (
+    <Modal open={Boolean(note)} onClose={onClose} title={`${note.code} — ${note.title}`} size="lg">
+      <p className="mb-4 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800">
+        Ces valeurs ne sont pas calculées : elles viennent de vos pièces (statuts, contrat de bail, registre du personnel…).
+        Une ligne laissée vide restera vide — jamais remplacée par 0.
+      </p>
+      <div className="space-y-3">
+        {note.rows.map((r) => (
+          <div key={r.label} className="grid items-end gap-2 sm:grid-cols-[1fr_140px_140px]">
+            <p className="text-sm text-slate-700">{r.label}</p>
+            <Field label="N"><Input inputMode="numeric" placeholder="—" value={values[r.label]?.n ?? ""} onChange={(e) => setValues({ ...values, [r.label]: { ...(values[r.label] || { n: "", n1: "" }), n: e.target.value } })} /></Field>
+            <Field label="N-1"><Input inputMode="numeric" placeholder="—" value={values[r.label]?.n1 ?? ""} onChange={(e) => setValues({ ...values, [r.label]: { ...(values[r.label] || { n: "", n1: "" }), n1: e.target.value } })} /></Field>
+          </div>
+        ))}
+      </div>
+      <div className="mt-5 flex items-center justify-between gap-2">
+        {hasSaved ? (
+          <Button variant="ghost" onClick={() => { const res = clearManualNote(companyId, exercise, note.code); if (!res.ok) { toast("Aucune saisie à effacer."); return; } toast("Saisie effacée : la note redevient à compléter.", undefined, "info"); onClose(); }}>
+            Effacer la saisie
+          </Button>
+        ) : <span />}
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={onClose}>Annuler</Button>
+          <Button onClick={save}>Enregistrer la saisie</Button>
+        </div>
+      </div>
+    </Modal>
   );
 }

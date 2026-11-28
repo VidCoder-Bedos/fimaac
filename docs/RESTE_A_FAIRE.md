@@ -2,7 +2,7 @@
 
 > Registre tenu à jour à chaque lot livré. Il sert de point de reprise : tout ce
 > qui est ici est **non fait**, avec sa raison et son blocage éventuel.
-> Dernière mise à jour : 28/11/2026, après les PR #5 à #21.
+> Dernière mise à jour : 28/11/2026, après les PR #5 à #22.
 
 ## Déjà réglé (ne plus y revenir)
 
@@ -24,6 +24,7 @@
 | P5 | Ventilation de la TVA par taux (18 / 9 / exonéré) | #19 |
 | P6 | Numérotation des pièces sans recyclage + contrôle affiché | #20 |
 | P7 | TAFIRE calculé, bouclé et imprimé (liasse, PDF, XLSX) | #21 |
+| P8 | Notes annexes calculées, imprimées et exportées | #22 |
 
 ## 1. Bloqué par une décision d'infrastructure (à arbitrer par le porteur)
 
@@ -43,9 +44,11 @@ Ces points ne peuvent pas avancer sans base de données et hébergement d'API.
 ## 2. Faisable sans infrastructure (ordre recommandé)
 
 5. ~~**Liasse GUDEF imprimable**~~ — **fait (PR #16)** ;
-   ~~**TAFIRE**~~ — **fait (PR #21)**. Reste les **notes annexes** (`notes.ts`
-   existe, toujours non connecté) : tableau des immobilisations, des créances et
-   dettes, effectifs, engagements hors bilan.
+   ~~**TAFIRE**~~ — **fait (PR #21)** ;
+   ~~**notes annexes**~~ — **fait (PR #22)**. Reste : **saisie des 15 notes
+   manuelles** (engagements hors bilan, effectifs, ventilation du CA, cessions)
+   et **éclatement ligne à ligne** des notes calculées (NOTE_04 et NOTE_16A
+   agrègent aujourd'hui leurs lignes sans détail par compte).
 6. ~~**Journal d'audit chaîné localement**~~ — **fait (PR #14)**. Reste la
    version serveur : ancrage hors du poste, acteur et IP réels (point 4).
 7. ~~**Export FEC conforme**~~ — **fait (PR #17)** : 18 colonnes, point décimal,

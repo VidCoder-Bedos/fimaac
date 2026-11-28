@@ -30,11 +30,11 @@ export default function ConformityWorkshop() {
       {!current ? (
         portfolio.length === 0 ? <EmptyState icon={<ShieldCheck />} title="Aucune entreprise" /> : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{portfolio.map((p) => {
-            const tone = p.score >= 80 ? "#10b981" : p.score >= 60 ? "#f59e0b" : "#ef4444";
+            const tone = p.score >= 80 ? "#059669" : p.score >= 60 ? "#d97706" : "#ef4444";
             return (
               <Card key={p.company.id} hover className="cursor-pointer p-5" onClick={() => setSelected(p.company.id)}>
                 <div className="flex items-start justify-between"><div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white"><ShieldCheck size={18} /></div><div><p className="font-bold text-slate-800">{p.company.name}</p><p className="text-xs text-slate-500">{p.entries} écritures</p></div></div>{p.critical > 0 && <Badge tone="rose">{p.critical} critique</Badge>}</div>
-                <div className="mt-4 flex items-center justify-between text-xs text-slate-500"><span>Score de conformité</span><span className="flex items-center gap-1 text-emerald-700"><span className="live-dot h-1.5 w-1.5 rounded-full bg-emerald-500" /> en direct</span></div>
+                <div className="mt-4 flex items-center justify-between text-xs text-slate-500"><span>Score de conformité</span><span className="flex items-center gap-1 text-emerald-700"><span className="live-dot h-1.5 w-1.5 rounded-full bg-emerald-600" /> en direct</span></div>
                 <div className="mt-2 flex items-center gap-3">
                   <div className="relative flex h-12 w-12 items-center justify-center"><svg width={48} height={48} className="-rotate-90"><circle cx={24} cy={24} r={20} fill="none" stroke="#e2e8f0" strokeWidth={4} /><circle cx={24} cy={24} r={20} fill="none" stroke={tone} strokeWidth={4} strokeLinecap="round" strokeDasharray={125.6} strokeDashoffset={125.6 - (p.score / 100) * 125.6} /></svg><span className="absolute text-xs font-bold" style={{ color: tone }}>{p.score}</span></div>
                   <div className="flex-1 space-y-1 text-xs"><div className="flex justify-between"><span className="text-slate-500">Cohérence</span><span className="font-semibold text-slate-700">{p.coherence.score}% · {p.coherence.koCount} écarts</span></div><div className="flex justify-between"><span className="text-slate-500">Plan normatif</span><span className="font-semibold text-slate-700">{p.normative.score}% · {p.normative.koCount} ko</span></div><div className="flex justify-between"><span className="text-slate-500">Anomalies</span><span className="font-semibold text-slate-700">{p.issues}</span></div></div>
@@ -59,7 +59,7 @@ function SessionDetail({ companyId, companyName, onBack }: { companyId: string; 
     <div>
       <button onClick={onBack} className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-slate-500 hover:text-indigo-600"><ArrowLeft size={15} /> Portefeuille</button>
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <div><h2 className="text-xl font-black tracking-tight text-slate-900">{companyName}</h2><p className="flex items-center gap-1.5 text-sm text-slate-500"><span className="live-dot h-2 w-2 rounded-full bg-emerald-500" /> Cohérence en direct · recalculée à chaque modification</p></div>
+        <div><h2 className="text-xl font-black tracking-tight text-slate-900">{companyName}</h2><p className="flex items-center gap-1.5 text-sm text-slate-500"><span className="live-dot h-2 w-2 rounded-full bg-emerald-600" /> Cohérence en direct · recalculée à chaque modification</p></div>
         <div className="ml-auto flex items-center gap-2"><Badge tone={live.score >= 80 ? "emerald" : live.score >= 60 ? "amber" : "rose"}>Score {live.score}%</Badge><Badge tone="sky">Cohérence {live.coherence.score}%</Badge><Badge tone="violet">Normatif {live.normative.score}%</Badge></div>
       </div>
       <div className="mb-6"><Tabs active={tab} onChange={setTab} tabs={[{ id: "coherence", label: `Contrôles C1…C9 (${live.coherence.lines.length})` }, { id: "normatif", label: `Plan normatif (${live.normative.checks.length})` }, { id: "anomalies", label: `Anomalies (${live.openIssues})` }]} /></div>

@@ -126,7 +126,7 @@ export default function Documents() {
       <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
         {/* Tree */}
         <Card className="h-fit p-3">
-          <button onClick={() => setSel({ toclass: true })} className={`mb-1 flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-sm font-semibold ${sel.toclass ? "bg-rose-50 text-rose-700" : "text-slate-600 hover:bg-slate-50"}`}><span className="flex items-center gap-2"><Inbox size={15} /> À classer</span>{nonClasse.length > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">{nonClasse.length}</span>}</button>
+          <button onClick={() => setSel({ toclass: true })} className={`mb-1 flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-sm font-semibold ${sel.toclass ? "bg-rose-50 text-rose-700" : "text-slate-600 hover:bg-slate-50"}`}><span className="flex items-center gap-2"><Inbox size={15} /> À classer</span>{nonClasse.length > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-700 px-1 text-[10px] font-bold text-white">{nonClasse.length}</span>}</button>
           <div className="my-1 border-t border-slate-100" />
           {exercises.map((ex) => (
             <div key={ex}>

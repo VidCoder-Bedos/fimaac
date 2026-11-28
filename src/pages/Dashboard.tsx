@@ -74,9 +74,9 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {/* M4 — la tuile CA affiche le CA strict (70x), cohérent avec le SIG ci-dessous */}
         <KpiTile title="Chiffre d'affaires" value={fcfaCompact(summary.ca)} icon={<TrendingUp size={20} />} tone="indigo" delta={<TrendDelta current={caNow} previous={caPrev} />} spark={data.caSeries} color="#6366f1" />
-        <KpiTile title="Résultat" value={fcfaCompact(summary.resultat)} icon={<Target size={20} />} tone={summary.resultat >= 0 ? "emerald" : "rose"} delta={<TrendDelta current={resNow} previous={prevIdx >= 0 ? data.resultatSeries[prevIdx] : 0} />} spark={data.resultatSeries} color={summary.resultat >= 0 ? "#10b981" : "#ef4444"} />
-        <KpiTile title="Trésorerie" value={fcfaCompact(tresoNow)} icon={<Wallet size={20} />} tone={tresoNow >= 0 ? "sky" : "rose"} spark={data.tresoSeries} color="#0ea5e9" />
-        <KpiTile title="Charges" value={fcfaCompact(summary.charges)} icon={<TrendingDown size={20} />} tone="amber" delta={<TrendDelta current={data.chargesSeries[lastIdx] ?? 0} previous={prevIdx >= 0 ? data.chargesSeries[prevIdx] : 0} invert />} spark={data.chargesSeries} color="#f59e0b" />
+        <KpiTile title="Résultat" value={fcfaCompact(summary.resultat)} icon={<Target size={20} />} tone={summary.resultat >= 0 ? "emerald" : "rose"} delta={<TrendDelta current={resNow} previous={prevIdx >= 0 ? data.resultatSeries[prevIdx] : 0} />} spark={data.resultatSeries} color={summary.resultat >= 0 ? "#059669" : "#ef4444"} />
+        <KpiTile title="Trésorerie" value={fcfaCompact(tresoNow)} icon={<Wallet size={20} />} tone={tresoNow >= 0 ? "sky" : "rose"} spark={data.tresoSeries} color="#0284c7" />
+        <KpiTile title="Charges" value={fcfaCompact(summary.charges)} icon={<TrendingDown size={20} />} tone="amber" delta={<TrendDelta current={data.chargesSeries[lastIdx] ?? 0} previous={prevIdx >= 0 ? data.chargesSeries[prevIdx] : 0} invert />} spark={data.chargesSeries} color="#d97706" />
       </div>
 
       {/* ---------- SANTÉ DE L'ENTREPRISE ---------- */}
@@ -108,15 +108,15 @@ export default function Dashboard() {
           <div className="flex flex-col items-center justify-center gap-3">
             <RadialRings rings={[
               { label: "Santé", value: health.global, color: "#6366f1" },
-              { label: "Liqu.", value: health.liquidity, color: "#0ea5e9" },
-              { label: "Rent.", value: health.profitability, color: "#10b981" },
-              { label: "Conf.", value: health.compliance, color: "#f59e0b" },
+              { label: "Liqu.", value: health.liquidity, color: "#0284c7" },
+              { label: "Rent.", value: health.profitability, color: "#059669" },
+              { label: "Conf.", value: health.compliance, color: "#d97706" },
             ]} size={160} />
             <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-[10px] text-slate-500">
               <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-indigo-500" />Global</span>
-              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-sky-500" />Liquidité</span>
-              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-500" />Rentabilité</span>
-              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-amber-500" />Conformité</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-sky-600" />Liquidité</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-600" />Rentabilité</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-amber-600" />Conformité</span>
             </div>
           </div>
         </div>
@@ -159,14 +159,14 @@ export default function Dashboard() {
             labels={data.labels}
             series={[
               { name: "CA", data: data.caSeries, color: "#6366f1" },
-              { name: "Résultat", data: data.resultatSeries, color: "#10b981" },
+              { name: "Résultat", data: data.resultatSeries, color: "#059669" },
             ]}
             height={210}
             showValues={data.months.length <= 6}
           />
           <div className="mt-2 flex flex-wrap gap-4 text-xs">
             <span className="flex items-center gap-1.5"><span className="h-0.5 w-4 rounded bg-indigo-500" /> Chiffre d'affaires</span>
-            <span className="flex items-center gap-1.5"><span className="h-0.5 w-4 rounded bg-emerald-500" /> Résultat</span>
+            <span className="flex items-center gap-1.5"><span className="h-0.5 w-4 rounded bg-emerald-600" /> Résultat</span>
           </div>
         </Card>
         <Card className="p-5">
@@ -174,7 +174,7 @@ export default function Dashboard() {
           <GroupedBars
             labels={data.labels}
             series={[
-              { name: "Produits", data: data.caSeries, color: "#10b981" },
+              { name: "Produits", data: data.caSeries, color: "#059669" },
               { name: "Charges", data: data.chargesSeries, color: "#ef4444" },
             ]}
             height={210}
@@ -216,7 +216,7 @@ export default function Dashboard() {
           {data.chargesByCat.length === 0 ? <p className="py-6 text-center text-sm text-slate-500">Aucune charge</p> : (
             <>
               <StackedComposition
-                segments={data.chargesByCat.slice(0, 6).map((c) => ({ label: c.label, value: c.amount, color: ["#6366f1", "#8b5cf6", "#a78bfa", "#f59e0b", "#ef4444", "#ec4899"][Math.min(5, data.chargesByCat.indexOf(c))] }))}
+                segments={data.chargesByCat.slice(0, 6).map((c) => ({ label: c.label, value: c.amount, color: ["#6366f1", "#8b5cf6", "#a78bfa", "#d97706", "#ef4444", "#ec4899"][Math.min(5, data.chargesByCat.indexOf(c))] }))}
               />
               <div className="mt-4">
                 <HBars items={data.chargesByCat.slice(0, 6).map((c) => ({ label: c.label, value: c.amount }))} color="#ef4444" formatter={fmtMoney} />
@@ -226,7 +226,7 @@ export default function Dashboard() {
         </Card>
         <Card className="p-5">
           <SectionHeading title="Trésorerie" subtitle="Évolution du solde liquidités (classe 5)" />
-          <AreaTrend labels={data.labels} series={[{ name: "Trésorerie", data: data.tresoSeries, color: "#0ea5e9" }]} height={180} />
+          <AreaTrend labels={data.labels} series={[{ name: "Trésorerie", data: data.tresoSeries, color: "#0284c7" }]} height={180} />
           <div className="mt-3 flex items-center justify-between rounded-xl bg-sky-50 px-3 py-2">
             <span className="text-xs text-slate-500">Solde actuel</span>
             <span className="font-bold tabular-nums text-sky-700">{fcfa(tresoNow)}</span>
@@ -237,10 +237,10 @@ export default function Dashboard() {
           {data.produitsByCat.length === 0 ? <p className="py-6 text-center text-sm text-slate-500">Aucun produit</p> : (
             <>
               <StackedComposition
-                segments={data.produitsByCat.map((c) => ({ label: c.label, value: c.amount, color: ["#10b981", "#34d399", "#6ee7b7", "#a3e635", "#84cc16"][Math.min(4, data.produitsByCat.indexOf(c))] }))}
+                segments={data.produitsByCat.map((c) => ({ label: c.label, value: c.amount, color: ["#059669", "#34d399", "#6ee7b7", "#a3e635", "#84cc16"][Math.min(4, data.produitsByCat.indexOf(c))] }))}
               />
               <div className="mt-4">
-                <HBars items={data.produitsByCat.map((c) => ({ label: c.label, value: c.amount }))} color="#10b981" formatter={fmtMoney} />
+                <HBars items={data.produitsByCat.map((c) => ({ label: c.label, value: c.amount }))} color="#059669" formatter={fmtMoney} />
               </div>
             </>
           )}
@@ -319,7 +319,7 @@ export default function Dashboard() {
               const actor = db.users.find((u) => u.id === a.userId);
               return (
                 <div key={a.id} className="flex gap-2 text-[11px]">
-                  <div className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400" />
+                  <div className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500" />
                   <div><p className="text-slate-700"><b>{actor?.firstName || "Système"}</b> · {a.action.replace(/_/g, " ").toLowerCase()}</p><p className="text-slate-500">{formatDate(a.createdAt)}</p></div>
                 </div>
               );

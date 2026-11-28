@@ -93,7 +93,7 @@ export function AreaTrend({
       {gridVals.map((v, i) => (
         <g key={i}>
           <line x1={PAD.l} x2={W - PAD.r} y1={y(v)} y2={y(v)} stroke="#e2e8f0" strokeWidth="1" strokeDasharray={i === 0 ? "" : "4 4"} />
-          <text x={PAD.l - 6} y={y(v) + 4} textAnchor="end" fontSize="10" fill="#94a3b8">{yFormat(v)}</text>
+          <text x={PAD.l - 6} y={y(v) + 4} textAnchor="end" fontSize="10" fill="#64748b">{yFormat(v)}</text>
         </g>
       ))}
       {/* Séries */}
@@ -108,7 +108,7 @@ export function AreaTrend({
               <circle key={i} cx={x(i)} cy={y(v)} r={showValues ? 4 : 3} fill="#fff" stroke={s.color || color} strokeWidth="2" />
             ))}
             {showValues && s.data.map((v, i) => (
-              <text key={i} x={x(i)} y={y(v) - 10} textAnchor="middle" fontSize="9" fontWeight="600" fill={s.color || color}>{yFormat(v)}</text>
+              <text key={i} x={x(i)} y={y(v) - 10} textAnchor="middle" fontSize="9" fontWeight="600" fill="#334155">{yFormat(v)}</text>
             ))}
           </g>
         );
@@ -142,7 +142,7 @@ export function GroupedBars({
         return (
           <g key={i}>
             <line x1={PAD.l} x2={W - PAD.r} y1={yy} y2={yy} stroke="#e2e8f0" strokeWidth="1" strokeDasharray={i === 0 ? "" : "4 4"} />
-            <text x={PAD.l - 6} y={yy + 4} textAnchor="end" fontSize="10" fill="#94a3b8">{yFormat(v)}</text>
+            <text x={PAD.l - 6} y={yy + 4} textAnchor="end" fontSize="10" fill="#64748b">{yFormat(v)}</text>
           </g>
         );
       })}
@@ -225,14 +225,14 @@ export function Gauge({ value, size = 180, label, sublabel, color }: { value: nu
     const x2 = cx + r * Math.cos(to), y2 = cy - r * Math.sin(to);
     return `M${x1},${y1} A${r},${r} 0 ${Math.abs(from - to) > Math.PI ? 1 : 0} ${from > to ? 1 : 0} ${x2},${y2}`;
   };
-  const c = color ?? (clamped >= 80 ? "#10b981" : clamped >= 60 ? "#f59e0b" : "#ef4444");
+  const c = color ?? (clamped >= 80 ? "#059669" : clamped >= 60 ? "#d97706" : "#ef4444");
   return (
     <div className="relative inline-flex flex-col items-center" style={{ width: size }}>
       <svg width={size} height={size / 2 + 12} viewBox={`0 0 ${size} ${size / 2 + 12}`}>
         <path d={arcPath(startAngle, endAngle)} fill="none" stroke="#e2e8f0" strokeWidth={stroke} strokeLinecap="round" />
         <path d={arcPath(startAngle, valAngle)} fill="none" stroke={c} strokeWidth={stroke} strokeLinecap="round" />
-        <text x={cx} y={cy - 4} textAnchor="middle" fontSize={size * 0.2} fontWeight="800" fill={c}>{label ?? `${Math.round(clamped)}`}</text>
-        {sublabel && <text x={cx} y={cy + 14} textAnchor="middle" fontSize={size * 0.075} fill="#94a3b8">{sublabel}</text>}
+        <text x={cx} y={cy - 4} textAnchor="middle" fontSize={size * 0.2} fontWeight="800" fill="#0f172a">{label ?? `${Math.round(clamped)}`}</text>
+        {sublabel && <text x={cx} y={cy + 14} textAnchor="middle" fontSize={size * 0.075} fill="#64748b">{sublabel}</text>}
       </svg>
     </div>
   );
@@ -285,17 +285,17 @@ export function ScatterPlot({
       <line x1={PAD.l} x2={W - PAD.r} y1={zeroY} y2={zeroY} stroke="#cbd5e1" strokeWidth="1.5" />
       <line x1={PAD.l} x2={PAD.l} y1={PAD.t} y2={PAD.t + ih} stroke="#e2e8f0" strokeWidth="1" />
       <line x1={PAD.l} x2={W - PAD.r} y1={PAD.t + ih} y2={PAD.t + ih} stroke="#e2e8f0" strokeWidth="1" />
-      <text x={PAD.l - 6} y={PAD.t + 8} textAnchor="end" fontSize="9" fill="#94a3b8">{fmt(maxY)}</text>
-      <text x={PAD.l - 6} y={zeroY - 4} textAnchor="end" fontSize="9" fill="#94a3b8">0</text>
-      <text x={PAD.l - 6} y={PAD.t + ih} textAnchor="end" fontSize="9" fill="#94a3b8">{fmt(-maxY)}</text>
+      <text x={PAD.l - 6} y={PAD.t + 8} textAnchor="end" fontSize="9" fill="#64748b">{fmt(maxY)}</text>
+      <text x={PAD.l - 6} y={zeroY - 4} textAnchor="end" fontSize="9" fill="#64748b">0</text>
+      <text x={PAD.l - 6} y={PAD.t + ih} textAnchor="end" fontSize="9" fill="#64748b">{fmt(-maxY)}</text>
       {points.map((p, i) => (
         <g key={i}>
           <circle cx={px(p.x)} cy={py(p.y)} r={p.size ?? 10} fill={p.y >= 0 ? color : "#f43f5e"} fillOpacity="0.75" stroke="#fff" strokeWidth="2" />
           <text x={px(p.x)} y={py(p.y) - (p.size ?? 10) - 6} textAnchor="middle" fontSize="9" fontWeight="600" fill="#334155">{p.label}</text>
         </g>
       ))}
-      <text x={W - PAD.r} y={H - 6} textAnchor="end" fontSize="10" fill="#94a3b8">{xLabel} →</text>
-      <text x={PAD.l + 4} y={PAD.t + 10} fontSize="10" fill="#94a3b8">↑ {yLabel}</text>
+      <text x={W - PAD.r} y={H - 6} textAnchor="end" fontSize="10" fill="#64748b">{xLabel} →</text>
+      <text x={PAD.l + 4} y={PAD.t + 10} fontSize="10" fill="#64748b">↑ {yLabel}</text>
     </svg>
   );
 }
@@ -330,7 +330,7 @@ export function Waterfall({ steps, height = 220, formatter = fmt }: { steps: { l
         return (
           <g key={i}>
             <line x1={PAD.l} x2={W - PAD.r} y1={yy} y2={yy} stroke="#e2e8f0" strokeWidth="1" strokeDasharray={i === 0 ? "" : "4 4"} />
-            <text x={PAD.l - 6} y={yy + 4} textAnchor="end" fontSize="10" fill="#94a3b8">{formatter(v)}</text>
+            <text x={PAD.l - 6} y={yy + 4} textAnchor="end" fontSize="10" fill="#64748b">{formatter(v)}</text>
           </g>
         );
       })}
@@ -338,14 +338,14 @@ export function Waterfall({ steps, height = 220, formatter = fmt }: { steps: { l
         const x = PAD.l + i * (iw / bars.length) + (iw / bars.length - bw) / 2;
         const top = y(Math.max(b.from, b.to));
         const h = Math.max(2, Math.abs(y(b.from) - y(b.to)));
-        const c = b.type === "start" ? "#6366f1" : b.type === "total" ? (b.to >= 0 ? "#10b981" : "#ef4444") : b.value >= 0 ? "#10b981" : "#f43f5e";
+        const c = b.type === "start" ? "#6366f1" : b.type === "total" ? (b.to >= 0 ? "#059669" : "#ef4444") : b.value >= 0 ? "#059669" : "#f43f5e";
         return (
           <g key={i}>
             {i > 0 && b.type !== "total" && (
               <line x1={x - (iw / bars.length) + bw} x2={x} y1={y(bars[i - 1].to)} y2={y(bars[i - 1].to)} stroke="#cbd5e1" strokeWidth="1" strokeDasharray="3 3" />
             )}
             <rect x={x} y={top} width={bw} height={h} rx="4" fill={c} fillOpacity={b.type === "minus" ? 0.85 : 1} />
-            <text x={x + bw / 2} y={top - 6} textAnchor="middle" fontSize="10" fontWeight="700" fill={c}>{formatter(b.type === "total" ? b.to : b.value)}</text>
+            <text x={x + bw / 2} y={top - 6} textAnchor="middle" fontSize="10" fontWeight="700" fill="#334155">{formatter(b.type === "total" ? b.to : b.value)}</text>
             <text x={x + bw / 2} y={H - 24} textAnchor="middle" fontSize="10" fill="#64748b">{b.label}</text>
           </g>
         );
@@ -365,7 +365,7 @@ export function StackedComposition({ segments, height = 28 }: { segments: { labe
       <div className="flex overflow-hidden rounded-full" style={{ height }}>
         {segments.map((s, i) => (
           <div key={i} className="flex items-center justify-center transition-all" style={{ width: `${(Math.abs(s.value) / total) * 100}%`, background: s.color }} title={`${s.label} : ${fmt(s.value)}`}>
-            {(Math.abs(s.value) / total) > 0.08 && <span className="text-[10px] font-bold text-white">{((Math.abs(s.value) / total) * 100).toFixed(0)}%</span>}
+            {(Math.abs(s.value) / total) > 0.1 && <span className="rounded bg-white/95 px-1 text-[10px] font-bold text-slate-900 shadow-sm">{((Math.abs(s.value) / total) * 100).toFixed(0)}%</span>}
           </div>
         ))}
       </div>

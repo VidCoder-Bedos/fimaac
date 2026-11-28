@@ -4,6 +4,7 @@ import { X, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "../utils/cn";
 import { FOCUSABLE_SELECTOR, nextFocusIndex, shouldTrapKey, isEscapeKey, dialogLabel } from "../lib/focusTrap";
+import { bestTextOn } from "../lib/contrast";
 
 /* ---------------- Button ---------------- */
 type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "outline" | "success";
@@ -321,7 +322,7 @@ export function StatCard({ title, value, icon, trend, tone = "indigo", sub, coun
 
 /* ---------------- Misc ---------------- */
 export function ProgressBar({ value, tone = "indigo" }: { value: number; tone?: string }) {
-  const colors: Record<string, string> = { indigo: "bg-indigo-500", emerald: "bg-emerald-500", amber: "bg-amber-500", rose: "bg-rose-500" };
+  const colors: Record<string, string> = { indigo: "bg-indigo-500", emerald: "bg-emerald-600", amber: "bg-amber-600", rose: "bg-rose-500" };
   return (
     <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
       <motion.div className={cn("h-full rounded-full", colors[tone] || colors.indigo)} initial={{ width: 0 }} animate={{ width: `${Math.min(100, Math.max(0, value))}%` }} transition={{ duration: 0.8, ease: "easeOut" }} />
@@ -332,7 +333,7 @@ export function ProgressBar({ value, tone = "indigo" }: { value: number; tone?: 
 export function Avatar({ name, color, size = 36 }: { name: string; color?: string; size?: number }) {
   const initials = name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
   return (
-    <div className="flex shrink-0 items-center justify-center rounded-full font-bold text-white" style={{ width: size, height: size, background: color || "#6366f1", fontSize: size * 0.38 }}>
+    <div className="flex shrink-0 items-center justify-center rounded-full font-bold" style={{ width: size, height: size, background: color || "#4f46e5", color: bestTextOn(color || "#4f46e5"), fontSize: size * 0.38 }}>
       {initials}
     </div>
   );
@@ -389,7 +390,7 @@ export function Donut({ value, size = 130, stroke = 14, color = "#6366f1", track
 
 export function BarChart({ data, height = 180, tone = "indigo" }: { data: { label: string; value: number }[]; height?: number; tone?: string }) {
   const max = Math.max(1, ...data.map((d) => d.value));
-  const colors: Record<string, string> = { indigo: "#6366f1", emerald: "#10b981", amber: "#f59e0b", sky: "#0ea5e9" };
+  const colors: Record<string, string> = { indigo: "#6366f1", emerald: "#059669", amber: "#d97706", sky: "#0284c7" };
   const color = colors[tone] || colors.indigo;
   return (
     <div className="flex items-end justify-between gap-2" style={{ height }}>

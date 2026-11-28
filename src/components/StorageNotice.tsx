@@ -40,7 +40,7 @@ export default function StorageNotice() {
         ? "border-amber-200 bg-amber-50 text-amber-800"
         : "border-slate-200 bg-slate-50 text-slate-600";
   const barTone =
-    message.tone === "critical" ? "bg-rose-500" : message.tone === "warn" ? "bg-amber-500" : "bg-emerald-500";
+    message.tone === "critical" ? "bg-rose-500" : message.tone === "warn" ? "bg-amber-600" : "bg-emerald-600";
   const Icon = message.tone === "critical" ? ShieldAlert : message.tone === "warn" ? AlertTriangle : Info;
 
   const download = () => {

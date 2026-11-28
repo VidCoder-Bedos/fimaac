@@ -84,9 +84,9 @@ export default function Landing() {
             <motion.div animate={{ y: [0, -12, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }} className="relative">
               <Card className="overflow-hidden p-0 shadow-2xl">
                 <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50/80 px-4 py-3">
-                  <span className="h-3 w-3 rounded-full bg-rose-400" /><span className="h-3 w-3 rounded-full bg-amber-400" /><span className="h-3 w-3 rounded-full bg-emerald-400" />
+                  <span className="h-3 w-3 rounded-full bg-rose-500" /><span className="h-3 w-3 rounded-full bg-amber-600" /><span className="h-3 w-3 rounded-full bg-emerald-600" />
                   <span className="ml-2 text-xs font-medium text-slate-500">FIMAAC — Tableau de bord</span>
-                  <span className="ml-auto flex items-center gap-1 text-[10px] font-semibold text-emerald-700"><span className="live-dot h-1.5 w-1.5 rounded-full bg-emerald-500" /> En direct</span>
+                  <span className="ml-auto flex items-center gap-1 text-[10px] font-semibold text-emerald-700"><span className="live-dot h-1.5 w-1.5 rounded-full bg-emerald-600" /> En direct</span>
                 </div>
                 <div className="grid grid-cols-3 gap-3 p-5">
                   {[["Clients", "42"], ["Échéances", "7"], ["Conformité", "94%"]].map(([l, v]) => (

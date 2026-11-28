@@ -30,19 +30,23 @@ export const PALETTE: Record<string, string> = {
   "slate-700": "#334155",
   "slate-800": "#1e293b",
   "slate-900": "#0f172a",
+  "indigo-400": "#818cf8",
   "indigo-500": "#6366f1",
   "indigo-600": "#4f46e5",
   "indigo-700": "#4338ca",
   "violet-600": "#7c3aed",
+  "emerald-400": "#34d399",
   "emerald-500": "#10b981",
   "emerald-600": "#059669",
   "emerald-700": "#047857",
   "amber-50": "#fffbeb",
+  "amber-400": "#fbbf24",
   "amber-500": "#f59e0b",
   "amber-600": "#d97706",
   "amber-700": "#b45309",
   "amber-800": "#92400e",
   "rose-50": "#fff1f2",
+  "rose-400": "#fb7185",
   "rose-500": "#f43f5e",
   "rose-600": "#e11d48",
   "rose-700": "#be123c",
@@ -106,4 +110,31 @@ export function describeContrast(foreground: string, background: string, size: T
   const ratio = contrastRatio(foreground, background);
   const level = wcagLevel(ratio, size);
   return `${foreground} sur ${background} : ${ratio.toFixed(2)}:1 — ${level === "fail" ? "sous le seuil AA" : level}`;
+}
+
+/* ----------------------------------------------------------------------------
+ * P32 — L'encre se choisit par la mesure, pas par l'habitude.
+ *
+ * P31 avait corrigé les classes de texte sur fond clair. Restaient les fonds
+ * *pleins* : pastilles, puces de calendrier, barres de composition — et les
+ * couleurs venues des données (`avatarColor`, `logoColor`, teintes de séries).
+ * Le blanc y était posé par convention : il donne 2,15:1 sur `amber-500` et
+ * 2,54:1 sur `emerald-500`, c'est-à-dire un texte qu'on ne lit pas.
+ *
+ * Sur ces fonds, aucune teinte ne peut être décidée à l'avance : c'est le fond
+ * qui décide. On mesure les deux encres possibles et on garde la meilleure.
+ * -------------------------------------------------------------------------- */
+
+/** Encre claire et encre sombre du produit — les deux seules candidates. */
+export const INK_LIGHT = "#ffffff";
+export const INK_DARK = "#0f172a";
+
+/** Meilleure encre (blanche ou ardoise) sur `background`, mesurée. Égalité → blanc. */
+export function bestTextOn(background: string): string {
+  return contrastRatio(INK_DARK, background) > contrastRatio(INK_LIGHT, background) ? INK_DARK : INK_LIGHT;
+}
+
+/** Le contraste obtenu par `bestTextOn` — utile pour dire si même le meilleur échoue. */
+export function bestTextRatio(background: string): number {
+  return Math.max(contrastRatio(INK_LIGHT, background), contrastRatio(INK_DARK, background));
 }

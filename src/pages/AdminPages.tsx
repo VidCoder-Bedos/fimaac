@@ -8,6 +8,7 @@ import { fcfa, fcfaCompact, formatDateTime, formatDate } from "../lib/format";
 import { toggleCabinetSuspension, setPlatformLogo, setCabinetLogo, publishAnnouncement, updatePlanPrice, DEFAULT_PLANS, type PlatformPlan } from "../lib/actions";
 import { Building2, Users, Database, CreditCard, Globe2, TrendingUp, ShieldAlert, Activity, Ban, Play, Image, Megaphone, FileText, ClipboardList, Receipt, HardDrive, Download, Search, ArrowUpDown, Mail, Phone, MapPin, Check, Layers, BarChart3, ShieldCheck, CheckCircle2, AlertTriangle, Info } from "lucide-react";
 import { toast } from "../lib/toast";
+import { bestTextOn } from "../lib/contrast";
 
 // ============================================================================
 // HELPERS PARTAGÉS
@@ -24,7 +25,7 @@ function cabinetStats(db: ReturnType<typeof useDB>, cabinetId: string) {
 /** Logo d'une organisation : image personnalisée sinon initiales colorées. */
 function OrgLogo({ org, size = 40 }: { org: { name: string; logoColor: string; logoDataUrl?: string }; size?: number }) {
   if (org.logoDataUrl) return <img src={org.logoDataUrl} alt={org.name} className="rounded-xl object-cover" style={{ width: size, height: size }} />;
-  return <div className="flex items-center justify-center rounded-xl font-bold text-white" style={{ width: size, height: size, background: org.logoColor, fontSize: size * 0.38 }}>{org.name.slice(0, 2).toUpperCase()}</div>;
+  return <div className="flex items-center justify-center rounded-xl font-bold" style={{ width: size, height: size, background: org.logoColor, color: bestTextOn(org.logoColor), fontSize: size * 0.38 }}>{org.name.slice(0, 2).toUpperCase()}</div>;
 }
 
 /** Téléverse un logo → data URL. */
@@ -97,7 +98,7 @@ export function AdminOverview() {
         </Card>
         <Card className="p-5"><SectionHeading title="Activité système" />
           <div className="space-y-2">{recentLogs.map((l) => { const u = db.users.find((x) => x.id === l.userId); return (
-            <div key={l.id} className="flex items-start gap-2 text-xs"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400" /><div><p className="text-slate-700"><span className="font-semibold">{u?.firstName || "Système"}</span> · {l.action.replace(/_/g, " ").toLowerCase()}</p><p className="text-slate-500">{formatDateTime(l.createdAt)} · {l.after}</p></div></div>
+            <div key={l.id} className="flex items-start gap-2 text-xs"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-500" /><div><p className="text-slate-700"><span className="font-semibold">{u?.firstName || "Système"}</span> · {l.action.replace(/_/g, " ").toLowerCase()}</p><p className="text-slate-500">{formatDateTime(l.createdAt)} · {l.after}</p></div></div>
           ); })}</div>
         </Card>
       </div>

@@ -341,7 +341,7 @@ export default function Obligations() {
                   <div className="mt-0.5 space-y-0.5">
                     {day.obligations.slice(0, 3).map((o) => {
                       const days = daysUntil(o.dueDate);
-                      const tone = days < 0 ? "bg-rose-500" : days <= 3 ? "bg-amber-500" : days <= 7 ? "bg-sky-500" : "bg-slate-400";
+                      const tone = days < 0 ? "bg-rose-700" : days <= 3 ? "bg-amber-700" : days <= 7 ? "bg-sky-700" : "bg-slate-600";
                       return (
                         <div key={o.id} className={`truncate rounded px-1 py-0.5 text-[9px] font-semibold text-white ${tone}`} title={`${o.companyName} — ${o.label}`}>
                           {o.companyName.slice(0, 8)}…
@@ -356,10 +356,10 @@ export default function Obligations() {
           </div>
           {/* Légende */}
           <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-slate-500">
-            <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-rose-500" /> En retard</span>
-            <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-amber-500" /> ≤ 3 jours</span>
-            <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-sky-500" /> ≤ 7 jours</span>
-            <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-slate-400" /> Plus tard</span>
+            <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-rose-700" /> En retard</span>
+            <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-amber-700" /> ≤ 3 jours</span>
+            <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-sky-700" /> ≤ 7 jours</span>
+            <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-slate-600" /> Plus tard</span>
           </div>
         </Card>
       )}

@@ -12,6 +12,8 @@ import {
   computeTvaFiscal,
   fiscalBaseFromMoves,
   IS_PARAMS_DEFAUT,
+  EMPTY_ADJUSTMENTS,
+  type FiscalAdjustments,
   type IsComputation,
   type TvaComputation,
 } from "./fiscalite";
@@ -71,9 +73,14 @@ export function computeTVA(
  * Le minimum de perception s'applique même en cas de perte : sans lui, un
  * dossier déficitaire affichait un IS de 0 alors qu'un impôt reste dû.
  */
-export function computeIS(entries: JournalEntry[], rule: TaxRuleRef): TaxResult {
+export function computeIS(
+  entries: JournalEntry[],
+  rule: TaxRuleRef,
+  adjustments: FiscalAdjustments = EMPTY_ADJUSTMENTS,
+): TaxResult {
   const base = fiscalBaseFromMoves(movementsByAccount(entries));
-  const is = computeIsFiscal(base.resultatComptable, base, { ...IS_PARAMS_DEFAUT, taux: rule.rate });
+  // P10 : les retraitements fiscaux entrent dans le calcul, jamais après.
+  const is = computeIsFiscal(base.resultatComptable, base, { ...IS_PARAMS_DEFAUT, taux: rule.rate }, adjustments);
 
   return {
     montant: is.impotDu,
@@ -84,6 +91,9 @@ export function computeIS(entries: JournalEntry[], rule: TaxRuleRef): TaxResult 
       { label: "Produits (classe 7)", amount: base.produits },
       { label: "Charges (classe 6)", amount: -base.charges },
       { label: "Résultat comptable", amount: base.resultatComptable },
+      { label: "Réintégrations fiscales", amount: is.reintegrations },
+      { label: "Déductions fiscales", amount: -is.deductions },
+      { label: "Résultat fiscal avant arrondi", amount: is.resultatFiscalAvantArrondi },
       { label: "Résultat fiscal arrondi au millier inférieur", amount: is.resultatFiscalArrondi },
       { label: `IS au taux de ${rule.rate} % (résultat positif seulement)`, amount: is.impotCalcule },
       { label: "Minimum de perception (assis sur le chiffre d'affaires)", amount: is.minimumPerception },
@@ -98,12 +108,12 @@ export function computeTax(
   taxCode: string,
   entries: JournalEntry[],
   rules: TaxRuleRef[],
-  opts: { creditAnterieur?: number } = {},
+  opts: { creditAnterieur?: number; adjustments?: FiscalAdjustments } = {},
 ): TaxResult | null {
   const rule = rules.find((r) => r.code === taxCode);
   if (!rule) return null;
-  if (taxCode === "TVA") return computeTVA(entries, rule, opts);
-  if (taxCode === "IS") return computeIS(entries, rule);
+  if (taxCode === "TVA") return computeTVA(entries, rule, { creditAnterieur: opts.creditAnterieur });
+  if (taxCode === "IS") return computeIS(entries, rule, opts.adjustments ?? EMPTY_ADJUSTMENTS);
   return {
     montant: 0,
     base: 0,

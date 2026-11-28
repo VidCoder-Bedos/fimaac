@@ -9,11 +9,14 @@ import { measureSerialized, type StorageUsage } from "./storage";
  * DB_VERSION et être traitée dans migrate(). Sinon, le visiteur récurrent charge
  * un état partiel et l'UI crashe (TypeError sur champ manquant).
  */
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 const KEY = "fimaac_db_v1";
 
 /** Lot 1 — DB_VERSION 3 : liaison cabinet ↔ entreprise.
  *  Champs ajoutés : Company.cabinetOrganizationId · User.mustChangePassword. */
+/** P10 — DB_VERSION 4 : retraitements fiscaux persistés (réintégrations /
+ *  déductions). Collection `taxAdjustments`, initialisée à vide ; aucune valeur
+ *  n'est déduite d'un état antérieur. */
 /** Collections ajoutées après le premier seed — initialisées à vide si absentes. */
 const COLLECTION_KEYS = [
   "documents", "bankAccounts", "bankTransactions", "fixedAssets", "taxProfiles",
@@ -23,6 +26,7 @@ const COLLECTION_KEYS = [
   "entryTemplates", "stockItems", "payslips", "reconRules", "permanentDocs",
   "tiers", "fsSessions", "regulatoryVersions", "taxRulesV2", "taxBrackets",
   "socialRules", "declarationTemplates", "payrollComponents", "declarationWorkflows",
+  "taxAdjustments",
 ] as const;
 
 /**

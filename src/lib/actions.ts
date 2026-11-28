@@ -6,7 +6,7 @@ import type {
   DocumentItem, AccountingPeriod,
 } from "./types";
 import { computeTax } from "./tax";
-import { computeTvaFiscal, fiscalBaseFromMoves } from "./fiscalite";
+import { computeTvaFiscal, fiscalBaseFromMoves, totalAdjustments } from "./fiscalite";
 import { calculerBulletin, paieParamsFromConfig, totaliserBulletins, ecrituresPaie } from "./paie";
 import { sealLog } from "./auditChain";
 import { movementsByAccount } from "./accounting";
@@ -1231,6 +1231,59 @@ export function postRegularisation(companyId: string, data: { type: "CCA" | "PCA
   }
   const id = addEntry(companyId, { date: data.date, journalId: journal.id, reference: "REGUL", label: `Régularisation ${data.type} — ${lbl}`, status: "draft", lines });
   return { ok: !!id, error: id ? undefined : "Période clôturée." };
+}
+
+// ---------------- Retraitements fiscaux (réintégrations / déductions) ----------------
+/**
+ * P10 — Une réintégration ou une déduction fiscale se saisit, ne se devine pas.
+ * Chaque ligne est attribuée, datée et scellée dans le journal d'audit : un
+ * retraitement fiscal sans trace écrite est indéfendable en vérification.
+ */
+export function addTaxAdjustment(
+  companyId: string,
+  data: { exercise: string; type: "reintegration" | "deduction"; label: string; amount: number; reference?: string },
+): { ok: boolean; error?: string; id?: string } {
+  const label = (data.label || "").trim();
+  if (!label) return { ok: false, error: "Libellé obligatoire : un retraitement doit pouvoir être justifié." };
+  if (!Number.isFinite(data.amount) || data.amount <= 0) return { ok: false, error: "Montant strictement positif attendu." };
+  if (!/^\d{4}$/.test(data.exercise)) return { ok: false, error: "Exercice attendu au format AAAA." };
+  const id = uid();
+  mutate((s) => {
+    s.taxAdjustments.push({
+      id,
+      companyId,
+      exercise: data.exercise,
+      type: data.type,
+      label,
+      amount: Math.round(data.amount),
+      reference: data.reference?.trim() || undefined,
+      authorId: currentUserId() || "system",
+      createdAt: new Date().toISOString(),
+    });
+    audit(s, currentUserId() || "", currentOrgId() || "", "TAX_ADJUSTMENT_CREATE", "TaxAdjustment", id,
+      `${data.type === "reintegration" ? "Réintégration" : "Déduction"} ${data.exercise} — ${label} : ${Math.round(data.amount)}`);
+  });
+  return { ok: true, id };
+}
+
+export function deleteTaxAdjustment(id: string): void {
+  mutate((s) => {
+    const item = s.taxAdjustments.find((a) => a.id === id);
+    s.taxAdjustments = s.taxAdjustments.filter((a) => a.id !== id);
+    if (item) {
+      audit(s, currentUserId() || "", currentOrgId() || "", "TAX_ADJUSTMENT_DELETE", "TaxAdjustment", id,
+        `Suppression ${item.type} ${item.exercise} — ${item.label} : ${item.amount}`);
+    }
+  });
+}
+
+/** Retraitements d'un dossier pour un exercice, prêts pour `computeIsFiscal`. */
+export function fiscalAdjustmentsFor(companyId: string, exercise: string): { reintegrations: number; deductions: number } {
+  const list = getDB().taxAdjustments.filter((a) => a.companyId === companyId && a.exercise === exercise);
+  return {
+    reintegrations: totalAdjustments(list, "reintegration"),
+    deductions: totalAdjustments(list, "deduction"),
+  };
 }
 
 // ============================================================================

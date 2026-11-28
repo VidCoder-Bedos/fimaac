@@ -237,3 +237,20 @@
 | Correctif | Fichiers restaurés depuis le commit de travail propre (contenu complet : TAFIRE + notes annexes). `tsc` 0, `vitest` 157/157, build vert. |
 | Garde-fou | `npm run build` et `npm test` lancent désormais `check:conflicts` **en premier** : un marqueur fait échouer la CI Vercel au lieu de déployer. Hook `pre-commit` installé par `scripts/install-hooks.sh` (déclenché par `npm install`). |
 | Règle | Le contrôle se lance **après chaque fusion**, jamais seulement avant. |
+
+## P9 — Écriture hors exercice (PR #24)
+| Point | Détail |
+|---|---|
+| Symptôme | `addEntry` prenait le **premier exercice** du dossier et, à défaut de période, la **première période** : une écriture antidatée était déplacée en silence, son `fiscalYearId` désignait le mauvais exercice, et le contrôle de clôture portait sur la mauvaise période (donc on pouvait saisir dans un exercice clos). `updateEntry` ne contrôlait que la période. |
+| Livré | `src/lib/periods.ts` : `resolveAccountingDate` (date → exercice contenant → période), `fiscalYearFor`, `describeFiscalYears`, `auditFiscalYearPlacement`. `addEntry`/`updateEntry` branchés ; période mensuelle absente **créée et auditée** dans un exercice ouvert ; éditeur affichant la plage autorisée et **conservant la saisie** en cas de refus ; carte « Rattachement à l'exercice ». |
+| Règle | Une date est acceptée pour ce qu'elle est, ou refusée en le disant. Déplacer une écriture est un acte comptable : le contrôle **liste**, il ne corrige pas. |
+| Vérifications | `tsc` 0 erreur · `vitest` **170/170** (13 nouveaux) · build 11,44 s |
+
+## P10 — Réintégrations et déductions fiscales (PR #25)
+| Point | Détail |
+|---|---|
+| Symptôme | `computeIS` prenait le **résultat comptable pour le résultat fiscal** : aucune réintégration (amendes, dons, charges non justifiées) ni déduction n'entrait dans l'IS. Le moteur de liasse savait déjà le faire ; l'écran ne l'exposait pas. |
+| Livré | `FiscalAdjustments` + `applyFiscalAdjustments` + `totalAdjustments` dans `fiscalite.ts` (montants négatifs ramenés à zéro, arrondi au franc) ; `computeIsFiscal(…, adjustments)` et détail enrichi (réintégrations, déductions, résultat fiscal avant arrondi) ; `computeIS`/`computeTax` propagent ; collection `taxAdjustments` (DB_VERSION 4, migrée à vide) ; `addTaxAdjustment`/`deleteTaxAdjustment` **scellés dans l'audit** ; carte de saisie dans Fiscalité. |
+| Mesures | Seed : −479 805 + 1 000 000 → résultat fiscal 520 195 → arrondi 520 000 → IS 140 400 **et** minimum de perception 201 900 qui reste dû (le plus élevé des deux). |
+| Limites affichées | Aucune réintégration n'est supposée sans saisie ; la déclaration IS générée ne reprend pas encore ces montants (inscrit au registre). |
+| Vérifications | `tsc` 0 erreur · `vitest` **179/179** (9 nouveaux) · build 11,62 s |

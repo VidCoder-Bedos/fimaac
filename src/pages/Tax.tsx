@@ -2,11 +2,12 @@ import { useMemo, useState } from "react";
 import { Receipt, AlertTriangle, Check, FileDown, CalendarClock, ShieldAlert, Info } from "lucide-react";
 import { useDB } from "../lib/store";
 import { useCompanyScope, Page } from "../components/Layout";
-import { Card, Button, Badge, StatusBadge, EmptyState, SectionHeading, Input, Tabs } from "../components/ui";
+import { Card, Button, Badge, StatusBadge, EmptyState, SectionHeading, Input, Tabs, Field, Select } from "../components/ui";
 import { computeTax } from "../lib/tax";
-import { generateTvaDeclaration, updateTaxRate, setDeadlineStatus, tvaGrid } from "../lib/actions";
+import { generateTvaDeclaration, updateTaxRate, setDeadlineStatus, tvaGrid, addTaxAdjustment, deleteTaxAdjustment } from "../lib/actions";
 import { fcfa, formatDate } from "../lib/format";
 import { ventilateVat } from "../lib/tvaVentilation";
+import { totalAdjustments } from "../lib/fiscalite";
 import type { TaxRuleRef, DeclarationStatus } from "../lib/types";
 
 export default function Tax() {
@@ -15,8 +16,15 @@ export default function Tax() {
   const [tab, setTab] = useState("calc");
   const company = db.companies.find((c) => c.id === companyId);
   const entries = db.entries.filter((e) => e.companyId === companyId);
+  const [exercise, setExercise] = useState(String(new Date().getFullYear()));
+  const [adj, setAdj] = useState({ type: "reintegration" as "reintegration" | "deduction", label: "", amount: "", reference: "" });
+  const adjustments = useMemo(() => {
+    const list = db.taxAdjustments.filter((a) => a.companyId === companyId && a.exercise === exercise);
+    return { reintegrations: totalAdjustments(list, "reintegration"), deductions: totalAdjustments(list, "deduction") };
+  }, [db.taxAdjustments, companyId, exercise]);
+  const exerciseAdjustments = db.taxAdjustments.filter((a) => a.companyId === companyId && a.exercise === exercise);
   const tva = computeTax("TVA", entries, db.taxRules)!;
-  const is = computeTax("IS", entries, db.taxRules)!;
+  const is = computeTax("IS", entries, db.taxRules, { adjustments })!;
   const deadlines = db.taxDeadlines.filter((d) => d.companyId === companyId);
   const declarations = db.taxDeclarations.filter((d) => d.companyId === companyId);
   const vat = useMemo(() => ventilateVat(entries, db.accounts), [entries, db.accounts]);
@@ -41,6 +49,60 @@ export default function Tax() {
             <div className="mb-4 flex items-center justify-between"><h3 className="font-bold text-slate-800">Impôt sur les bénéfices (IS)</h3>{!is.verified && <Badge tone="amber">À vérifier</Badge>}</div>
             <div className="rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-5 text-white"><p className="text-xs uppercase opacity-80">Impôt estimé</p><p className="mt-1 text-3xl font-black">{fcfa(is.montant)}</p><p className="mt-1 text-xs opacity-80">Base (résultat) : {fcfa(is.base)} · taux {is.rule.rate}%</p></div>
             <div className="mt-4 space-y-1.5">{is.breakdown.map((b, i) => <div key={i} className="flex justify-between rounded-lg bg-slate-50 px-3 py-1.5 text-sm"><span className="text-slate-500">{b.label}</span><span className="font-semibold tabular-nums text-slate-800">{fcfa(b.amount)}</span></div>)}</div>
+          </Card>
+          <Card className="p-5 lg:col-span-2">
+            <SectionHeading
+              title="Retraitements fiscaux — réintégrations et déductions"
+              subtitle="Amendes et pénalités, dons sans reçu, charges non justifiées (réintégrations) · produits non imposables (déductions)"
+              action={
+                <Select value={exercise} onChange={(e) => setExercise(e.target.value)} className="h-9 w-32">
+                  {[...new Set([String(new Date().getFullYear() - 1), String(new Date().getFullYear()), String(new Date().getFullYear() + 1)])].map((y) => <option key={y} value={y}>Exercice {y}</option>)}
+                </Select>
+              }
+            />
+            <div className="mb-3 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-xl bg-slate-50 px-4 py-3"><p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Résultat comptable</p><p className="mt-1 font-black tabular-nums text-slate-800">{fcfa(is.is?.resultatComptable ?? 0)}</p></div>
+              <div className="rounded-xl bg-rose-50 px-4 py-3"><p className="text-[11px] font-semibold uppercase tracking-wide text-rose-500">+ Réintégrations</p><p className="mt-1 font-black tabular-nums text-rose-700">{fcfa(adjustments.reintegrations)}</p></div>
+              <div className="rounded-xl bg-emerald-50 px-4 py-3"><p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-600">− Déductions</p><p className="mt-1 font-black tabular-nums text-emerald-700">{fcfa(adjustments.deductions)}</p></div>
+            </div>
+            <div className="mb-4 flex items-center justify-between rounded-xl bg-indigo-50 px-4 py-3">
+              <span className="text-sm font-semibold text-indigo-900">Résultat fiscal avant arrondi</span>
+              <span className="font-black tabular-nums text-indigo-900">{fcfa(is.is?.resultatFiscalAvantArrondi ?? 0)}</span>
+            </div>
+            {exerciseAdjustments.length === 0 ? (
+              <p className="mb-4 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-500">Aucun retraitement saisi pour l'exercice {exercise}. Le résultat fiscal est alors égal au résultat comptable — aucune réintégration n'est supposée.</p>
+            ) : (
+              <div className="mb-4 overflow-x-auto rounded-xl border border-slate-100">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-400"><tr><th className="px-3 py-2">Type</th><th className="px-3 py-2">Libellé</th><th className="px-3 py-2">Référence</th><th className="px-3 py-2 text-right">Montant</th><th className="px-3 py-2" /></tr></thead>
+                  <tbody>{exerciseAdjustments.map((a) => (
+                    <tr key={a.id} className="border-t border-slate-50">
+                      <td className="px-3 py-2"><Badge tone={a.type === "reintegration" ? "rose" : "emerald"}>{a.type === "reintegration" ? "Réintégration" : "Déduction"}</Badge></td>
+                      <td className="px-3 py-2 text-slate-700">{a.label}</td>
+                      <td className="px-3 py-2 text-xs text-slate-400">{a.reference || "—"}</td>
+                      <td className="px-3 py-2 text-right tabular-nums">{fcfa(a.amount)}</td>
+                      <td className="px-3 py-2 text-right"><button className="text-xs font-semibold text-rose-600 hover:underline" onClick={() => deleteTaxAdjustment(a.id)}>Supprimer</button></td>
+                    </tr>
+                  ))}</tbody>
+                </table>
+              </div>
+            )}
+            <div className="grid gap-3 sm:grid-cols-5">
+              <Field label="Type"><Select value={adj.type} onChange={(e) => setAdj({ ...adj, type: e.target.value as "reintegration" | "deduction" })}><option value="reintegration">Réintégration</option><option value="deduction">Déduction</option></Select></Field>
+              <Field label="Libellé" required><Input value={adj.label} onChange={(e) => setAdj({ ...adj, label: e.target.value })} placeholder="Amendes fiscales, dons…" /></Field>
+              <Field label="Montant (FCFA)" required><Input value={adj.amount} onChange={(e) => setAdj({ ...adj, amount: e.target.value })} inputMode="numeric" /></Field>
+              <Field label="Référence"><Input value={adj.reference} onChange={(e) => setAdj({ ...adj, reference: e.target.value })} placeholder="Pièce, article CGI" /></Field>
+              <div className="flex items-end">
+                <Button className="w-full" onClick={() => {
+                  const res = addTaxAdjustment(company.id, { exercise, type: adj.type, label: adj.label, amount: Number(adj.amount.replace(/\s/g, "").replace(",", ".")), reference: adj.reference });
+                  if (!res.ok) { alert(res.error); return; }
+                  setAdj({ ...adj, label: "", amount: "", reference: "" });
+                }}>Ajouter</Button>
+              </div>
+            </div>
+            <p className="mt-3 text-xs text-slate-400">
+              Chaque ligne est attribuée, horodatée et scellée dans le journal d'audit. Le calcul de l'IS reprend ces montants : le même résultat fiscal alimente l'écran, la déclaration et la liasse.
+            </p>
           </Card>
           <Card className="p-5 lg:col-span-2">
             <h3 className="mb-3 font-bold text-slate-800">Explication du calcul (traçabilité)</h3>

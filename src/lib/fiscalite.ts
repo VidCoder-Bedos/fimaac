@@ -161,8 +161,55 @@ export const IS_PARAMS_DEFAUT: IsParams = {
   tauxMinimumCA: 1,
 };
 
+/** Retraitement fiscal du résultat comptable. */
+export interface FiscalAdjustments {
+  reintegrations: number;
+  deductions: number;
+}
+
+export const EMPTY_ADJUSTMENTS: FiscalAdjustments = { reintegrations: 0, deductions: 0 };
+
+/**
+ * Applique les réintégrations et déductions au résultat comptable.
+ * Une réintégration est une charge comptabilisée mais non déductible ; une
+ * déduction est un produit imposable comptablement mais non imposable.
+ * Les deux sont ramenées à des montants positifs : un signe négatif saisi par
+ * erreur ne doit pas inverser silencieusement le retraitement.
+ */
+export function applyFiscalAdjustments(
+  resultatComptable: number,
+  adjustments: FiscalAdjustments = EMPTY_ADJUSTMENTS,
+): { resultatComptable: number; reintegrations: number; deductions: number; resultatFiscal: number } {
+  const reintegrations = Math.max(0, Math.round(adjustments.reintegrations || 0));
+  const deductions = Math.max(0, Math.round(adjustments.deductions || 0));
+  return {
+    resultatComptable,
+    reintegrations,
+    deductions,
+    // Le franc est l'unité : un résultat fiscal ne se transporte pas avec des
+    // centimes, mais l'arrondi est explicite et non un effet de bord de l'UI.
+    resultatFiscal: Math.round(resultatComptable + reintegrations - deductions),
+  };
+}
+
+/** Somme des lignes d'un même type, pour un exercice donné. */
+export function totalAdjustments(
+  list: { type: "reintegration" | "deduction"; amount: number; exercise?: string }[],
+  type: "reintegration" | "deduction",
+  exercise?: string,
+): number {
+  return list
+    .filter((a) => a.type === type && (exercise === undefined || a.exercise === exercise))
+    .reduce((sum, a) => sum + Math.max(0, Math.round(a.amount || 0)), 0);
+}
+
 export interface IsComputation {
   resultatComptable: number;
+  /** Retraitements appliqués au résultat comptable. */
+  reintegrations: number;
+  deductions: number;
+  /** Résultat fiscal avant arrondi (comptable + réintégrations − déductions). */
+  resultatFiscalAvantArrondi: number;
   /** Résultat fiscal, arrondi au millier inférieur (base imposable). */
   resultatFiscalArrondi: number;
   /** IS au taux normal, sur résultat positif seulement. */
@@ -182,8 +229,13 @@ export function computeIsFiscal(
   resultatFiscal: number,
   base: FiscalBase,
   params: IsParams = IS_PARAMS_DEFAUT,
+  adjustments: FiscalAdjustments = EMPTY_ADJUSTMENTS,
 ): IsComputation {
-  const resultatFiscalArrondi = roundDown(resultatFiscal, -3);
+  // P10 : le résultat transmis est le résultat COMPTABLE ; les réintégrations et
+  // déductions sont appliquées ici, une seule fois, pour que tous les écrans
+  // (page Fiscalité, liasse, déclaration) partent du même montant.
+  const adjusted = applyFiscalAdjustments(resultatFiscal, adjustments);
+  const resultatFiscalArrondi = roundDown(adjusted.resultatFiscal, -3);
   const chiffreAffaires = base.chiffreAffaires;
 
   const minimumPerception = roundDown(
@@ -195,6 +247,9 @@ export function computeIsFiscal(
 
   return {
     resultatComptable: base.resultatComptable,
+    reintegrations: adjusted.reintegrations,
+    deductions: adjusted.deductions,
+    resultatFiscalAvantArrondi: adjusted.resultatFiscal,
     resultatFiscalArrondi,
     impotCalcule,
     minimumPerception,

@@ -16,12 +16,12 @@ Sur les deux salariés de démonstration, l'écart mesuré après correction est
 
 | Salarié | Brut | Retenues avant | Retenues après | Écart |
 |---|---|---|---|---|
-| Kossi AGBO | 450 000 | 34 500 | 68 190 | +33 690 |
-| Awa LAWSON | 350 000 | 29 500 | 51 190 | +21 690 |
+| Kossi AGBO | 450 000 | 34 500 | 75 660 | +41 160 |
+| Awa LAWSON | 350 000 | 29 500 | 57 660 | +28 160 |
 
-(chiffres après arbitrage AMU : assiette IRPP diminuée de la cotisation
-salariale AMU ; l'IRPP retenu baisse de 1 020 FCFA par salarié, l'AMU
-nouvellement retenue est de 6 000 FCFA.)
+(chiffres à AMU 5 % : l'AMU nouvellement retenue est de 15 000 FCFA par
+salarié, et l'IRPP baisse car sa base est diminuée de cette cotisation —
+48 660 pour 450 000 de brut, 31 660 pour 350 000.)
 
 (avant = CNSS 12 000 + forfait 5 % ; après = CNSS 12 000 + AMU 6 000 + IRPP
 51 210 / 34 210.)
@@ -138,10 +138,9 @@ ces trois lectures.
   salariale`, et un test vérifie que la part patronale ne modifie jamais
   l'assiette du salarié tout en contrôlant qu'une AMU salariale plus élevée
   réduit bien l'IRPP retenu.
-  **Question restante, non tranchée** : le paramétrage du dossier porte
-  AMU 2 % salarié / 4 % patronal (marqué « à vérifier »), alors que la
-  référence communiquée mentionne 5 % / 5 %. Le taux n'a pas été modifié en
-  silence — il reste paramétrable et l'arbitrage est demandé au porteur.
+  **Taux arbitrés le 28/11/2026 : AMU 5 % salarié / 5 % employeur.** Le
+  paramétrage du dossier, le jeu de règles sociales et les tests sont alignés
+  (auparavant 2 %/4 %, jamais appliqués puisque l'AMU n'était pas retenue).
 - **Charges de famille / abattements** : absents du barème chargé.
 - **Congés payés, primes, heures supplémentaires** : le brut est saisi, non
   composé. `payrollComponents` existe et n'est pas encore branché.

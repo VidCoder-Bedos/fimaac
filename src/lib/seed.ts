@@ -803,7 +803,7 @@ export function seedDatabase(): DBState {
     payslips: [],
     payrollConfig: {
       cnssEmployeeRate: 4, cnssEmployerRate: 17.5, cnssPlafond: 300000,
-      withholdingRate: 5, amuEmployeeRate: 2, amuEmployerRate: 4, amuPlafond: 300000,
+      withholdingRate: 5, amuEmployeeRate: 5, amuEmployerRate: 5, amuPlafond: 300000,
       irppBrackets: [], verified: false,
     },
     reconRules: [
@@ -842,7 +842,7 @@ export function seedDatabase(): DBState {
     ],
     socialRules: [
       { id: uid(), versionId: "reg-togo-2026", organism: "CNSS", code: "CNSS_STANDARD", name: "CNSS standard", employeeRate: 4, employerRate: 17.5, ceiling: 300000, periodicity: "monthly", active: true, source: "CNSS — À VÉRIFIER" },
-      { id: uid(), versionId: "reg-togo-2026", organism: "AMU", code: "AMU_STANDARD", name: "AMU standard", employeeRate: 2, employerRate: 4, ceiling: 300000, periodicity: "monthly", active: true, source: "AMU — À VÉRIFIER" },
+      { id: uid(), versionId: "reg-togo-2026", organism: "AMU", code: "AMU_STANDARD", name: "AMU standard", employeeRate: 5, employerRate: 5, ceiling: 300000, periodicity: "monthly", active: true, source: "AMU — 5 % salarié / 5 % employeur (taux arbitrés par le porteur le 28/11/2026)" },
     ],
     declarationTemplates: [
       { id: uid(), versionId: "reg-togo-2026", organism: "OTR", code: "TVA_MENSUELLE", name: "TVA mensuelle", periodicity: "monthly", requiredDocuments: ["Journal ventes", "Journal achats"], controls: ["TVA collectée − récupérable = nette"], portal: "DIMANA", active: true },

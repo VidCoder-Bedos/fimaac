@@ -3,7 +3,7 @@
 //
 // Constat d'audit (E.4) : `runPayroll` appliquait un forfait de 5 % au titre de
 // l'IRPP alors que 8 tranches progressives existaient, et n'appliquait JAMAIS
-// l'AMU (2 % salarié / 4 % patronal) pourtant déclarée dans `payrollConfig`
+// l'AMU (5 % salarié / 5 % patronal) pourtant déclarée dans `payrollConfig`
 // ET dans `socialRules`. Sur le dossier de démonstration (2 salariés) :
 // **49 500 FCFA/mois de retenues non collectées**, soit un risque de
 // redressement à l'échelle d'un cabinet.

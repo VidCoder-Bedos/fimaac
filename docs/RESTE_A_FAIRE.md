@@ -2,7 +2,7 @@
 
 > Registre tenu à jour à chaque lot livré. Il sert de point de reprise : tout ce
 > qui est ici est **non fait**, avec sa raison et son blocage éventuel.
-> Dernière mise à jour : 28/11/2026, après les PR #5 à #41.
+> Dernière mise à jour : 28/11/2026, après les PR #5 à #42.
 
 ## Déjà réglé (ne plus y revenir)
 
@@ -44,6 +44,7 @@
 | P24 | Écrans vides : nommer le prérequis manquant | #39 |
 | P25 | Moteurs dormants : quatre modules archivés, garde-fou de test | #40 |
 | P26 | Exports sans usage : mesure, politique, moteur factorisé requalifié en oracle | #41 |
+| P27 | `actions.ts` : doublons supprimés, exports internes refermés, clé du dossier unifiée | #42 |
 
 ## 1. Bloqué par une décision d'infrastructure (à arbitrer par le porteur)
 
@@ -173,8 +174,15 @@ Ces points ne peuvent pas avancer sans base de données et hébergement d'API.
     `docs/AUDIT_EXPORTS_MORTS.md` (archivé / oracle / conservé-documenté / à
     trancher). Le moteur factorisé (970 l.), présenté comme co-source de vérité,
     n'était importé que par les tests : il devient **oracle de
-    contre-vérification**, protégé par test. Reste : trancher **une par une** les
-    21 actions non branchées, puis `analytics`, `production`, `etatsMapping`.
+    contre-vérification**, protégé par test. ~~Actions non branchées~~ — **première
+    passe (PR #42)** : 4 doublons supprimés (`addCompany`, `addClientRequest`,
+    `createServiceRequest`, `setServiceRequestStatus`), 4 exports internes
+    refermés, et la clé `fimaac_company` unifiée dans `companyScope.ts` (elle était
+    recopiée dans trois fichiers ; le dossier actif ne survit plus à une
+    déconnexion). Reste : 6 actions à trancher (`ensureFiscalYear`,
+    `setDocCategory`, `setDocStatus`, `setDocumentRequestStatus`,
+    `runAllSubscriptions`, `togglePlanActive`), puis `analytics`, `production`,
+    `etatsMapping`.
 22. ~~**Balance 6 colonnes**~~ — **fait (PR #37)** : `parseBalance6` passe par
     `balance6.ts`, entrée = grille de texte (testable sans fichier). Les **soldes**
     sont préférés aux mouvements (une balance « Débit · Crédit · SD · SC » était

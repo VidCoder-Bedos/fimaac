@@ -1,5 +1,6 @@
 import { mutate, getDB } from "./store";
 import { uid } from "./format";
+import { storeCompanyId } from "./companyScope";
 import type {
   JournalType, TaxRegime, DeclarationStatus, DBState, DocFolder, DocStatus,
   ClientRequestStatus, PayrollConfig, DocumentRequest, EntryTemplate, JournalEntry, Payslip,
@@ -53,70 +54,24 @@ function notify(orgId: string, title: string, body: string, type: "info" | "warn
   });
 }
 
-export function currentOrgId(): string | null {
+function currentOrgId(): string | null {
   const u = getDB().users.find((x) => x.id === getDB().session.userId);
   return u?.organizationId || null;
 }
 
-export function currentUserId(): string | null {
+function currentUserId(): string | null {
   return getDB().session.userId;
 }
 
 // ---------------- Scope entreprise (sélecteur du shell) ----------------
-const COMPANY_KEY = "fimaac_company";
-
-/** Persiste l'entreprise active du scope cabinet. */
+/** Persiste l'entreprise active du scope cabinet (clé définie dans `companyScope.ts`). */
 export function setCurrentCompany(companyId: string): void {
-  try {
-    localStorage.setItem(COMPANY_KEY, companyId);
-  } catch { /* stockage indisponible */ }
+  storeCompanyId(companyId);
 }
 
-/** Entreprise active mémorisée (null si aucune). */
-export function getCurrentCompany(): string | null {
-  try {
-    return localStorage.getItem(COMPANY_KEY);
-  } catch {
-    return null;
-  }
-}
-
-/** Oublie l'entreprise active (déconnexion / changement de cabinet). */
-export function clearCurrentCompany(): void {
-  try {
-    localStorage.removeItem(COMPANY_KEY);
-  } catch { /* ignore */ }
-}
-
-// ---------------- Companies ----------------
-export function addCompany(data: Partial<{ name: string; tradeName: string; legalForm: string; nif: string; sector: string; activity: string; city: string; capital: number; taxRegime: TaxRegime; vatPayer: boolean; riskLevel: "low" | "medium" | "high" }>): void {
-  const orgId = currentOrgId();
-  if (!orgId) return;
-  const id = uid();
-  mutate((s) => {
-    s.companies.push({
-      id,
-      organizationId: orgId,
-      name: data.name || "Nouvelle entreprise",
-      tradeName: data.tradeName || data.name || "",
-      legalForm: data.legalForm || "SARL",
-      nif: data.nif || "",
-      sector: data.sector || "",
-      activity: data.activity || "",
-      city: data.city || "Lomé",
-      capital: data.capital || 0,
-      taxRegime: data.taxRegime || "ri",
-      vatPayer: data.vatPayer ?? true,
-      currency: "XOF",
-      fiscalYearStartMonth: 1,
-      riskLevel: data.riskLevel || "low",
-      cabinetOrganizationId: orgId,
-      createdAt: new Date().toISOString(),
-    });
-    s.taxProfiles.push({ id: uid(), companyId: id, regime: data.taxRegime || "ri", vatPayer: data.vatPayer ?? true, tfeLiable: true, obligations: data.vatPayer ? ["TVA mensuelle"] : [] });
-    audit(s, currentUserId() || "", orgId, "CREATE_COMPANY", "Company", id, `Création de l'entreprise ${data.name}`);
-  });
-}
+// P27 — `addCompany` (doublon de `addCompanyWithAccess`, conservé « pour
+// compatibilité » et appelé par aucun écran) a été supprimé : la création d'un
+// dossier passe par `addCompanyWithAccess`, qui crée aussi l'accès et l'audit.
 
 // ---------------- Journals / Fiscal year ----------------
 export function ensureFiscalYear(companyId: string, year: number, startMonth = 1): void {
@@ -882,18 +837,10 @@ function runOcrSim(docId: string): void {
   }, 1500);
 }
 
-// Anciens helpers conservés pour compatibilité (redirigent)
-export function addClientRequest(companyId: string, orgId: string, title: string, message: string): void {
-  createClientRequest(companyId, orgId, { id: "message", family: "comptable", label: title }, { description: message });
-}
-
-export function createServiceRequest(companyId: string, orgId: string, serviceType: string, title: string, message: string): void {
-  createClientRequest(companyId, orgId, { id: serviceType, family: "comptable", label: title }, { description: message });
-}
-
-export function setServiceRequestStatus(id: string, status: ClientRequestStatus): void {
-  setClientRequestStatus(id, status, "cabinet");
-}
+// P27 — `addClientRequest`, `createServiceRequest` et `setServiceRequestStatus`
+// n'étaient que des alias de `createClientRequest` / `setClientRequestStatus`
+// (aucun écran ne les appelait). Supprimés : les appelants utilisent la fonction
+// réelle, dont le nom dit ce qu'elle fait.
 
 // ---------------- Subscriptions / payments (SIMULATED) ----------------
 const PLAN_PRICES: Record<string, number> = { trial: 0, starter: 35_000, pro: 75_000, enterprise: 250_000 };
@@ -1388,7 +1335,7 @@ export function createFSSession(companyId: string, exercise: string, label: stri
   return id;
 }
 
-export function updateFSSession(id: string, patch: Partial<DBState["fsSessions"][number]>, historyLabel?: string): void {
+function updateFSSession(id: string, patch: Partial<DBState["fsSessions"][number]>, historyLabel?: string): void {
   const now = new Date().toISOString();
   mutate((s) => {
     const sess = s.fsSessions.find((x) => x.id === id);
@@ -1550,7 +1497,7 @@ export function deleteTaxAdjustment(id: string): void {
 }
 
 /** Retraitements d'un dossier pour un exercice, prêts pour `computeIsFiscal`. */
-export function fiscalAdjustmentsFor(companyId: string, exercise: string): { reintegrations: number; deductions: number } {
+function fiscalAdjustmentsFor(companyId: string, exercise: string): { reintegrations: number; deductions: number } {
   const list = getDB().taxAdjustments.filter((a) => a.companyId === companyId && a.exercise === exercise);
   return {
     reintegrations: totalAdjustments(list, "reintegration"),

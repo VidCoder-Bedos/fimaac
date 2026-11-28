@@ -392,3 +392,12 @@
 | Livré | `scripts/dead-exports.mjs` + `npm run audit:dead` ; `docs/AUDIT_EXPORTS_MORTS.md` ; en-têtes corrigés (`engine/index.ts`, `tax.ts`) ; `engineOracle.test.ts` (6 tests : import hors tests interdit, en-tête, accord des deux moteurs, fraîcheur documentaire). |
 | Mesures | 386 / 932 exports · imports de `lib/engine` hors `__tests__` : **0** · `runEngine.totalActif` = `buildStatements.actifTotal` = **1 000 000** · document : 3 verdicts + rôle d'oracle |
 | Vérifications | `tsc` 0 erreur · `vitest` **328/328** (6 nouveaux) |
+
+## P27 — `actions.ts` : doublons supprimés, exports refermés, clé unifiée (PR #42)
+| Point | Détail |
+|---|---|
+| Symptôme | `actions.ts` exposait 21 exports sans appelant. Quatre étaient des doublons assumés (`addCompany` « conservée pour compatibilité », trois alias de `createClientRequest` / `setClientRequestStatus`), quatre étaient des helpers **internes** exportés par erreur, et deux (`getCurrentCompany`, `clearCurrentCompany`) étaient contournés : le shell et la déconnexion recopiaient la clé `fimaac_company` en dur — **trois copies** d'une même clé. |
+| Décision | Trancher un par un : supprimer ce qui double, refermer ce qui est privé, et brancher ce que le code recopiait. Une clé dupliquée finit toujours par diverger ; ici, c'était le dossier actif qui pouvait survivre à une déconnexion. |
+| Livré | `src/lib/companyScope.ts` (clé unique + lecture/écriture/oubli, tolérant à un stockage indisponible) ; `addCompany`, `addClientRequest`, `createServiceRequest`, `setServiceRequestStatus` supprimés ; `export` retiré de `currentUserId`, `currentOrgId`, `fiscalAdjustmentsFor`, `updateFSSession` ; clic sur une notification = **lue** (`markNotificationRead`, jusqu'ici jamais appelé) ; `companyScope.test.ts` (7 tests). |
+| Mesures | exports sans usage : **386 → 376** · `actions.ts` : 21 → **10** · clé littérale `fimaac_company` : 3 fichiers → **1** · après déconnexion, `getStoredCompanyId()` = **null** · stockage en erreur ou absent : aucune exception |
+| Vérifications | `tsc` 0 erreur · `vitest` **335/335** (7 nouveaux) |

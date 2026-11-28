@@ -15,7 +15,8 @@ import { useDB } from "../lib/store";
 import { useAuth, logout } from "../lib/auth";
 import { cn } from "../utils/cn";
 import { Avatar } from "./ui";
-import { markAllNotificationsRead, setCurrentCompany } from "../lib/actions";
+import { markAllNotificationsRead, markNotificationRead, setCurrentCompany } from "../lib/actions";
+import { getStoredCompanyId } from "../lib/companyScope";
 import { ROLE_LABELS } from "../lib/permissions";
 import { relativeTime } from "../lib/format";
 
@@ -170,14 +171,19 @@ function TopBar({ onMenu, title, toolbar }: { onMenu: () => void; title: string;
                 <div className="max-h-80 overflow-y-auto">
                   {myNotifs.length === 0 && <p className="px-4 py-8 text-center text-sm text-slate-400">Aucune notification</p>}
                   {myNotifs.slice(0, 8).map((n) => (
-                    <div key={n.id} className={cn("flex gap-3 border-b border-slate-50 px-4 py-3", !n.read && "bg-indigo-50/40")}>
+                    <button
+                      key={n.id}
+                      onClick={() => { if (!n.read) markNotificationRead(n.id); }}
+                      className={cn("flex w-full gap-3 border-b border-slate-50 px-4 py-3 text-left transition hover:bg-slate-50", !n.read && "bg-indigo-50/40")}
+                      aria-label={n.read ? n.title : `${n.title} — non lue, cliquer pour marquer comme lue`}
+                    >
                       <span className={cn("mt-0.5 h-2 w-2 shrink-0 rounded-full", n.type === "danger" ? "bg-rose-500" : n.type === "warning" ? "bg-amber-500" : n.type === "success" ? "bg-emerald-500" : "bg-sky-500")} />
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-slate-800">{n.title}</p>
                         <p className="text-xs text-slate-500">{n.body}</p>
                         <p className="mt-0.5 text-[10px] text-slate-400">{relativeTime(n.createdAt)}</p>
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </motion.div>
@@ -280,7 +286,7 @@ function CompanyScopeProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const db = useDB();
   const companies = companiesForUser(db, user);
-  const [id, setId] = useState<string | null>(() => localStorage.getItem("fimaac_company") || null);
+  const [id, setId] = useState<string | null>(() => getStoredCompanyId());
   useEffect(() => {
     if (!companies.some((c) => c.id === id)) setId(companies[0]?.id || null);
   }, [companies, id]);

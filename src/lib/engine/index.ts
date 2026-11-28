@@ -1,6 +1,18 @@
 // ============================================================================
-// FIMAAC — Moteur factorisé DRY — Point d'entrée principal (DOCUMENT 5)
+// FIMAAC — Moteur factorisé DRY (DOCUMENT 5)
 // BALANCE N + BALANCE N-1 → États → Notes → Fiscalité → Contrôles
+//
+// ⚠️ RÔLE RÉEL (constaté en P26) : ce moteur n'est importé par **aucun** code de
+// l'application — seuls les tests le chargent. Il n'est donc pas une seconde
+// source de vérité : c'est un **oracle de contre-vérification**. Les montants
+// affichés viennent de `liasseEngine` et `lib/liasse` ; ici, on recalcule
+// indépendamment pour vérifier que les deux tombent d'accord (même bilan, même
+// TAFIRE, même résultat). Un oracle qui divergerait est un signal d'alarme, pas
+// un correctif automatique.
+//
+// Toute utilisation hors `__tests__` est refusée par
+// `src/lib/__tests__/engineOracle.test.ts` : si ce moteur entre un jour en
+// production, la décision devra être écrite, pas subie.
 // ============================================================================
 export * from "./types";
 export * from "./soldes";

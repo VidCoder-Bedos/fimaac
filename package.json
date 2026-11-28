@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "test": "npm run check:conflicts && vitest run",
     "test:watch": "vitest",
+    "audit:dead": "node scripts/dead-exports.mjs",
     "check:conflicts": "bash scripts/check-conflicts.sh",
     "verify": "npm run check:conflicts && tsc --noEmit && vitest run && vite build",
     "prepare": "bash scripts/install-hooks.sh || true"

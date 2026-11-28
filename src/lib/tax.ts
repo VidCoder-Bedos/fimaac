@@ -2,8 +2,9 @@
 // FIMAAC — Adaptateur d'affichage des impôts.
 //
 // ⚠️ Aucun calcul ne vit ici. Tout est délégué à `lib/fiscalite.ts`, seule
-// source de vérité, partagée avec le moteur factorisé (`lib/engine`) et avec
-// la génération de déclarations. Cette couche ne fait que mettre en forme.
+// source de vérité, partagée avec la génération de déclarations. Cette couche ne
+// fait que mettre en forme. Le moteur factorisé (`lib/engine`) n'est pas branché :
+// il sert d'oracle de contre-vérification dans les tests (voir P26).
 // ============================================================================
 import type { JournalEntry, TaxRuleRef } from "./types";
 import { movementsByAccount } from "./accounting";

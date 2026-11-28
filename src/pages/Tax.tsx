@@ -10,6 +10,7 @@ import { ventilateVat } from "../lib/tvaVentilation";
 import { totalAdjustments } from "../lib/fiscalite";
 import { trialBalance } from "../lib/accounting";
 import { suggestAdjustments, describeSuggestions } from "../lib/taxSuggestions";
+import { missingFor } from "../lib/emptyStates";
 import { resolveTaxRule, profileOfCompany, describeProfile, TAX_REGIME_CODES, TAX_REGIME_LABELS } from "../lib/taxRegime";
 import { setCompanyTaxProfile } from "../lib/actions";
 import type { TaxRegime } from "../lib/types";
@@ -206,7 +207,16 @@ export default function Tax() {
         <div className="space-y-6">
           <Card className="p-5">
             <SectionHeading title="Déclarations générées" />
-            {declarations.length === 0 ? <p className="text-sm text-slate-400">Aucune déclaration. Générez la TVA depuis l'onglet Calculs.</p> : (
+            {declarations.length === 0 ? (
+              <div>
+                <p className="text-sm text-slate-400">Aucune déclaration. Générez la TVA depuis l'onglet Calculs.</p>
+                {missingFor("fiscalite", db, companyId) ? (
+                  <p className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-amber-50 px-2.5 py-1 text-xs text-amber-800">
+                    <Info size={12} /> {missingFor("fiscalite", db, companyId)!.message}
+                  </p>
+                ) : null}
+              </div>
+            ) : (
               <div className="space-y-2">{declarations.map((d) => <div key={d.id} className="flex items-center justify-between rounded-xl border border-slate-100 px-4 py-3"><div><p className="font-semibold text-slate-800">{d.taxCode} · {d.periodLabel}</p><p className="text-xs text-slate-400">Échéance {formatDate(d.dueDate)} · {fcfa(d.amount)}</p></div><StatusBadge status={d.status} /></div>)}</div>
             )}
           </Card>

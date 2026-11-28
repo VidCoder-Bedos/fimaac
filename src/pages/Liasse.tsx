@@ -2,6 +2,7 @@ import { Fragment, useMemo, useState } from "react";
 import { FileSpreadsheet, Upload, FileDown, AlertTriangle, CheckCircle2, XCircle, Info, Wand2, ShieldCheck } from "lucide-react";
 import { useDB } from "../lib/store";
 import { useCompanyScope, Page } from "../components/Layout";
+import { missingFor } from "../lib/emptyStates";
 import { Card, Button, Badge, EmptyState, SectionHeading, Tabs, Spinner, Input, Field, Modal } from "../components/ui";
 import { parseBalanceReport, buildStatements, runChecks, exportLiasseXlsx, fillTemplate, downloadWorkbook } from "../lib/liasse";
 import type { BalanceImportResult } from "../lib/balanceImport";
@@ -241,7 +242,7 @@ export default function Liasse() {
       {tab === "checks" && (
         <Card className="p-5">
           <SectionHeading title="Rapport de cohérence & conformité" subtitle="Confrontation bilan / compte de résultat / balance" />
-          {!stmt ? <EmptyState icon={<ShieldCheck />} title="Importez une Balance N pour lancer les contrôles" /> : (
+          {!stmt ? <EmptyState icon={<ShieldCheck />} title="Importez une Balance N pour lancer les contrôles" next={missingFor("liasse", db, company.id) ?? undefined} /> : (
             <>
               <div className="mb-4 grid grid-cols-3 gap-3 text-center">
                 <div className="rounded-xl bg-emerald-50 p-3"><p className="text-2xl font-black text-emerald-600">{checks.filter((c) => c.status === "ok").length}</p><p className="text-xs text-slate-500">Conformes</p></div>
@@ -262,7 +263,7 @@ export default function Liasse() {
       {tab === "tafire" && (
         <div className="space-y-6">
           {!tafire ? (
-            <Card className="p-5"><EmptyState icon={<FileSpreadsheet />} title="Importez une balance N" description="Le TAFIRE se calcule à partir des balances N-1 et N." /></Card>
+            <Card className="p-5"><EmptyState icon={<FileSpreadsheet />} title="Importez une balance N" description="Le TAFIRE se calcule à partir des balances N-1 et N." next={missingFor("liasse", db, company.id) ?? undefined} /></Card>
           ) : (
             <>
               <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

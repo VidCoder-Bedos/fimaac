@@ -13,6 +13,7 @@ import { missingThirdPartyLines, groupMissingTiers, tiersForAccount, describeAss
 import type { Account, Journal, JournalEntry, JournalEntryLine, ThirdParty, AccountingPeriod, DBState } from "../lib/types";
 import { auditNumbering } from "../lib/entryNumbering";
 import { auditFiscalYearPlacement } from "../lib/periods";
+import { missingFor } from "../lib/emptyStates";
 import AccountInquiry from "../components/AccountInquiry";
 import { EntryEditor } from "../components/EntryEditor";
 import { Can } from "../components/Can";
@@ -78,6 +79,7 @@ export default function Accounting() {
         <PlacementCard entries={entries} fiscalYears={db.fiscalYears} periods={db.periods} />
         <EntriesView
           entries={entries}
+          companyId={company.id}
           accounts={db.accounts}
           documents={db.documents.filter((d) => d.companyId === company.id)}
           onEdit={(e) => { setEditing(e); setEditorOpen(true); }}
@@ -254,8 +256,9 @@ function JournalsView({ journals, companyId }: { journals: Journal[]; companyId:
 }
 
 /* ---------------- Entries ---------------- */
-function EntriesView({ entries, accounts, documents, onEdit, onAttachments, onViewDoc }: {
+function EntriesView({ entries, accounts, documents, companyId, onEdit, onAttachments, onViewDoc }: {
   entries: JournalEntry[];
+  companyId: string;
   accounts: Account[];
   documents: DocumentItem[];
   onEdit: (e: JournalEntry) => void;
@@ -278,7 +281,12 @@ function EntriesView({ entries, accounts, documents, onEdit, onAttachments, onVi
           <button key={s} onClick={() => setFilter(s)} className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${filter === s ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-600"}`}>{s === "all" ? "Toutes" : s === "draft" ? "Brouillons" : s === "validated" ? "Validées" : s === "rejected" ? "Rejetées" : "En revue"}</button>
         ))}
       </div>
-      {filtered.length === 0 ? <EmptyState icon={<FileText />} title="Aucune écriture" description="Créez votre première écriture comptable." /> : (
+      {filtered.length === 0 ? <EmptyState
+        icon={<FileText />}
+        title="Aucune écriture"
+        description="Créez votre première écriture comptable."
+        next={missingFor("ecritures", db, companyId) ?? undefined}
+      /> : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">

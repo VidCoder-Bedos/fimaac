@@ -11,6 +11,7 @@ import { buildStatements, runChecks } from "../lib/liasse";
 import { runCrossChecks } from "../lib/crossCheck";
 import PrintSheet from "../components/PrintSheet";
 import StatementsPrint from "../components/StatementsPrint";
+import { buildFec } from "../lib/fec";
 
 function downloadCSV(name: string, rows: (string | number)[][]) {
   const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(";")).join("\n");
@@ -106,6 +107,9 @@ export function Financials() {
     </Page>
   );
 }
+function Mini({ label, value }: { label: string; value: string }) {
+  return <div className="rounded-xl bg-slate-50 px-4 py-3"><p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</p><p className="mt-1 font-black tabular-nums text-slate-800">{value}</p></div>;
+}
 function Row({ label, value, tone, bold }: { label: string; value: string; tone: "debit" | "credit"; bold?: boolean }) {
   return <div className="flex items-center justify-between rounded-lg px-3 py-2 text-sm"><span className={bold ? "font-black text-slate-900" : "text-slate-600"}>{label}</span><span className={`tabular-nums ${bold ? "text-lg font-black" : "font-semibold"} ${tone === "credit" ? "text-emerald-600" : "text-slate-800"}`}>{value}</span></div>;
 }
@@ -123,6 +127,7 @@ export function Reports() {
   const aux = auxiliaryLedger(entries, db.journals, tiers);
   const aged = agedBalance(entries, tiers);
   const eche = echeancier(entries, tiers);
+  const fec = buildFec(entries, db.journals, db.accounts, tiers);
   const aPayer = eche.filter((e) => e.type === "supplier");
   const aRecevoir = eche.filter((e) => e.type === "customer");
   const exportBalance = () => downloadCSV(`balance_${company.name}.csv`, [["Compte", "Libellé", "Débit", "Crédit", "Solde D", "Solde C"], ...tb.map((r) => [r.code, r.label, r.debit, r.credit, r.soldeDebit, r.soldeCredit])]);
@@ -136,7 +141,64 @@ export function Reports() {
       {tab === "aux" && (<Card className="p-5"><SectionHeading title="Grand livre auxiliaire" action={<Button size="sm" variant="outline" onClick={exportAux}><Download size={14} /> CSV</Button>} />{aux.length === 0 ? <EmptyState icon={<FileText />} title="Aucun tiers" /> : (<div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-400"><th className="px-3 py-2">Code</th><th className="px-3 py-2">Tiers</th><th className="px-3 py-2">Type</th><th className="px-3 py-2 text-right">Débit</th><th className="px-3 py-2 text-right">Crédit</th><th className="px-3 py-2 text-right">Solde</th></tr></thead><tbody>{aux.map((a) => (<tr key={a.tier.id} className="border-b border-slate-50"><td className="px-3 py-2.5 font-mono">{a.tier.code}</td><td className="px-3 py-2.5 font-medium text-slate-800">{a.tier.name}</td><td className="px-3 py-2.5"><Badge tone={a.tier.type === "customer" ? "indigo" : "sky"}>{a.tier.type === "customer" ? "Client" : "Fournisseur"}</Badge></td><td className="px-3 py-2.5 text-right tabular-nums">{fcfa(a.totalDebit)}</td><td className="px-3 py-2.5 text-right tabular-nums">{fcfa(a.totalCredit)}</td><td className="px-3 py-2.5 text-right font-semibold tabular-nums text-indigo-600">{fcfa(a.solde)}</td></tr>))}</tbody></table></div>)}</Card>)}
       {tab === "aged" && (<Card className="p-5"><SectionHeading title="Balance âgée" action={<Button size="sm" variant="outline" onClick={() => exportAgedCSV(aged, `balance_agee_${company.name}.csv`)}><Download size={14} /> CSV</Button>} />{aged.length === 0 ? <EmptyState icon={<BarChart3 />} title="Aucun encours" /> : (<div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-400"><th className="px-3 py-2">Tiers</th><th className="px-3 py-2 text-right">0-30 j</th><th className="px-3 py-2 text-right">31-60 j</th><th className="px-3 py-2 text-right">61-90 j</th><th className="px-3 py-2 text-right">+90 j</th><th className="px-3 py-2 text-right">Total</th></tr></thead><tbody>{aged.map((r) => (<tr key={r.tier.id} className="border-b border-slate-50"><td className="px-3 py-2.5"><p className="font-medium text-slate-800">{r.tier.name}</p><p className="text-xs text-slate-400">{r.tier.type === "customer" ? "Client" : "Fournisseur"}</p></td><td className="px-3 py-2.5 text-right tabular-nums">{fcfa(r.tranches[0])}</td><td className="px-3 py-2.5 text-right tabular-nums">{fcfa(r.tranches[1])}</td><td className="px-3 py-2.5 text-right tabular-nums">{fcfa(r.tranches[2])}</td><td className="px-3 py-2.5 text-right tabular-nums text-rose-600">{fcfa(r.tranches[3])}</td><td className="px-3 py-2.5 text-right font-bold tabular-nums text-slate-800">{fcfa(r.total)}</td></tr>))}</tbody></table></div>)}</Card>)}
       {tab === "eche" && (<div className="space-y-6"><Card className="p-5"><SectionHeading title="À payer (fournisseurs)" subtitle={`${aPayer.length} facture(s)`} action={<Button size="sm" variant="outline" onClick={() => exportEcheancierCSV(aPayer, `echeancier_payer_${company.name}.csv`)}><Download size={14} /> CSV</Button>} />{aPayer.length === 0 ? <EmptyState icon={<ListChecks />} title="Rien à payer" /> : (<div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-400"><th className="px-3 py-2">Tiers</th><th className="px-3 py-2">Pièce</th><th className="px-3 py-2">Échéance</th><th className="px-3 py-2 text-right">Montant</th><th className="px-3 py-2">Statut</th></tr></thead><tbody>{aPayer.map((e, i) => (<tr key={i} className="border-b border-slate-50"><td className="px-3 py-2.5 text-slate-700">{e.tier}</td><td className="px-3 py-2.5 font-mono text-xs text-slate-500">{e.number}</td><td className="px-3 py-2.5 text-slate-500">{formatDate(e.due)}</td><td className="px-3 py-2.5 text-right font-semibold tabular-nums text-rose-600">{fcfa(e.amount)}</td><td className="px-3 py-2.5">{e.overdue ? <Badge tone="rose">Retard</Badge> : <Badge tone="amber">{e.days} j</Badge>}</td></tr>))}</tbody></table></div>)}</Card><Card className="p-5"><SectionHeading title="À recevoir (clients)" subtitle={`${aRecevoir.length} facture(s)`} action={<Button size="sm" variant="outline" onClick={() => exportEcheancierCSV(aRecevoir, `echeancier_recevoir_${company.name}.csv`)}><Download size={14} /> CSV</Button>} />{aRecevoir.length === 0 ? <EmptyState icon={<ListChecks />} title="Rien à recevoir" /> : (<div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-400"><th className="px-3 py-2">Tiers</th><th className="px-3 py-2">Pièce</th><th className="px-3 py-2">Échéance</th><th className="px-3 py-2 text-right">Montant</th><th className="px-3 py-2">Statut</th></tr></thead><tbody>{aRecevoir.map((e, i) => (<tr key={i} className="border-b border-slate-50"><td className="px-3 py-2.5 text-slate-700">{e.tier}</td><td className="px-3 py-2.5 font-mono text-xs text-slate-500">{e.number}</td><td className="px-3 py-2.5 text-slate-500">{formatDate(e.due)}</td><td className="px-3 py-2.5 text-right font-semibold tabular-nums text-emerald-600">{fcfa(e.amount)}</td><td className="px-3 py-2.5">{e.overdue ? <Badge tone="rose">Retard</Badge> : <Badge tone="amber">{e.days} j</Badge>}</td></tr>))}</tbody></table></div>)}</Card></div>)}
-      {tab === "fec" && (<Card className="p-5"><SectionHeading title="Export FEC (Fichier des Écritures Comptables)" subtitle="Format pipe (|) — prêt pour contrôle fiscal" /><div className="rounded-xl bg-slate-50 p-4 font-mono text-[11px] text-slate-500">JournalCode|JournalLib|EcritureNum|EcritureDate|CompteNum|CompteLib|CompAuxNum|PieceRef|EcritureLib|Debit|Credit|EcritureLet|DateRglt|ValidDate|Montantdevise</div><Button className="mt-4" onClick={() => exportFEC(entries, db.journals, db.accounts, company.name)}><Download size={15} /> Générer le FEC (.txt)</Button></Card>)}
+      {tab === "fec" && (
+        <div className="space-y-6">
+          <Card className="p-5">
+            <SectionHeading
+              title="Export FEC (Fichier des Écritures Comptables)"
+              subtitle="18 colonnes normalisées · point décimal · devise renseignée"
+              action={<Button size="sm" onClick={() => exportFEC(entries, db.journals, db.accounts, company.name, tiers)}><Download size={14} /> Générer le FEC (.txt)</Button>}
+            />
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Mini label="Écritures validées" value={String(fec.entryCount)} />
+              <Mini label="Lignes exportées" value={String(fec.lineCount)} />
+              <Mini label="Σ débit / Σ crédit" value={`${fcfa(fec.totals.debit)} / ${fcfa(fec.totals.credit)}`} />
+            </div>
+            <div className="mt-4 overflow-x-auto rounded-xl bg-slate-50 p-4 font-mono text-[11px] leading-relaxed text-slate-500">
+              {fec.header.join("|")}
+            </div>
+            <div className="mt-4 space-y-2">
+              {fec.controls.map((c) => (
+                <div key={c.id} className="flex items-start gap-3 rounded-xl border border-slate-100 px-3 py-2.5">
+                  {c.level === "ok" ? <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-emerald-500" /> : <AlertTriangle size={16} className={`mt-0.5 shrink-0 ${c.level === "blocking" ? "text-rose-500" : "text-amber-500"}`} />}
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-slate-800">{c.label}</p>
+                    <p className="text-xs text-slate-500">{c.detail}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {fec.blockingCount > 0 && (
+              <p className="mt-4 rounded-xl bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+                {fec.blockingCount} contrôle(s) bloquant(s) : le fichier ne doit pas être déposé en l'état.
+              </p>
+            )}
+          </Card>
+          <Card className="p-5">
+            <SectionHeading title="Aperçu des premières lignes" subtitle="Tronqué à 12 lignes" />
+            {fec.rows.length === 0 ? <EmptyState icon={<ListChecks />} title="Aucune écriture validée" /> : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead><tr className="border-b border-slate-100 text-left font-semibold uppercase text-slate-400">{["Journal", "N°", "Date", "Compte", "Tiers", "Libellé", "Débit", "Crédit", "Valid."].map((h) => <th key={h} className="whitespace-nowrap px-2 py-2">{h}</th>)}</tr></thead>
+                  <tbody>{fec.rows.slice(0, 12).map((r, i) => (
+                    <tr key={i} className="border-b border-slate-50">
+                      <td className="px-2 py-2 font-mono">{r[0]}</td>
+                      <td className="px-2 py-2 font-mono">{r[2]}</td>
+                      <td className="px-2 py-2 font-mono">{r[3]}</td>
+                      <td className="px-2 py-2 font-mono">{r[4]}</td>
+                      <td className="px-2 py-2">{r[6] || "—"}</td>
+                      <td className="max-w-[220px] truncate px-2 py-2 text-slate-600">{r[10]}</td>
+                      <td className="px-2 py-2 text-right tabular-nums">{r[11] === "0.00" ? "" : r[11]}</td>
+                      <td className="px-2 py-2 text-right tabular-nums">{r[12] === "0.00" ? "" : r[12]}</td>
+                      <td className="px-2 py-2 font-mono">{r[15]}</td>
+                    </tr>
+                  ))}</tbody>
+                </table>
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
     </Page>
   );
 }

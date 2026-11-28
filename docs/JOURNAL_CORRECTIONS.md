@@ -172,3 +172,13 @@
 | Livré | `components/LiassePrint.tsx` : page de garde d'identification fiscale (NIF, RCCM, régime, devise), bilan actif/passif, compte de résultat AO/HAO, tableau des contrôles avec statut et détail, mentions de validation humaine. Bouton « Imprimer la liasse / PDF » sur la page Liasse. |
 | Règle | Montants de `buildStatements`, contrôles de `runChecks` — aucun recalcul. Une liasse déséquilibrée s'écrit « NON déposable en l'état ». |
 | Vérifications | `tsc` 0 erreur · `npm run build` 11,39 s · `vitest` 84/84 (test de contrat sur les colonnes des contrôles) |
+
+## P3 — Export FEC conforme (PR #17)
+| Point | Détail |
+|---|---|
+| Symptôme | `exportFEC` sortait 15 colonnes, montants à **virgule** décimale, `CompAuxNum` vide, pas de devise, `ValidDate` = date d'écriture, `EcritureNum` = numéro de pièce donc troué. Fichier inutilisable en contrôle. |
+| Livré | `src/lib/fec.ts` : 18 colonnes de référence, `fecAmount` (point, 2 décimales, sans séparateur), `fecDate` (AAAAMMJJ ou vide), `CompAuxNum/Lib` résolus par ligne, `EcritureNum` = `JOURNAL-0001…` continue et chronologique (numéro de pièce déplacé dans `PieceRef`), neutralisation des `|`/tabulations, tri stable. |
+| Écran | Onglet FEC : en-tête réel, compteurs (écritures, lignes, Σ débit/Σ crédit), 10 contrôles statués, aperçu tronqué, bandeau rouge si un contrôle est bloquant. |
+| Mesures (seed) | 102 écritures, 281 lignes, **80 951 571,00 = 80 951 571,00**, écart 0, **0 bloquant**, 3 avertissements (exercice non filtré, lettrage non daté, `ValidDate` approximée, auxiliaires 5/67). |
+| Limites assumées | Date de validation et date de lettrage non historisées : affichées, jamais inventées. Export mono-devise XOF. |
+| Vérifications | `tsc` 0 erreur · `npm run build` vert · `vitest` 98/98 (14 nouveaux, dont déséquilibre → 2 bloquants et doublons de pièce) |

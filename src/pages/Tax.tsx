@@ -8,6 +8,8 @@ import { generateTvaDeclaration, generateIsDeclaration, updateTaxRate, setDeadli
 import { fcfa, formatDate } from "../lib/format";
 import { ventilateVat } from "../lib/tvaVentilation";
 import { totalAdjustments } from "../lib/fiscalite";
+import { trialBalance } from "../lib/accounting";
+import { suggestAdjustments, describeSuggestions } from "../lib/taxSuggestions";
 import type { TaxRuleRef, DeclarationStatus } from "../lib/types";
 import { toast } from "../lib/toast";
 
@@ -29,6 +31,15 @@ export default function Tax() {
   const deadlines = db.taxDeadlines.filter((d) => d.companyId === companyId);
   const declarations = db.taxDeclarations.filter((d) => d.companyId === companyId);
   const vat = useMemo(() => ventilateVat(entries, db.accounts), [entries, db.accounts]);
+  // P20 — comptes de nature non déductible : on propose, le fiscaliste décide.
+  const suggestions = useMemo(
+    () => suggestAdjustments(
+      trialBalance(entries, db.accounts).map((r) => ({ code: r.code, label: r.label, debit: r.debit, credit: r.credit })),
+      db.taxAdjustments,
+      exercise,
+    ),
+    [entries, db.accounts, db.taxAdjustments, exercise],
+  );
   if (!company) return <Page><EmptyState icon={<Receipt />} title="Sélectionnez une entreprise" /></Page>;
   return (
     <Page>
@@ -75,6 +86,38 @@ export default function Tax() {
               <p className="mb-4 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-500">Aucun retraitement saisi pour l'exercice {exercise}. Le résultat fiscal est alors égal au résultat comptable — aucune réintégration n'est supposée.</p>
             ) : (
               <div className="mb-4 overflow-x-auto rounded-xl border border-slate-100">
+                <div className="mb-4 rounded-xl border border-indigo-100 bg-indigo-50/50 p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-indigo-700">Réintégrations proposées — exercice {exercise}</p>
+                    <span className="text-[11px] text-indigo-700">{describeSuggestions(suggestions)}</span>
+                  </div>
+                  {suggestions.length === 0 ? (
+                    <p className="mt-2 text-xs text-slate-500">Aucun compte de nature non déductible trouvé (pénalités 647x, dons 6582/6583/835, jetons 6581).</p>
+                  ) : (
+                    <div className="mt-2 space-y-2">
+                      {suggestions.map((sg) => (
+                        <div key={sg.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-white px-3 py-2">
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-slate-800">{sg.label} · <span className="tabular-nums">{fcfa(sg.amount)}</span></p>
+                            <p className="text-[11px] text-slate-500">{sg.rationale} <span className="text-slate-400">({sg.accounts.map((a) => a.code).join(", ")})</span></p>
+                          </div>
+                          {sg.alreadyRecorded ? (
+                            <Badge tone="emerald">Reprise</Badge>
+                          ) : (
+                            <Button size="sm" variant="outline" onClick={() => {
+                              const res = addTaxAdjustment(company.id, { exercise, type: sg.type, label: sg.label, amount: sg.amount, reference: sg.reference, suggestionId: sg.id });
+                              if (!res.ok) { toast(res.error); return; }
+                              toast("Réintégration reprise.", "Montant et origine conservés dans le journal d'audit.", "success");
+                            }}>
+                              Reprendre
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <p className="mt-2 text-[11px] text-slate-500">Un compte proposé n'est pas une décision : la déductibilité dépend des pièces et du texte applicable. Rien n'est enregistré sans votre clic.</p>
+                </div>
                 <table className="w-full text-sm">
                   <thead className="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-400"><tr><th className="px-3 py-2">Type</th><th className="px-3 py-2">Libellé</th><th className="px-3 py-2">Référence</th><th className="px-3 py-2 text-right">Montant</th><th className="px-3 py-2" /></tr></thead>
                   <tbody>{exerciseAdjustments.map((a) => (

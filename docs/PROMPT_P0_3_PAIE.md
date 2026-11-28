@@ -16,8 +16,12 @@ Sur les deux salariés de démonstration, l'écart mesuré après correction est
 
 | Salarié | Brut | Retenues avant | Retenues après | Écart |
 |---|---|---|---|---|
-| Kossi AGBO | 450 000 | 34 500 | 69 210 | +34 710 |
-| Awa LAWSON | 350 000 | 29 500 | 52 210 | +22 710 |
+| Kossi AGBO | 450 000 | 34 500 | 68 190 | +33 690 |
+| Awa LAWSON | 350 000 | 29 500 | 51 190 | +21 690 |
+
+(chiffres après arbitrage AMU : assiette IRPP diminuée de la cotisation
+salariale AMU ; l'IRPP retenu baisse de 1 020 FCFA par salarié, l'AMU
+nouvellement retenue est de 6 000 FCFA.)
 
 (avant = CNSS 12 000 + forfait 5 % ; après = CNSS 12 000 + AMU 6 000 + IRPP
 51 210 / 34 210.)
@@ -122,9 +126,22 @@ ces trois lectures.
 
 ## 11. Points ouverts (assumés)
 
-- **AMU dans l'assiette IRPP** : non tranché. Le code conserve la règle
-  existante (brut − CNSS) et le documente. Décision à prendre avec un
-  fiscaliste, pas dans un commit.
+- **AMU dans l'assiette IRPP — TRANCHÉ le 28/11/2026.** Décision du porteur :
+  la cotisation salariale AMU est déductible de l'assiette de l'IRPP sur
+  traitements et salaires, en application de **l'article 26 du CGI togolais**
+  (« sont déduits du revenu brut imposable […] les retenues pour constitution
+  de pensions ou de retraites relevant d'un régime obligatoire de prévoyance
+  […] et les cotisations salariales aux assurances sociales et assurances
+  maladies obligatoires »). Seule la part salariale est déductible ; la part
+  patronale reste une charge de l'employeur.
+  Le code applique désormais : `assiette IRPP = brut − CNSS salariale − AMU
+  salariale`, et un test vérifie que la part patronale ne modifie jamais
+  l'assiette du salarié tout en contrôlant qu'une AMU salariale plus élevée
+  réduit bien l'IRPP retenu.
+  **Question restante, non tranchée** : le paramétrage du dossier porte
+  AMU 2 % salarié / 4 % patronal (marqué « à vérifier »), alors que la
+  référence communiquée mentionne 5 % / 5 %. Le taux n'a pas été modifié en
+  silence — il reste paramétrable et l'arbitrage est demandé au porteur.
 - **Charges de famille / abattements** : absents du barème chargé.
 - **Congés payés, primes, heures supplémentaires** : le brut est saisi, non
   composé. `payrollComponents` existe et n'est pas encore branché.

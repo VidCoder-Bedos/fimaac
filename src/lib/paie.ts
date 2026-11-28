@@ -85,7 +85,7 @@ export function paieParamsFromConfig(cfg: PayrollConfig, brackets: TaxBracket[] 
  *
  * Hypothèses explicites (à valider par un humain, jamais présentées comme
  * certifiées) :
- *  - assiette IRPP = brut − CNSS salariale (règle existante, conservée) ;
+ *  - assiette IRPP = brut − CNSS salariale − AMU salariale (art. 26 CGI) ;
  *  - IRPP progressif calculé sur 12 mois puis ramené au mois ;
  *  - CNSS et AMU plafonnées chacune à leur propre plafond d'assiette ;
  *  - aucun abattement forfaitaire ni charge de famille n'est appliqué.
@@ -103,11 +103,14 @@ export function calculerBulletin(gross: number, params: PaieParams): BulletinCal
   if (!params.cnss.plafond) alertes.push("Plafond CNSS non renseigné : cotisations calculées sur le brut entier.");
   if (!params.amu.plafond) alertes.push("Plafond AMU non renseigné : cotisations calculées sur le brut entier.");
 
-  // Assiette IRPP : brut diminué de la seule CNSS salariale — c'est la règle
-  // déjà portée par `calculatePaycheck` (regulatory-engine.ts), conservée telle
-  // quelle pour ne pas modifier une règle fiscale sans validation humaine.
-  // La déductibilité de l'AMU de l'assiette IRPP reste une question ouverte.
-  const assietteIRPP = Math.max(0, gross - cnssEmployee);
+  // Assiette IRPP : brut − cotisations salariales d'assurances sociales et
+  // d'assurance maladie obligatoire. Base juridique arbitrée (28/11/2026) :
+  // article 26 du CGI togolais — « sont déduits du revenu brut imposable les
+  // retenues pour pensions/retraites d'un régime obligatoire et les cotisations
+  // salariales aux assurances sociales et assurances maladies obligatoires ».
+  // Seule la part SALARIALE est déductible ; la part patronale est une charge
+  // de l'employeur et n'entre jamais dans le revenu du salarié.
+  const assietteIRPP = Math.max(0, gross - cnssEmployee - amuEmployee);
   const brackets = [...(params.irppBrackets ?? [])].sort((a, b) => a.order - b.order);
 
   let irpp = 0;

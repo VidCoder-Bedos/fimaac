@@ -200,14 +200,20 @@ export function Payroll() {
   const cfg = db.payrollConfig;
   const [period, setPeriod] = useState(new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(new Date()));
   const [edit, setEdit] = useState(false);
-  const [rates, setRates] = useState({ cnssEmployeeRate: String(cfg.cnssEmployeeRate), cnssEmployerRate: String(cfg.cnssEmployerRate), cnssPlafond: String(cfg.cnssPlafond), withholdingRate: String(cfg.withholdingRate) });
+  const [rates, setRates] = useState({
+    cnssEmployeeRate: String(cfg.cnssEmployeeRate), cnssEmployerRate: String(cfg.cnssEmployerRate),
+    cnssPlafond: String(cfg.cnssPlafond), withholdingRate: String(cfg.withholdingRate),
+    amuEmployeeRate: String(cfg.amuEmployeeRate), amuEmployerRate: String(cfg.amuEmployerRate),
+    amuPlafond: String(cfg.amuPlafond),
+  });
+  const irppTranches = db.taxBrackets.filter((b) => b.taxCode === "IRPP").length;
   if (!company) return <Page><EmptyState icon={<Users />} title="Sélectionnez une entreprise" /></Page>;
   const totalGross = employees.reduce((s, e) => s + e.grossSalary, 0);
   const totalNet = payslips.filter((p) => p.periodLabel === period).reduce((s, p) => s + p.net, 0);
   return (
     <Page>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-xl font-black tracking-tight text-slate-900">Paie & social</h2><p className="text-sm text-slate-500">{company.tradeName || company.name}</p></div><Button size="sm" variant="outline" onClick={() => setEdit(true)}><Calculator size={15} /> Taux</Button></div>
-      <div className="mb-4 flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-700"><AlertTriangle size={14} className="mt-0.5 shrink-0" /> Taux CNSS/ITS <b>paramétrables et à vérifier</b> contre les barèmes officiels. Statut : {cfg.verified ? "vérifié" : "non vérifié"}.</div>
+      <div className="mb-4 flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-700"><AlertTriangle size={14} className="mt-0.5 shrink-0" /> Taux CNSS / AMU / IRPP <b>paramétrables et à vérifier</b> contre les barèmes officiels. Statut : {cfg.verified ? "vérifié" : "non vérifié"}. Calcul appliqué : {irppTranches > 0 ? `IRPP progressif (${irppTranches} tranches) + CNSS + AMU` : "forfait de repli (aucun barème chargé)"}.</div>
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard title="Employés" value={String(employees.length)} icon={<Users size={18} />} tone="indigo" />
         <StatCard title="Masse brute" value={fcfa(totalGross)} icon={<Calculator size={18} />} tone="amber" />
@@ -217,14 +223,20 @@ export function Payroll() {
       <Card className="mb-6 p-5"><SectionHeading title="Lancer la paie" subtitle="Génère les bulletins + une écriture comptable équilibrée (brouillon)" />
         <div className="flex flex-wrap items-end gap-3">
           <Field label="Période"><Input value={period} onChange={(e) => setPeriod(e.target.value)} className="w-56" /></Field>
-          <Button onClick={() => { const r = runPayroll(company.id, period); alert(r.entryCreated ? `Paie ${period} : ${r.slips} bulletin(s) + écriture de paie en brouillon.` : `Paie ${period} : ${r.slips} bulletin(s) générés. ⚠️ Créez un journal « Paie » pour générer l'écriture comptable.`); }}><Calculator size={15} /> Calculer & générer</Button>
+          <Button onClick={() => {
+            const r = runPayroll(company.id, period);
+            const base = r.entryCreated
+              ? `Paie ${period} : ${r.slips} bulletin(s) + écriture de paie en brouillon.`
+              : `Paie ${period} : ${r.slips} bulletin(s) générés. ⚠️ Créez un journal « Paie » pour générer l'écriture comptable.`;
+            alert(r.alertes?.length ? `${base}\n\n⚠️ ${r.alertes.join("\n⚠️ ")}` : base);
+          }}><Calculator size={15} /> Calculer & générer</Button>
         </div>
       </Card>
       {payslips.length > 0 && (
         <Card className="mb-6 p-5"><SectionHeading title="Derniers bulletins" />
-          <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-400"><th className="px-3 py-2">Employé</th><th className="px-3 py-2">Période</th><th className="px-3 py-2 text-right">Brut</th><th className="px-3 py-2 text-right">CNSS sal.</th><th className="px-3 py-2 text-right">Retenue</th><th className="px-3 py-2 text-right">Net</th></tr></thead>
+          <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-400"><th className="px-3 py-2">Employé</th><th className="px-3 py-2">Période</th><th className="px-3 py-2 text-right">Brut</th><th className="px-3 py-2 text-right">CNSS sal.</th><th className="px-3 py-2 text-right">AMU sal.</th><th className="px-3 py-2 text-right">IRPP</th><th className="px-3 py-2 text-right">Net</th></tr></thead>
             <tbody>{payslips.slice(0, 12).map((p) => { const emp = employees.find((e) => e.id === p.employeeId); return (
-              <tr key={p.id} className="border-b border-slate-50"><td className="px-3 py-2.5 font-medium text-slate-800">{emp ? `${emp.firstName} ${emp.lastName}` : "—"}</td><td className="px-3 py-2.5 text-slate-500">{p.periodLabel}</td><td className="px-3 py-2.5 text-right tabular-nums">{fcfa(p.gross)}</td><td className="px-3 py-2.5 text-right tabular-nums text-rose-500">{fcfa(p.cnssEmployee)}</td><td className="px-3 py-2.5 text-right tabular-nums text-rose-500">{fcfa(p.withholding)}</td><td className="px-3 py-2.5 text-right font-bold tabular-nums text-emerald-600">{fcfa(p.net)}</td></tr>
+              <tr key={p.id} className="border-b border-slate-50"><td className="px-3 py-2.5 font-medium text-slate-800">{emp ? `${emp.firstName} ${emp.lastName}` : "—"}</td><td className="px-3 py-2.5 text-slate-500">{p.periodLabel}</td><td className="px-3 py-2.5 text-right tabular-nums">{fcfa(p.gross)}</td><td className="px-3 py-2.5 text-right tabular-nums text-rose-500">{fcfa(p.cnssEmployee)}</td><td className="px-3 py-2.5 text-right tabular-nums text-rose-500">{fcfa(p.amuEmployee ?? 0)}</td><td className="px-3 py-2.5 text-right tabular-nums text-rose-500">{fcfa(p.irpp ?? p.withholding)}</td><td className="px-3 py-2.5 text-right font-bold tabular-nums text-emerald-600">{fcfa(p.net)}</td></tr>
             ); })}</tbody>
           </table></div>
         </Card>
@@ -242,9 +254,13 @@ export function Payroll() {
             <Field label="CNSS salarié (%)"><Input value={rates.cnssEmployeeRate} onChange={(e) => setRates({ ...rates, cnssEmployeeRate: e.target.value })} inputMode="numeric" /></Field>
             <Field label="CNSS employeur (%)"><Input value={rates.cnssEmployerRate} onChange={(e) => setRates({ ...rates, cnssEmployerRate: e.target.value })} inputMode="numeric" /></Field>
             <Field label="Plafond CNSS (FCFA)"><Input value={rates.cnssPlafond} onChange={(e) => setRates({ ...rates, cnssPlafond: e.target.value })} inputMode="numeric" /></Field>
-            <Field label="Retenue (ITS, %)"><Input value={rates.withholdingRate} onChange={(e) => setRates({ ...rates, withholdingRate: e.target.value })} inputMode="numeric" /></Field>
+            <Field label="AMU salarié (%)"><Input value={rates.amuEmployeeRate} onChange={(e) => setRates({ ...rates, amuEmployeeRate: e.target.value })} inputMode="numeric" /></Field>
+            <Field label="AMU employeur (%)"><Input value={rates.amuEmployerRate} onChange={(e) => setRates({ ...rates, amuEmployerRate: e.target.value })} inputMode="numeric" /></Field>
+            <Field label="Plafond AMU (FCFA)"><Input value={rates.amuPlafond} onChange={(e) => setRates({ ...rates, amuPlafond: e.target.value })} inputMode="numeric" /></Field>
+            <Field label="Forfait ITS de repli (%)"><Input value={rates.withholdingRate} onChange={(e) => setRates({ ...rates, withholdingRate: e.target.value })} inputMode="numeric" /></Field>
           </div>
-          <div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setEdit(false)}>Annuler</Button><Button onClick={() => { updatePayrollConfig({ cnssEmployeeRate: parseFloat(rates.cnssEmployeeRate) || 0, cnssEmployerRate: parseFloat(rates.cnssEmployerRate) || 0, cnssPlafond: parseInt(rates.cnssPlafond, 10) || 0, withholdingRate: parseFloat(rates.withholdingRate) || 0 }); setEdit(false); }}>Enregistrer</Button></div>
+          <p className="rounded-xl bg-sky-50 px-3 py-2 text-xs text-sky-700">{irppTranches > 0 ? `L'IRPP est calculé au barème progressif (${irppTranches} tranches chargées) ; le forfait de repli n'est pas utilisé.` : "Aucun barème IRPP chargé : la retenue forfaitaire de repli s'applique. Chargez le barème dans le moteur réglementaire pour un calcul conforme."}</p>
+          <div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setEdit(false)}>Annuler</Button><Button onClick={() => { updatePayrollConfig({ cnssEmployeeRate: parseFloat(rates.cnssEmployeeRate) || 0, cnssEmployerRate: parseFloat(rates.cnssEmployerRate) || 0, cnssPlafond: parseInt(rates.cnssPlafond, 10) || 0, amuEmployeeRate: parseFloat(rates.amuEmployeeRate) || 0, amuEmployerRate: parseFloat(rates.amuEmployerRate) || 0, amuPlafond: parseInt(rates.amuPlafond, 10) || 0, withholdingRate: parseFloat(rates.withholdingRate) || 0 }); setEdit(false); }}>Enregistrer</Button></div>
         </div>
       </Modal>
     </Page>

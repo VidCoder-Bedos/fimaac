@@ -79,3 +79,31 @@
 | Correctif | `inline-block whitespace-pre` + espace explicite après chaque mot sauf le dernier (`{i < 3 ? " " : ""}`) — le span dégradé « cabinet comptable » étant `block`, il repart sur sa propre ligne |
 | Scan | Tous les autres titres et blocs de texte des 23 pages et 8 composants passés au crible (motifs `inline-block` portant du texte, `<h1-h3>` multi-expressions, `{a}{b}` adjacents, majuscules collées) : **aucun autre cas** — les motifs `{s.icon} {s.label}` préservent l'espace littéral |
 | Verifications | tsc 0 erreur · build 11,27 s · bundle 2 141,28 kB (604,26 kB gzip) |
+
+## P0-1 — Table de mapping unique et équilibre des états (PR #5, `1aae7a3`)
+| Point | Détail |
+|---|---|
+| Symptôme | Bilan non équilibré (écart 108 000) ; quatre modules calculaient les postes différemment ; des comptes disparaissaient sans trace |
+| Cause | Quatre tables de préfixes concurrentes : `liasse.ts` (boucles `startsWith` locales), `engine/agregateurs.ts`, `engine/etats.ts`, `liasseFiller.ts` |
+| Correctif | `src/lib/etatsMapping.ts` = source de vérité unique (22 postes, préfixe le plus long gagnant, exclusions, filtre de signe). Chaque compte alimente **un seul** poste ; l'équilibre devient une conséquence de Σ soldes = 0. Contrôle `unmapped` bloquant. |
+| Reclassements | Dépréciations de créances (49) déduites de l'actif (et non ajoutées aux dettes) · compte 42 Personnel dans « dettes fiscales et sociales » · totaux = somme exacte des composantes · classes 8/9 hors bilan |
+| Vérifications | `tsc` 0 erreur · `vitest` 11/11 · seed 102 écritures : actif = passif = **27 440 921**, écart 0, aucun compte non mappé · accord exact `engine` ↔ `liasse` |
+
+## P0-2 — Source de vérité fiscale unique (PR #6, `27b054d`)
+| Point | Détail |
+|---|---|
+| Symptôme | Trois IS différents pour un même dossier (0 / 201 900) ; base TVA affichée = TVA collectée ; libellés 433/435 au lieu de 443/445 ; TVA déductible comptée deux fois dans les déclarations |
+| Cause | Calculs dupliqués dans `tax.ts`, `engine/fiscalite.ts`, `actions.tvaGrid` ; recouvrement de préfixes dans `declarationEngine` |
+| Correctif | `src/lib/fiscalite.ts` : `fiscalBaseFromMoves`, `computeTvaFiscal` (crédit reporté), `computeIsFiscal` (maximum entre taux et minimum de perception), `IS_PARAMS_DEFAUT` exporté. Les quatre appelants deviennent des adaptateurs. `excludeAccounts` dans `declarationEngine`. |
+| Valeurs mesurées sur le seed | IS **201 900** (minimum de perception) · TVA collectée 3 634 200 · déductible 1 160 868 · à payer **2 473 332** · base **20 190 000** |
+| Vérifications | `tsc` 0 erreur · `vitest` 24/24 · accord des trois implémentations sur le dossier réel |
+
+## P0-3 — Paie conforme : barème IRPP + AMU (PR #7)
+| Point | Détail |
+|---|---|
+| Symptôme | Retenue IRPP forfaitaire de 5 % au lieu du barème progressif ; AMU jamais retenue alors qu'elle est déclarée dans `payrollConfig` **et** `socialRules` |
+| Cause | `runPayroll` (actions.ts) recalculait la paie lui-même et n'appelait jamais `calculatePaycheck` / `calculateIRPP` |
+| Correctif | `src/lib/paie.ts` : `calculerBulletin`, `paieParamsFromConfig`, `totaliserBulletins`, `ecrituresPaie`. `runPayroll` délègue. Écriture enrichie : AMU sur le compte **4331** (mutuelle), IRPP sur 4472, CNSS sur 4311. |
+| Valeurs mesurées (2 salariés du seed) | CNSS 24 000 · AMU **12 000** · IRPP **85 420** (51 210 + 34 210, barème 8 tranches) · retenues totales **121 420** contre 64 000 auparavant → **57 420 FCFA/mois non collectés** avant correction |
+| Non-régression | Si aucun barème n'est chargé, repli forfaitaire explicite **et signalé** (`alertes`), jamais silencieux. Champs de bulletin ajoutés en optionnel. |
+| Vérifications | `tsc` 0 erreur · `vitest` 36/36 · écriture de paie équilibrée par construction |

@@ -2,7 +2,7 @@
 
 > Registre tenu à jour à chaque lot livré. Il sert de point de reprise : tout ce
 > qui est ici est **non fait**, avec sa raison et son blocage éventuel.
-> Dernière mise à jour : 28/11/2026, après les PR #5 à #39.
+> Dernière mise à jour : 28/11/2026, après les PR #5 à #40.
 
 ## Déjà réglé (ne plus y revenir)
 
@@ -42,6 +42,7 @@
 | P22 | Balance 6 colonnes : un seul lecteur, diagnostic complet | #37 |
 | P23 | Parcours d'amorçage en 6 étapes, déduit de l'état réel | #38 |
 | P24 | Écrans vides : nommer le prérequis manquant | #39 |
+| P25 | Moteurs dormants : quatre modules archivés, garde-fou de test | #40 |
 
 ## 1. Bloqué par une décision d'infrastructure (à arbitrer par le porteur)
 
@@ -157,9 +158,14 @@ Ces points ne peuvent pas avancer sans base de données et hébergement d'API.
     et les bornes ; période mensuelle absente créée et auditée. Reste : la
     **saisie en lot** (import d'écritures) qui ne passe pas encore par ce
     contrôle.
-20. **Moteurs encore dormants** — `financialStatements`, `liasseEngine`
-    (partiellement), `obligations.generateObligationInstances`, `notes`.
-    Chacun doit être soit branché, soit archivé explicitement.
+20. ~~**Moteurs dormants**~~ — **fait (PR #40)** : inventaire refait sur
+    l'import réel. `obligations.generateObligationInstances`, `notes` et
+    `liasseEngine` sont **branchés** (Obligations, liasse, ateliers) ; quatre
+    modules ne l'étaient par personne — `declarationEngine` (440 l.),
+    `financialStatements` (369 l.), `liasseFiller` (267 l.), `formulaRegistry`
+    (244 l.) — et sont désormais **archivés** dans `src/lib/archive/` avec leur
+    en-tête, la notice des remplaçants, et un test qui échoue si l'un d'eux
+    revient dans le chemin d'exécution. Reste : `modules morts` (point 21).
 21. **Modules morts à supprimer** — 4 945 lignes (23,5 % du code) jamais
     exécutées ; à trancher un par un, jamais en bloc.
 22. ~~**Balance 6 colonnes**~~ — **fait (PR #37)** : `parseBalance6` passe par

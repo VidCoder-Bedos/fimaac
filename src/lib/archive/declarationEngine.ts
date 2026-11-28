@@ -1,11 +1,25 @@
 // ============================================================================
+// ARCHIVÉ — declarationEngine.ts
+//
+// Ce module n'est importé par AUCUN code de l'application (vérifié par
+// `src/lib/__tests__/archive.test.ts`). Il est conservé tel quel pour mémoire :
+// il documente déclarations fiscales.
+//
+// Pourquoi il n'est pas branché : il ferait doublon avec actions.generateTvaDeclaration / generateIsDeclaration, déclenchées depuis l'écran Fiscalité.
+// Deux moteurs qui calculent la même chose finissent par diverger — et c'est
+// toujours l'écran qui a tort le dernier.
+//
+// Pour le réactiver : décider explicitement de remplacer le moteur en place,
+// puis supprimer cet en-tête et retirer le fichier de `ARCHIVED_MODULES`.
+// ============================================================================
+// ============================================================================
 // FIMAAC — DECLARATION ENGINE
 // Transforme les données comptables → champs de déclarations fiscales/sociales.
 // Chaque montant est traçable : Montant → Formule → Comptes → Écritures → Règle.
 // ============================================================================
-import type { JournalEntry, Employee, SocialRule, TaxBracket } from "./types";
-import { movementsByAccount } from "./accounting";
-import { calculateIRPP, calculateCNSS } from "./regulatory-engine";
+import type { JournalEntry, Employee, SocialRule, TaxBracket } from "../types";
+import { movementsByAccount } from "../accounting";
+import { calculateIRPP, calculateCNSS } from "../regulatory-engine";
 
 // ---- Types ----
 export type DeclarationType = "TVA" | "TSB" | "CNSS" | "AMU" | "DAS" | "IS" | "LIASSE";

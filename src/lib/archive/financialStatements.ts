@@ -1,4 +1,18 @@
 // ============================================================================
+// ARCHIVÉ — financialStatements.ts
+//
+// Ce module n'est importé par AUCUN code de l'application (vérifié par
+// `src/lib/__tests__/archive.test.ts`). Il est conservé tel quel pour mémoire :
+// il documente bilan et compte de résultat.
+//
+// Pourquoi il n'est pas branché : il ferait doublon avec liasseEngine (moteur d'états) et lib/liasse (agrégats), seuls producteurs des montants affichés.
+// Deux moteurs qui calculent la même chose finissent par diverger — et c'est
+// toujours l'écran qui a tort le dernier.
+//
+// Pour le réactiver : décider explicitement de remplacer le moteur en place,
+// puis supprimer cet en-tête et retirer le fichier de `ARCHIVED_MODULES`.
+// ============================================================================
+// ============================================================================
 // FIMAAC — FINANCIAL STATEMENT ENGINE
 // Couche structurée au-dessus du moteur factorisé (engine/).
 // Concept → Mapping → Ligne d'état → Note → Contrôle → Anomalie.
@@ -6,8 +20,8 @@
 // Architecture : Jamais de cellule Excel en dur.
 //   COMPTE → FINANCIAL_CONCEPT → STATEMENT_LINE → OUTPUT (field code)
 // ============================================================================
-import type { NormalizedBalance, EngineContext } from "./engine/types";
-import { createContext } from "./engine/soldes";
+import type { NormalizedBalance, EngineContext } from "../engine/types";
+import { createContext } from "../engine/soldes";
 
 // ---- Types structurés ----
 export type StatementType =

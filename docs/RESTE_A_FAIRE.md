@@ -2,7 +2,7 @@
 
 > Registre tenu à jour à chaque lot livré. Il sert de point de reprise : tout ce
 > qui est ici est **non fait**, avec sa raison et son blocage éventuel.
-> Dernière mise à jour : 28/11/2026, après les PR #5 à #37.
+> Dernière mise à jour : 28/11/2026, après les PR #5 à #38.
 
 ## Déjà réglé (ne plus y revenir)
 
@@ -40,6 +40,7 @@
 | P20 | Réintégrations proposées depuis les comptes non déductibles | #35 |
 | P21 | Régime déclaré (réel/forfait/exonéré) et taux par catégorie | #36 |
 | P22 | Balance 6 colonnes : un seul lecteur, diagnostic complet | #37 |
+| P23 | Parcours d'amorçage en 6 étapes, déduit de l'état réel | #38 |
 
 ## 1. Bloqué par une décision d'infrastructure (à arbitrer par le porteur)
 
@@ -123,8 +124,11 @@ Ces points ne peuvent pas avancer sans base de données et hébergement d'API.
     clavier des tableaux** (tri, sélection de ligne), **contraste** à auditer,
     et `htmlFor` explicite pour les contrôles hors `Field`.
 13. **Densité des écrans** — jusqu'à 9 onglets ; cible ≤ 5 + sous-navigation.
-14. **Parcours d'amorçage** — cabinet → entreprise → exercice → balance →
-    contrôles → liasse, en 6 étapes guidées.
+14. ~~**Parcours d'amorçage**~~ — **fait (PR #38)** : six étapes **déduites de
+    l'état réel** (organisation, NIF, exercice ouvert, écritures, équilibre de la
+    balance, liasse), chacune avec sa raison et son lien ; la carte disparaît
+    d'elle-même à 6/6 et n'est jamais effaçable. Reste : la même logique dans les
+    **écrans vides** (chacun devrait nommer l'étape qui lui manque).
 15. ~~**Recherche globale / palette ⌘K**~~ — **fait (PR #34)** : ⌘K / Ctrl+K
     annoncé par un bouton, navigation et actions avant les données, parcours aux
     flèches avec Entrée, rôles ARIA. Reste : **commandes contextuelles** (agir sur

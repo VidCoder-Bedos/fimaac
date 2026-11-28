@@ -10,8 +10,10 @@ import { useDB } from "../lib/store";
 import { useAuth } from "../lib/auth";
 import { Page } from "../components/Layout";
 import { Card, Badge, ProgressBar, SectionHeading, Button } from "../components/ui";
+import { OnboardingCard } from "../components/OnboardingCard";
 import { AreaTrend, GroupedBars, HBars, Gauge, RadialRings, ScatterPlot, Waterfall, StackedComposition, Sparkline, TrendDelta, fmtMoney } from "../components/charts";
 import { computeDashboard } from "../lib/analytics";
+import { computeOnboarding } from "../lib/onboarding";
 import { fcfa, fcfaCompact, formatDate, daysUntil } from "../lib/format";
 
 export default function Dashboard() {
@@ -64,6 +66,9 @@ export default function Dashboard() {
           ))}
         </div>
       </motion.div>
+
+      {/* P23 — parcours d'amorçage : déduit de l'état réel, disparaît quand tout tient. */}
+      <OnboardingCard report={computeOnboarding(db, activeId)} />
 
       {/* ---------- KPI ROW avec sparklines ---------- */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

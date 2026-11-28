@@ -10,6 +10,7 @@ import { fcfa, formatDate, parseFcfa } from "../lib/format";
 import { CLASS_LABELS } from "../lib/chartOfAccounts";
 import { JOURNAL_TYPE_LABELS } from "../lib/journals";
 import type { Account, Journal, JournalEntry, JournalEntryLine, ThirdParty, AccountingPeriod } from "../lib/types";
+import { auditNumbering } from "../lib/entryNumbering";
 import AccountInquiry from "../components/AccountInquiry";
 import { EntryEditor } from "../components/EntryEditor";
 import { Can } from "../components/Can";
@@ -69,6 +70,8 @@ export default function Accounting() {
       {tab === "tiers" && <TiersView companyId={company.id} tiers={db.tiers.filter((t) => t.companyId === company.id)} entries={entries} journals={journals} onOpen={(code: string, tierId?: string) => setInquiry({ code, tierId })} />}
       {tab === "journals" && <JournalsView journals={journals} companyId={company.id} />}
       {tab === "entries" && (
+        <div className="space-y-4">
+        <NumberingCard entries={entries} journals={journals} />
         <EntriesView
           entries={entries}
           accounts={db.accounts}
@@ -77,6 +80,7 @@ export default function Accounting() {
           onAttachments={(e) => setAttachEntry(e)}
           onViewDoc={(d) => setViewerDoc(d)}
         />
+        </div>
       )}
       {tab === "ledger" && <LedgerView entries={entries} accounts={postable} />}
       {tab === "balance" && <BalanceView entries={entries} accounts={db.accounts} onOpen={(c: string) => setInquiry({ code: c })} />}
@@ -100,6 +104,35 @@ export default function Accounting() {
 }
 
 /* ---------------- Chart of accounts ---------------- */
+function NumberingCard({ entries, journals }: { entries: JournalEntry[]; journals: Journal[] }) {
+  const audit = useMemo(() => auditNumbering(entries, journals), [entries, journals]);
+  const gapCount = audit.gaps.reduce((n, g) => n + g.missing.length, 0);
+  return (
+    <Card className="p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          {audit.ok ? <Check size={16} className="text-emerald-500" /> : <AlertTriangle size={16} className="text-rose-500" />}
+          <p className="text-sm font-bold text-slate-800">Numérotation des pièces</p>
+          <Badge tone={audit.ok ? "emerald" : "rose"}>{audit.ok ? "Aucun doublon" : `${audit.duplicates.length} doublon(s)`}</Badge>
+          {audit.malformed.length > 0 && <Badge tone="amber">{audit.malformed.length} illisible(s)</Badge>}
+        </div>
+        <p className="text-xs text-slate-500">
+          {audit.checked} écriture(s) · {audit.counters.length} série(s) · {gapCount} trou(s) d'import
+        </p>
+      </div>
+      <p className="mt-2 text-[11px] text-slate-400">
+        Le prochain numéro reprend après le plus grand numéro existant de chaque journal, jamais après le nombre d'écritures : un numéro supprimé n'est plus recyclé.
+      </p>
+      {!audit.ok && (
+        <div className="mt-2 space-y-1 text-xs text-rose-600">
+          {audit.duplicates.slice(0, 3).map((d) => <p key={d.number}>Doublon {d.number} × {d.count}</p>)}
+          {audit.malformed.slice(0, 3).map((m) => <p key={m}>Numéro illisible : {m}</p>)}
+        </div>
+      )}
+    </Card>
+  );
+}
+
 function ChartView({ accounts, onOpen }: { accounts: Account[]; onOpen?: (code: string) => void }) {
   const [q, setQ] = useState("");
   const [openClass, setOpenClass] = useState<number | null>(1);

@@ -90,25 +90,25 @@ export function Billing() {
     <Page>
       <div className="mb-5"><h2 className="text-xl font-black tracking-tight text-slate-900">Facturation & abonnement</h2><p className="text-sm text-slate-500">{org.name}</p></div>
       <div className="mb-4 flex items-start gap-2 rounded-xl bg-sky-50 px-3 py-2 text-xs text-sky-700"><CreditCard size={14} className="mt-0.5 shrink-0" /> Système de paiement en <b>mode simulation</b> (adapter). Aucune plateforme de paiement réelle n'est connectée. En production : intégration Mobile Money / carte (adapter documenté).</div>
-      <Card className="mb-6 p-6"><div className="flex flex-wrap items-center justify-between gap-4"><div><p className="text-sm text-slate-400">Abonnement actuel</p><p className="text-2xl font-black capitalize text-slate-900">{sub?.plan || org.plan}</p><p className="text-sm text-slate-500">{sub?.status === "trialing" ? "Période d'essai" : "Actif"} · {sub?.seats} sièges · {fcfa(sub?.monthlyAmount || 0)}/mois</p></div><Badge tone={sub?.status === "trialing" ? "violet" : "emerald"}><StatusBadge status={sub?.status || "active"} /></Badge></div></Card>
+      <Card className="mb-6 p-6"><div className="flex flex-wrap items-center justify-between gap-4"><div><p className="text-sm text-slate-500">Abonnement actuel</p><p className="text-2xl font-black capitalize text-slate-900">{sub?.plan || org.plan}</p><p className="text-sm text-slate-500">{sub?.status === "trialing" ? "Période d'essai" : "Actif"} · {sub?.seats} sièges · {fcfa(sub?.monthlyAmount || 0)}/mois</p></div><Badge tone={sub?.status === "trialing" ? "violet" : "emerald"}><StatusBadge status={sub?.status || "active"} /></Badge></div></Card>
       <SectionHeading title="Plans disponibles" />
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{PLANS.map((p) => (
         <Card key={p.id} hover className={`p-5 ${org.plan === p.id ? "ring-2 ring-indigo-500" : ""}`}>
-          <p className="text-sm font-bold uppercase text-indigo-600">{p.name}</p><p className="mt-2 text-2xl font-black text-slate-900">{fcfa(p.price)}<span className="text-xs font-normal text-slate-400">/mois</span></p>
-          <ul className="mt-3 space-y-1.5">{p.features.map((f) => <li key={f} className="flex items-center gap-1.5 text-xs text-slate-600"><Check size={13} className="text-emerald-500" /> {f}</li>)}</ul>
+          <p className="text-sm font-bold uppercase text-indigo-600">{p.name}</p><p className="mt-2 text-2xl font-black text-slate-900">{fcfa(p.price)}<span className="text-xs font-normal text-slate-500">/mois</span></p>
+          <ul className="mt-3 space-y-1.5">{p.features.map((f) => <li key={f} className="flex items-center gap-1.5 text-xs text-slate-600"><Check size={13} className="text-emerald-700" /> {f}</li>)}</ul>
           <Button className="mt-4 w-full" size="sm" variant={org.plan === p.id ? "outline" : "primary"} disabled={org.plan === p.id} onClick={() => changePlan(org.id, p.id)}>{org.plan === p.id ? "Plan actuel" : "Choisir"}</Button>
         </Card>
       ))}</div>
       <Card className="p-5"><SectionHeading title="Factures" />
-        {invoices.length === 0 ? <p className="text-sm text-slate-400">Aucune facture.</p> : (
-          <div className="space-y-2">{invoices.map((inv) => <div key={inv.id} className="flex items-center justify-between rounded-xl border border-slate-100 px-4 py-3"><div><p className="font-semibold text-slate-800">{inv.number}</p><p className="text-xs text-slate-400">{inv.plan} · {formatDate(inv.issuedAt)}</p></div><div className="flex items-center gap-3"><span className="font-bold tabular-nums text-slate-800">{fcfa(inv.amount)}</span>{inv.status === "paid" ? <Badge tone="emerald"><CheckCircle2 size={11} /> Payée</Badge> : <Button size="sm" onClick={() => payInvoice(inv.id)}>Payer (sim.)</Button>}</div></div>)}</div>
+        {invoices.length === 0 ? <p className="text-sm text-slate-500">Aucune facture.</p> : (
+          <div className="space-y-2">{invoices.map((inv) => <div key={inv.id} className="flex items-center justify-between rounded-xl border border-slate-100 px-4 py-3"><div><p className="font-semibold text-slate-800">{inv.number}</p><p className="text-xs text-slate-500">{inv.plan} · {formatDate(inv.issuedAt)}</p></div><div className="flex items-center gap-3"><span className="font-bold tabular-nums text-slate-800">{fcfa(inv.amount)}</span>{inv.status === "paid" ? <Badge tone="emerald"><CheckCircle2 size={11} /> Payée</Badge> : <Button size="sm" onClick={() => payInvoice(inv.id)}>Payer (sim.)</Button>}</div></div>)}</div>
         )}
       </Card>
     </Page>
   );
 }
 
-function Info({ label, value }: { label: string; value: string }) { return <div><p className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</p><p className="mt-0.5 font-semibold capitalize text-slate-800">{value}</p></div>; }
+function Info({ label, value }: { label: string; value: string }) { return <div><p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p><p className="mt-0.5 font-semibold capitalize text-slate-800">{value}</p></div>; }
 
 /**
  * LOT 5 — L'entreprise change elle-même ses coordonnées de connexion

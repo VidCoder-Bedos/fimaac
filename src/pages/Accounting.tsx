@@ -118,7 +118,7 @@ function PlacementCard({ entries, fiscalYears, periods }: { entries: JournalEntr
     <Card className="p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          {audit.ok ? <Check size={16} className="text-emerald-500" /> : <AlertTriangle size={16} className="text-rose-500" />}
+          {audit.ok ? <Check size={16} className="text-emerald-700" /> : <AlertTriangle size={16} className="text-rose-700" />}
           <p className="text-sm font-bold text-slate-800">Rattachement à l'exercice</p>
           <Badge tone={audit.ok ? "emerald" : "rose"}>{audit.ok ? "Toutes les écritures sont dans leur exercice" : `${audit.anomalies.length} anomalie(s)`}</Badge>
         </div>
@@ -126,11 +126,11 @@ function PlacementCard({ entries, fiscalYears, periods }: { entries: JournalEntr
           {audit.wrongFiscalYear} hors exercice · {audit.wrongPeriod} hors période · {audit.unassigned} non rattachée(s)
         </p>
       </div>
-      <p className="mt-2 text-[11px] text-slate-400">
+      <p className="mt-2 text-[11px] text-slate-500">
         Une écriture doit être rattachée à l'exercice et à la période qui contiennent sa date. Les écarts sont listés, jamais déplacés d'office : déplacer une écriture est un acte comptable.
       </p>
       {!audit.ok && (
-        <div className="mt-2 space-y-1 text-xs text-rose-600">
+        <div className="mt-2 space-y-1 text-xs text-rose-700">
           {audit.anomalies.slice(0, 5).map((a) => <p key={a.entryId}>{a.number} du {a.date} — {a.reason}</p>)}
         </div>
       )}
@@ -145,7 +145,7 @@ function NumberingCard({ entries, journals }: { entries: JournalEntry[]; journal
     <Card className="p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          {audit.ok ? <Check size={16} className="text-emerald-500" /> : <AlertTriangle size={16} className="text-rose-500" />}
+          {audit.ok ? <Check size={16} className="text-emerald-700" /> : <AlertTriangle size={16} className="text-rose-700" />}
           <p className="text-sm font-bold text-slate-800">Numérotation des pièces</p>
           <Badge tone={audit.ok ? "emerald" : "rose"}>{audit.ok ? "Aucun doublon" : `${audit.duplicates.length} doublon(s)`}</Badge>
           {audit.malformed.length > 0 && <Badge tone="amber">{audit.malformed.length} illisible(s)</Badge>}
@@ -154,11 +154,11 @@ function NumberingCard({ entries, journals }: { entries: JournalEntry[]; journal
           {audit.checked} écriture(s) · {audit.counters.length} série(s) · {gapCount} trou(s) d'import
         </p>
       </div>
-      <p className="mt-2 text-[11px] text-slate-400">
+      <p className="mt-2 text-[11px] text-slate-500">
         Le prochain numéro reprend après le plus grand numéro existant de chaque journal, jamais après le nombre d'écritures : un numéro supprimé n'est plus recyclé.
       </p>
       {!audit.ok && (
-        <div className="mt-2 space-y-1 text-xs text-rose-600">
+        <div className="mt-2 space-y-1 text-xs text-rose-700">
           {audit.duplicates.slice(0, 3).map((d) => <p key={d.number}>Doublon {d.number} × {d.count}</p>)}
           {audit.malformed.slice(0, 3).map((m) => <p key={m}>Numéro illisible : {m}</p>)}
         </div>
@@ -176,7 +176,7 @@ function ChartView({ accounts, onOpen }: { accounts: Account[]; onOpen?: (code: 
     <Card className="p-5">
       <div className="mb-4 flex items-center gap-2">
         <div className="relative flex-1 max-w-xs">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
           <Input className="pl-9" placeholder="Rechercher un compte…" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         <Badge tone="indigo">{accounts.length} comptes</Badge>
@@ -204,7 +204,7 @@ function ChartView({ accounts, onOpen }: { accounts: Account[]; onOpen?: (code: 
                           <td className="w-24 px-4 py-2 font-mono font-semibold text-slate-700">{a.code}</td>
                           <td className="px-4 py-2 text-slate-700">{a.label}</td>
                           <td className="w-28 px-4 py-2 text-right"><Badge tone={a.normalBalance === "debit" ? "sky" : "emerald"}>{a.normalBalance === "debit" ? "Débit" : "Crédit"}</Badge></td>
-                          <td className="w-28 px-4 py-2 text-right">{a.postable ? <Badge tone="indigo">Imputable</Badge> : <span className="text-xs text-slate-300">titre</span>}</td>
+                          <td className="w-28 px-4 py-2 text-right">{a.postable ? <Badge tone="indigo">Imputable</Badge> : <span className="text-xs text-slate-500">titre</span>}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -235,9 +235,9 @@ function JournalsView({ journals, companyId }: { journals: Journal[]; companyId:
           const count = db.entries.filter((e) => e.journalId === j.id).length;
           return (
             <Card key={j.id} hover className="p-4">
-              <div className="flex items-center justify-between"><Badge tone="indigo">{j.code}</Badge><span className="text-xs text-slate-400">{count} écriture(s)</span></div>
+              <div className="flex items-center justify-between"><Badge tone="indigo">{j.code}</Badge><span className="text-xs text-slate-500">{count} écriture(s)</span></div>
               <p className="mt-2 font-bold text-slate-800">{j.name}</p>
-              <p className="text-xs text-slate-400">{types[j.type]}</p>
+              <p className="text-xs text-slate-500">{types[j.type]}</p>
             </Card>
           );
         })}
@@ -330,13 +330,13 @@ function EntriesView({ entries, accounts, documents, companyId, onEdit, onAttach
                       <td className="px-3 py-2.5"><StatusBadge status={e.status} /></td>
                       <td className="px-3 py-2.5">
                         <div className="flex items-center justify-end gap-1">
-                          <button onClick={() => setExpanded(isExp ? null : e.id)} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700" title="Détails"><Eye size={15} /></button>
-                          <button onClick={() => onAttachments(e)} title="Pièces jointes" className="rounded-lg p-1.5 text-indigo-500 hover:bg-indigo-50"><Paperclip size={15} /></button>
+                          <button onClick={() => setExpanded(isExp ? null : e.id)} className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700" title="Détails"><Eye size={15} /></button>
+                          <button onClick={() => onAttachments(e)} title="Pièces jointes" className="rounded-lg p-1.5 text-indigo-600 hover:bg-indigo-50"><Paperclip size={15} /></button>
                           <button onClick={() => onEdit(e)} title="Modifier l'écriture" className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-indigo-600"><Pencil size={15} /></button>
                           {/* M2 — actions sensibles réservées aux rôles autorisés */}
-                          {e.status === "draft" && <Can permission="accounting.validate"><button onClick={() => setEntryStatus(e.id, "validated")} title="Valider" className="rounded-lg p-1.5 text-emerald-600 hover:bg-emerald-50"><Check size={15} /></button></Can>}
-                          {e.status === "draft" && <Can permission="accounting.validate"><button onClick={() => setEntryStatus(e.id, "rejected")} title="Rejeter" className="rounded-lg p-1.5 text-rose-500 hover:bg-rose-50"><X size={15} /></button></Can>}
-                          {e.status === "validated" && <Can permission="accounting.validate"><button onClick={() => counterEntry(e.id)} title="Contrepasser" className="rounded-lg p-1.5 text-amber-600 hover:bg-amber-50"><RotateCcw size={15} /></button></Can>}
+                          {e.status === "draft" && <Can permission="accounting.validate"><button onClick={() => setEntryStatus(e.id, "validated")} title="Valider" className="rounded-lg p-1.5 text-emerald-700 hover:bg-emerald-50"><Check size={15} /></button></Can>}
+                          {e.status === "draft" && <Can permission="accounting.validate"><button onClick={() => setEntryStatus(e.id, "rejected")} title="Rejeter" className="rounded-lg p-1.5 text-rose-700 hover:bg-rose-50"><X size={15} /></button></Can>}
+                          {e.status === "validated" && <Can permission="accounting.validate"><button onClick={() => counterEntry(e.id)} title="Contrepasser" className="rounded-lg p-1.5 text-amber-700 hover:bg-amber-50"><RotateCcw size={15} /></button></Can>}
                         </div>
                       </td>
                     </tr>
@@ -350,8 +350,8 @@ function EntriesView({ entries, accounts, documents, companyId, onEdit, onAttach
                                 {docsOf(e).map((d) => (
                                   <button key={d.id} onClick={() => onViewDoc(d)} className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-white px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-50">
                                     <Paperclip size={12} /> {d.name.slice(0, 30)}
-                                    {d.extraction?.readable === false && <span className="text-rose-500">· illisible</span>}
-                                    {d.extraction?.readable && <span className="text-emerald-600">· lu</span>}
+                                    {d.extraction?.readable === false && <span className="text-rose-700">· illisible</span>}
+                                    {d.extraction?.readable && <span className="text-emerald-700">· lu</span>}
                                   </button>
                                 ))}
                               </div>
@@ -362,17 +362,17 @@ function EntriesView({ entries, accounts, documents, companyId, onEdit, onAttach
                           )}
                           <div className="overflow-hidden rounded-lg border border-slate-100 bg-white">
                             <table className="w-full text-xs">
-                              <thead><tr className="bg-slate-50 text-slate-400"><th className="px-3 py-1.5 text-left">Compte</th><th className="px-3 py-1.5 text-left">Libellé</th><th className="px-3 py-1.5 text-right">Débit</th><th className="px-3 py-1.5 text-right">Crédit</th></tr></thead>
+                              <thead><tr className="bg-slate-50 text-slate-500"><th className="px-3 py-1.5 text-left">Compte</th><th className="px-3 py-1.5 text-left">Libellé</th><th className="px-3 py-1.5 text-right">Débit</th><th className="px-3 py-1.5 text-right">Crédit</th></tr></thead>
                               <tbody>
                                 {e.lines.map((l) => {
                                   const acc = accounts.find((a) => a.code === l.accountId);
-                                  return <tr key={l.id} className="border-t border-slate-50"><td className="px-3 py-1.5 font-mono text-slate-600">{l.accountId}</td><td className="px-3 py-1.5 text-slate-600">{l.label} <span className="text-slate-300">· {acc?.label}</span></td><td className="px-3 py-1.5 text-right tabular-nums">{l.debit ? fcfa(l.debit) : "—"}</td><td className="px-3 py-1.5 text-right tabular-nums">{l.credit ? fcfa(l.credit) : "—"}</td></tr>;
+                                  return <tr key={l.id} className="border-t border-slate-50"><td className="px-3 py-1.5 font-mono text-slate-600">{l.accountId}</td><td className="px-3 py-1.5 text-slate-600">{l.label} <span className="text-slate-500">· {acc?.label}</span></td><td className="px-3 py-1.5 text-right tabular-nums">{l.debit ? fcfa(l.debit) : "—"}</td><td className="px-3 py-1.5 text-right tabular-nums">{l.credit ? fcfa(l.credit) : "—"}</td></tr>;
                                 })}
                                 <tr className="border-t-2 border-slate-200 font-bold text-slate-800"><td className="px-3 py-1.5" colSpan={2}>Totaux</td><td className="px-3 py-1.5 text-right tabular-nums">{fcfa(t.debit)}</td><td className="px-3 py-1.5 text-right tabular-nums">{fcfa(t.credit)}</td></tr>
                               </tbody>
                             </table>
                           </div>
-                          <p className={`mt-2 text-xs font-semibold ${t.balanced ? "text-emerald-600" : "text-rose-600"}`}>{t.balanced ? "✓ Écriture équilibrée (débit = crédit)" : `✗ Déséquilibrée : écart ${fcfa(Math.abs(t.diff))}`}</p>
+                          <p className={`mt-2 text-xs font-semibold ${t.balanced ? "text-emerald-700" : "text-rose-700"}`}>{t.balanced ? "✓ Écriture équilibrée (débit = crédit)" : `✗ Déséquilibrée : écart ${fcfa(Math.abs(t.diff))}`}</p>
                         </td>
                       </tr>
                     )}
@@ -410,7 +410,7 @@ function ClosingView({ companyId, years, periods, entries }: { companyId: string
       )}
       <div className="mb-4 flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-700"><AlertTriangle size={14} className="mt-0.5 shrink-0" /> Une période clôturée interdit toute saisie ou validation sur ce mois.</div>
       <div className="overflow-x-auto"><table className="w-full text-sm">
-        <thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-400"><th className="px-3 py-2">Période</th><th className="px-3 py-2 text-right">Écritures</th><th className="px-3 py-2">Statut</th><th className="px-3 py-2 text-right">Action</th></tr></thead>
+        <thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-500"><th className="px-3 py-2">Période</th><th className="px-3 py-2 text-right">Écritures</th><th className="px-3 py-2">Statut</th><th className="px-3 py-2 text-right">Action</th></tr></thead>
         <tbody>{sorted.map((p) => { const cnt = entries.filter((e) => e.periodId === p.id).length; return (
           <tr key={p.id} className="border-b border-slate-50"><td className="px-3 py-2.5 font-medium text-slate-800">{p.label}</td><td className="px-3 py-2.5 text-right tabular-nums text-slate-500">{cnt}</td>
             <td className="px-3 py-2.5">{p.status === "closed" ? <Badge tone="rose"><Lock size={11} /> Clôturée</Badge> : <Badge tone="emerald"><Unlock size={11} /> Ouverte</Badge>}</td>
@@ -481,11 +481,11 @@ function LettrageView({ entries, companyId }: { entries: JournalEntry[]; company
       <SectionHeading title="Lettrage des comptes de tiers" subtitle="Apparier débit et crédit (clients 411 / fournisseurs 401) — l'écart de lettrage doit être nul." action={<Button size="sm" variant="outline" onClick={() => { const r = autoLetter(companyId, acc); toast(r.lettered ? `${r.lettered} ligne(s) lettrée(s) automatiquement.` : "Aucun appariement trouvé."); }}><Wand2 size={14} /> Lettrage auto</Button>} />
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <Field label="Compte de tiers"><Select value={acc} onChange={(e) => { setAcc(e.target.value); setSel(new Set()); }} className="w-56"><option value="4111">4111 — Clients</option><option value="4011">4011 — Fournisseurs</option></Select></Field>
-        <div className="rounded-xl bg-slate-50 px-4 py-2 text-sm"><span className="text-slate-400">Solde non lettré : </span><span className={`font-bold tabular-nums ${solde === 0 ? "text-emerald-600" : "text-rose-600"}`}>{fcfa(solde)}</span></div>
+        <div className="rounded-xl bg-slate-50 px-4 py-2 text-sm"><span className="text-slate-500">Solde non lettré : </span><span className={`font-bold tabular-nums ${solde === 0 ? "text-emerald-700" : "text-rose-700"}`}>{fcfa(solde)}</span></div>
       </div>
       {unlettered.length === 0 ? <EmptyState icon={<Link2 />} title="Tout est lettré sur ce compte 🎉" /> : (
         <div className="overflow-x-auto"><table className="w-full text-sm">
-          <thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-400"><th className="px-2 py-2 w-8"></th><th className="px-2 py-2">Date</th><th className="px-2 py-2">N°</th><th className="px-2 py-2">Libellé</th><th className="px-2 py-2 text-right">Débit</th><th className="px-2 py-2 text-right">Crédit</th></tr></thead>
+          <thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-500"><th className="px-2 py-2 w-8"></th><th className="px-2 py-2">Date</th><th className="px-2 py-2">N°</th><th className="px-2 py-2">Libellé</th><th className="px-2 py-2 text-right">Débit</th><th className="px-2 py-2 text-right">Crédit</th></tr></thead>
           <tbody>{unlettered.map((r) => (
             <tr key={r.line.id} className={`border-b border-slate-50 ${sel.has(k(r.entry.id, r.line.id)) ? "bg-indigo-50/50" : ""}`}>
               <td className="px-2 py-2"><input type="checkbox" checked={sel.has(k(r.entry.id, r.line.id))} onChange={() => toggle(k(r.entry.id, r.line.id))} className="h-4 w-4 rounded" /></td>
@@ -504,12 +504,12 @@ function LettrageView({ entries, companyId }: { entries: JournalEntry[]; company
         <div className="ml-auto flex items-center gap-4 text-sm">
           <span className="text-slate-500">Débit sel. : <b className="tabular-nums text-slate-800">{fcfa(selDebit)}</b></span>
           <span className="text-slate-500">Crédit sel. : <b className="tabular-nums text-slate-800">{fcfa(selCredit)}</b></span>
-          <span className={`font-bold tabular-nums ${ecart === 0 ? "text-emerald-600" : "text-rose-600"}`}>Écart : {fcfa(ecart)}</span>
+          <span className={`font-bold tabular-nums ${ecart === 0 ? "text-emerald-700" : "text-rose-700"}`}>Écart : {fcfa(ecart)}</span>
         </div>
       </div>
       {letterGroups.length > 0 && (
         <div className="mt-6">
-          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">Lignes lettrées ({letterGroups.length})</p>
+          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">Lignes lettrées ({letterGroups.length})</p>
           <div className="space-y-2">{letterGroups.map((code) => {
             const g = lettered.filter((r) => r.line.letter === code);
             const gd = g.reduce((s, r) => s + r.line.debit, 0);
@@ -517,7 +517,7 @@ function LettrageView({ entries, companyId }: { entries: JournalEntry[]; company
             return (
               <div key={code} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-100 px-4 py-2.5">
                 <div className="flex items-center gap-2"><Badge tone="emerald">{code}</Badge><span className="text-xs text-slate-500">{g.length} ligne(s) · D {fcfa(gd)} / C {fcfa(gc)}</span></div>
-                <button onClick={() => unletter(code || "")} className="text-xs font-semibold text-rose-500 hover:text-rose-700">Délettrer</button>
+                <button onClick={() => unletter(code || "")} className="text-xs font-semibold text-rose-700 hover:text-rose-700">Délettrer</button>
               </div>
             );
           })}</div>
@@ -543,20 +543,20 @@ function TiersView({ companyId, tiers, entries, journals, onOpen }: { companyId:
     <MissingTiersView companyId={companyId} entries={entries} tiers={tiers} />
     <Card className="p-5">
       <SectionHeading title="Plan des tiers" subtitle="Clients (411) et fournisseurs (401) — fiches auxiliaires rattachées aux comptes collectifs" action={<Button size="sm" onClick={openNew}><Plus size={15} /> Nouveau tiers</Button>} />
-      <div className="mb-4 max-w-xs"><div className="relative"><Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><Input className="pl-9" placeholder="Rechercher un tiers…" value={q} onChange={(e) => setQ(e.target.value)} /></div></div>
+      <div className="mb-4 max-w-xs"><div className="relative"><Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" /><Input className="pl-9" placeholder="Rechercher un tiers…" value={q} onChange={(e) => setQ(e.target.value)} /></div></div>
       {list.length === 0 ? <EmptyState icon={<Users />} title="Aucun tiers" description="Créez une fiche client ou fournisseur." /> : (
         <div className="overflow-x-auto"><table className="w-full text-sm">
-          <thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-400"><th className="px-3 py-2">Code</th><th className="px-3 py-2">Nom</th><th className="px-3 py-2">Type</th><th className="px-3 py-2">NIF</th><th className="px-3 py-2 text-right">Débit</th><th className="px-3 py-2 text-right">Crédit</th><th className="px-3 py-2 text-right">Solde</th><th className="px-3 py-2 text-right">Actions</th></tr></thead>
+          <thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-500"><th className="px-3 py-2">Code</th><th className="px-3 py-2">Nom</th><th className="px-3 py-2">Type</th><th className="px-3 py-2">NIF</th><th className="px-3 py-2 text-right">Débit</th><th className="px-3 py-2 text-right">Crédit</th><th className="px-3 py-2 text-right">Solde</th><th className="px-3 py-2 text-right">Actions</th></tr></thead>
           <tbody>{list.map((t) => { const s = accountSituation(entries, t.collective, journals, t.id); return (
             <tr key={t.id} className="border-b border-slate-50 hover:bg-indigo-50/40">
               <td className="px-3 py-2.5 font-mono font-semibold text-slate-700">{t.code}</td>
-              <td className="px-3 py-2.5"><p className="font-semibold text-slate-800">{t.name}</p><p className="text-xs text-slate-400">{t.city}{t.contact ? ` · ${t.contact}` : ""}</p></td>
+              <td className="px-3 py-2.5"><p className="font-semibold text-slate-800">{t.name}</p><p className="text-xs text-slate-500">{t.city}{t.contact ? ` · ${t.contact}` : ""}</p></td>
               <td className="px-3 py-2.5"><Badge tone={t.type === "customer" ? "indigo" : "sky"}>{t.type === "customer" ? "Client" : "Fournisseur"} · {t.collective}</Badge></td>
               <td className="px-3 py-2.5 text-slate-500">{t.nif || "—"}</td>
               <td className="px-3 py-2.5 text-right tabular-nums">{fcfa(s.totalDebit)}</td>
               <td className="px-3 py-2.5 text-right tabular-nums">{fcfa(s.totalCredit)}</td>
               <td className="px-3 py-2.5 text-right font-semibold tabular-nums text-indigo-600">{fcfa(s.solde)}</td>
-              <td className="px-3 py-2.5"><div className="flex items-center justify-end gap-1"><Button size="sm" variant="outline" onClick={() => onOpen(t.collective, t.id)}>Consulter</Button><button onClick={() => openEdit(t)} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100"><Eye size={15} /></button><button onClick={() => deleteThirdParty(t.id)} className="rounded-lg p-1.5 text-slate-300 hover:text-rose-500"><Trash2 size={15} /></button></div></td>
+              <td className="px-3 py-2.5"><div className="flex items-center justify-end gap-1"><Button size="sm" variant="outline" onClick={() => onOpen(t.collective, t.id)}>Consulter</Button><button onClick={() => openEdit(t)} className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"><Eye size={15} /></button><button onClick={() => deleteThirdParty(t.id)} className="rounded-lg p-1.5 text-slate-500 hover:text-rose-700"><Trash2 size={15} /></button></div></td>
             </tr>
           ); })}</tbody>
         </table></div>
@@ -592,7 +592,7 @@ function LedgerView({ entries, accounts }: { entries: JournalEntry[]; accounts: 
       {lines.length === 0 ? <EmptyState icon={<ListTree />} title="Aucun mouvement" /> : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-400"><th className="px-3 py-2">Libellé</th><th className="px-3 py-2 text-right">Débit</th><th className="px-3 py-2 text-right">Crédit</th></tr></thead>
+            <thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-500"><th className="px-3 py-2">Libellé</th><th className="px-3 py-2 text-right">Débit</th><th className="px-3 py-2 text-right">Crédit</th></tr></thead>
             <tbody>
               {lines.map((l) => <tr key={l.id} className="border-b border-slate-50"><td className="px-3 py-2 text-slate-700">{l.label}</td><td className="px-3 py-2 text-right tabular-nums">{l.debit ? fcfa(l.debit) : "—"}</td><td className="px-3 py-2 text-right tabular-nums">{l.credit ? fcfa(l.credit) : "—"}</td></tr>)}
               <tr className="border-t-2 font-bold text-slate-800"><td className="px-3 py-2">Totaux</td><td className="px-3 py-2 text-right tabular-nums">{fcfa(totalD)}</td><td className="px-3 py-2 text-right tabular-nums">{fcfa(totalC)}</td></tr>
@@ -617,14 +617,14 @@ function BalanceView({ entries, accounts, onOpen }: { entries: JournalEntry[]; a
       <Card className="p-5">
         <SectionHeading title="Balance générale" subtitle="Récapitulatif des comptes (écritures validées)" />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {classes.map((c) => <div key={c.classe} className="rounded-xl border border-slate-100 p-3"><p className="text-xs text-slate-400">Classe {c.classe}</p><p className="font-bold text-slate-800">{fcfa(Math.abs(c.solde))}</p></div>)}
+          {classes.map((c) => <div key={c.classe} className="rounded-xl border border-slate-100 p-3"><p className="text-xs text-slate-500">Classe {c.classe}</p><p className="font-bold text-slate-800">{fcfa(Math.abs(c.solde))}</p></div>)}
         </div>
       </Card>
       <Card className="p-5">
         {rows.length === 0 ? <EmptyState icon={<Scale />} title="Aucune donnée" /> : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-400">
+              <thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-500">
                 <th className="px-3 py-2">Compte</th><th className="px-3 py-2">Libellé</th><th className="px-3 py-2 text-right">Débit</th><th className="px-3 py-2 text-right">Crédit</th><th className="px-3 py-2 text-right">Solde D</th><th className="px-3 py-2 text-right">Solde C</th>
               </tr></thead>
               <tbody>
@@ -635,7 +635,7 @@ function BalanceView({ entries, accounts, onOpen }: { entries: JournalEntry[]; a
           </div>
         )}
         <div className="mt-4 flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700"><Check size={14} /> {tDebit === tCredit ? `Balance équilibrée : ${fcfa(tDebit)}` : "Balance déséquilibrée"}</div>
-        <div className="mt-3"><p className="mb-1 text-xs font-medium text-slate-400">Contrôle d'équilibre</p><ProgressBar value={tDebit && tCredit ? (1 - Math.abs(tDebit - tCredit) / Math.max(tDebit, tCredit)) * 100 : 0} tone="emerald" /></div>
+        <div className="mt-3"><p className="mb-1 text-xs font-medium text-slate-500">Contrôle d'équilibre</p><ProgressBar value={tDebit && tCredit ? (1 - Math.abs(tDebit - tCredit) / Math.max(tDebit, tCredit)) * 100 : 0} tone="emerald" /></div>
       </Card>
     </div>
   );
@@ -718,7 +718,7 @@ function MissingTiersView({ companyId, entries, tiers }: { companyId: string; en
               {detail === g.accountId && (
                 <div className="mt-3 overflow-x-auto">
                   <table className="w-full text-xs">
-                    <thead><tr className="border-b border-slate-100 text-left uppercase text-slate-400"><th className="px-2 py-2">Pièce</th><th className="px-2 py-2">Date</th><th className="px-2 py-2">Libellé</th><th className="px-2 py-2 text-right">Montant</th><th className="px-2 py-2 text-right">Rattacher</th></tr></thead>
+                    <thead><tr className="border-b border-slate-100 text-left uppercase text-slate-500"><th className="px-2 py-2">Pièce</th><th className="px-2 py-2">Date</th><th className="px-2 py-2">Libellé</th><th className="px-2 py-2 text-right">Montant</th><th className="px-2 py-2 text-right">Rattacher</th></tr></thead>
                     <tbody>
                       {g.lines.map((l) => (
                         <tr key={`${l.entryId}-${l.lineIndex}`} className="border-b border-slate-50">
@@ -778,7 +778,7 @@ function SortableTh({ label, sortKey, state, onToggle, align = "left" }: {
         title={direction === "ascending" ? "Tri croissant — cliquer pour inverser" : direction === "descending" ? "Tri décroissant — cliquer pour revenir à l'ordre d'origine" : "Trier sur cette colonne"}
       >
         {label}
-        <span aria-hidden className={active ? "text-indigo-600" : "text-slate-300"}>{direction === "ascending" ? "▲" : direction === "descending" ? "▼" : "↕"}</span>
+        <span aria-hidden className={active ? "text-indigo-600" : "text-slate-500"}>{direction === "ascending" ? "▲" : direction === "descending" ? "▼" : "↕"}</span>
       </button>
     </th>
   );

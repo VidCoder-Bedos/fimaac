@@ -35,7 +35,7 @@ export default function Landing() {
           <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-3">
               <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 font-black text-white shadow-lg shadow-indigo-500/40">F<span className="live-dot absolute -right-1 -top-1 h-2 w-2 rounded-full bg-emerald-400" /></div>
-              <div><p className="font-display text-lg font-extrabold leading-none tracking-tight text-slate-900">FIMAAC</p><p className="text-[10px] font-medium uppercase tracking-wider text-slate-400">Finance · Management · Accounting</p></div>
+              <div><p className="font-display text-lg font-extrabold leading-none tracking-tight text-slate-900">FIMAAC</p><p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">Finance · Management · Accounting</p></div>
             </div>
             <nav className="hidden items-center gap-8 text-sm font-medium text-slate-600 md:flex">
               <a href="#modules" className="transition hover:text-indigo-600">Modules</a>
@@ -73,9 +73,9 @@ export default function Landing() {
                 <Link to="/login"><Button size="lg" variant="outline">Se connecter</Button></Link>
               </motion.div>
               <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-slate-500">
-                <span className="flex items-center gap-1.5"><CheckCircle2 size={15} className="text-emerald-500" /> Multi-tenant sécurisé</span>
-                <span className="flex items-center gap-1.5"><CheckCircle2 size={15} className="text-emerald-500" /> Moteur réglementaire versionné</span>
-                <span className="flex items-center gap-1.5"><CheckCircle2 size={15} className="text-emerald-500" /> IA contrôlée</span>
+                <span className="flex items-center gap-1.5"><CheckCircle2 size={15} className="text-emerald-700" /> Multi-tenant sécurisé</span>
+                <span className="flex items-center gap-1.5"><CheckCircle2 size={15} className="text-emerald-700" /> Moteur réglementaire versionné</span>
+                <span className="flex items-center gap-1.5"><CheckCircle2 size={15} className="text-emerald-700" /> IA contrôlée</span>
               </div>
             </motion.div>
           </div>
@@ -85,12 +85,12 @@ export default function Landing() {
               <Card className="overflow-hidden p-0 shadow-2xl">
                 <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50/80 px-4 py-3">
                   <span className="h-3 w-3 rounded-full bg-rose-400" /><span className="h-3 w-3 rounded-full bg-amber-400" /><span className="h-3 w-3 rounded-full bg-emerald-400" />
-                  <span className="ml-2 text-xs font-medium text-slate-400">FIMAAC — Tableau de bord</span>
-                  <span className="ml-auto flex items-center gap-1 text-[10px] font-semibold text-emerald-600"><span className="live-dot h-1.5 w-1.5 rounded-full bg-emerald-500" /> En direct</span>
+                  <span className="ml-2 text-xs font-medium text-slate-500">FIMAAC — Tableau de bord</span>
+                  <span className="ml-auto flex items-center gap-1 text-[10px] font-semibold text-emerald-700"><span className="live-dot h-1.5 w-1.5 rounded-full bg-emerald-500" /> En direct</span>
                 </div>
                 <div className="grid grid-cols-3 gap-3 p-5">
                   {[["Clients", "42"], ["Échéances", "7"], ["Conformité", "94%"]].map(([l, v]) => (
-                    <div key={l} className="rounded-2xl border border-slate-100 bg-white/70 p-3"><p className="text-[10px] font-medium text-slate-400">{l}</p><p className="font-display mt-1 text-xl font-extrabold text-slate-800">{v}</p></div>
+                    <div key={l} className="rounded-2xl border border-slate-100 bg-white/70 p-3"><p className="text-[10px] font-medium text-slate-500">{l}</p><p className="font-display mt-1 text-xl font-extrabold text-slate-800">{v}</p></div>
                   ))}
                 </div>
                 <div className="rounded-2xl bg-gradient-to-br from-indigo-50 to-violet-50 p-4">
@@ -99,7 +99,7 @@ export default function Landing() {
                 </div>
               </Card>
               <motion.div animate={{ y: [0, 12, 0] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }} className="absolute -bottom-6 -left-6 hidden w-44 rounded-2xl border border-white/60 bg-white/80 p-4 shadow-xl backdrop-blur-xl sm:block">
-                <div className="flex items-center gap-2"><div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600"><ShieldCheck size={16} /></div><div><p className="text-xs font-bold text-slate-800">Conformité</p><p className="text-[10px] text-slate-400">Score 94/100</p></div></div>
+                <div className="flex items-center gap-2"><div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700"><ShieldCheck size={16} /></div><div><p className="text-xs font-bold text-slate-800">Conformité</p><p className="text-[10px] text-slate-500">Score 94/100</p></div></div>
               </motion.div>
               <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }} className="absolute -right-4 -top-4 hidden rounded-2xl border border-white/60 bg-white/80 p-3 shadow-xl backdrop-blur-xl sm:block">
                 <div className="flex items-center gap-2"><div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-100 text-violet-600"><BrainCircuit size={16} /></div><p className="text-[11px] font-bold text-slate-800">IA</p></div>
@@ -185,9 +185,9 @@ export default function Landing() {
               <Card key={p.name} hover className={`relative flex flex-col p-6 ${p.popular ? "ring-2 ring-indigo-500" : ""}`}>
                 {p.popular && <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 px-3 py-1 text-xs font-bold text-white shadow-lg">Populaire</span>}
                 <p className="text-sm font-bold uppercase tracking-wide text-indigo-600">{p.name}</p>
-                <div className="mt-3 flex items-end gap-1"><span className="font-display text-3xl font-extrabold text-slate-900"><AnimatedCounter value={p.price} format={fcfaShort} /></span><span className="mb-1 text-xs text-slate-400">{p.period}</span></div>
+                <div className="mt-3 flex items-end gap-1"><span className="font-display text-3xl font-extrabold text-slate-900"><AnimatedCounter value={p.price} format={fcfaShort} /></span><span className="mb-1 text-xs text-slate-500">{p.period}</span></div>
                 <p className="mt-1 text-sm text-slate-500">{p.desc}</p>
-                <ul className="mt-5 flex-1 space-y-2.5">{p.features.map((f) => <li key={f} className="flex items-start gap-2 text-sm text-slate-600"><CheckCircle2 size={16} className="mt-0.5 shrink-0 text-emerald-500" /> {f}</li>)}</ul>
+                <ul className="mt-5 flex-1 space-y-2.5">{p.features.map((f) => <li key={f} className="flex items-start gap-2 text-sm text-slate-600"><CheckCircle2 size={16} className="mt-0.5 shrink-0 text-emerald-700" /> {f}</li>)}</ul>
                 <Link to="/register" className="mt-6"><Button variant={p.tone} className="w-full">{p.cta}</Button></Link>
               </Card>
             ))}
@@ -212,7 +212,7 @@ export default function Landing() {
           </div>
         </Card>
       </section>
-      <footer className="relative border-t border-slate-200 bg-slate-900 py-10 text-slate-400">
+      <footer className="relative border-t border-slate-200 bg-slate-900 py-10 text-slate-500">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 sm:px-6 md:flex-row lg:px-8">
           <div className="flex items-center gap-2"><div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-fuchsia-600 font-black text-white">F</div><span className="font-display font-extrabold text-white">FIMAAC</span></div>
           <p className="text-xs">© {new Date().getFullYear()} FIMAAC — SYSCOHADA révisé · OHADA · Togo 🇹🇬. V0.3 — démo premium.</p>

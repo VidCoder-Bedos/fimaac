@@ -248,7 +248,7 @@ export default function Obligations() {
       </div>
       {/* Filtres */}
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <Filter size={15} className="text-slate-400" />
+        <Filter size={15} className="text-slate-500" />
         <Select value={filterCat} onChange={(e) => setFilterCat(e.target.value)} className="h-9 w-48">
           <option value="all">Toutes catégories</option>
           {categories.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -257,7 +257,7 @@ export default function Obligations() {
           <option value="all">Tous statuts</option>
           {Object.entries(STATUS_META).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
         </Select>
-        <span className="text-xs text-slate-400">{filtered.length} obligation(s)</span>
+        <span className="text-xs text-slate-500">{filtered.length} obligation(s)</span>
       </div>
       {tab === "matrix" && (
         <div className="space-y-6">
@@ -273,7 +273,7 @@ export default function Obligations() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-400">
+                      <tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-500">
                         <th className="px-4 py-2">Client</th>
                         <th className="px-4 py-2">Obligation</th>
                         <th className="px-4 py-2 text-right">Échéance</th>
@@ -293,7 +293,7 @@ export default function Obligations() {
                             <td className="px-4 py-2.5 text-slate-600">{o.label}</td>
                             <td className="px-4 py-2.5 text-right text-slate-500">{formatDate(o.dueDate)}</td>
                             <td className="px-4 py-2.5 text-center">
-                              <span className={`text-xs font-bold tabular-nums ${isLate ? "text-rose-600" : days <= 7 ? "text-amber-600" : "text-slate-400"}`}>
+                              <span className={`text-xs font-bold tabular-nums ${isLate ? "text-rose-700" : days <= 7 ? "text-amber-700" : "text-slate-500"}`}>
                                 {isLate ? `${Math.abs(days)}j de retard` : days === 0 ? "Aujourd'hui" : `${days}j`}
                               </span>
                             </td>
@@ -321,7 +321,7 @@ export default function Obligations() {
             </h3>
             <button onClick={() => setCalMonth(new Date(calMonth.getFullYear(), calMonth.getMonth() + 1, 1))} className="rounded-lg p-2 hover:bg-slate-100"><ChevronRight size={18} /></button>
           </div>
-          <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase text-slate-400">
+          <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase text-slate-500">
             {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((d) => <div key={d} className="py-1">{d}</div>)}
           </div>
           <div className="mt-1 grid grid-cols-7 gap-1">
@@ -337,7 +337,7 @@ export default function Obligations() {
                   transition={{ delay: i * 0.005 }}
                   className={`min-h-[80px] rounded-lg border p-1.5 ${isToday ? "border-indigo-300 bg-indigo-50/40" : hasLate ? "border-rose-200 bg-rose-50/30" : "border-slate-100 bg-white"}`}
                 >
-                  <p className={`text-xs font-bold ${isToday ? "text-indigo-600" : "text-slate-400"}`}>{day.date.getDate()}</p>
+                  <p className={`text-xs font-bold ${isToday ? "text-indigo-600" : "text-slate-500"}`}>{day.date.getDate()}</p>
                   <div className="mt-0.5 space-y-0.5">
                     {day.obligations.slice(0, 3).map((o) => {
                       const days = daysUntil(o.dueDate);
@@ -348,7 +348,7 @@ export default function Obligations() {
                         </div>
                       );
                     })}
-                    {day.obligations.length > 3 && <p className="text-[9px] text-slate-400">+{day.obligations.length - 3} autres</p>}
+                    {day.obligations.length > 3 && <p className="text-[9px] text-slate-500">+{day.obligations.length - 3} autres</p>}
                   </div>
                 </motion.div>
               );
@@ -392,11 +392,11 @@ export default function Obligations() {
                 <div key={h.id} className="flex items-center justify-between gap-3 py-2 text-sm">
                   <div className="min-w-0">
                     <p className="font-medium text-slate-800"><span className="font-mono text-xs text-slate-500">{h.date}</span> · {h.label}</p>
-                    {h.reference && <p className="text-xs text-slate-400">{h.reference}</p>}
+                    {h.reference && <p className="text-xs text-slate-500">{h.reference}</p>}
                   </div>
                   <button
                     onClick={() => { removeHoliday(h.id); toast("Jour férié retiré : les échéances reprennent leur date légale.", undefined, "info"); }}
-                    className="rounded-lg p-1.5 text-slate-300 transition-colors hover:bg-rose-50 hover:text-rose-500"
+                    className="rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-700"
                     aria-label={`Retirer le jour férié ${h.label}`}
                   >
                     <Trash2 size={15} />
@@ -446,7 +446,7 @@ export default function Obligations() {
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
-                          <tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-400">
+                          <tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-500">
                             <th className="px-3 py-2">Entreprise</th>
                             <th className="px-3 py-2">Obligation</th>
                             <th className="px-3 py-2">Organisme</th>
@@ -464,7 +464,7 @@ export default function Obligations() {
                               <td className="px-3 py-2.5"><Badge tone="slate">{i.organism}</Badge></td>
                               <td className="px-3 py-2.5 capitalize text-slate-500">{i.periodLabel}</td>
                               <td className="px-3 py-2.5 text-right tabular-nums text-slate-600">{formatDate(i.dueDate)}</td>
-                              <td className="px-3 py-2.5 text-xs text-slate-400">{i.prorogatedFrom ? `${formatDate(i.prorogatedFrom)} → reporté` : "—"}</td>
+                              <td className="px-3 py-2.5 text-xs text-slate-500">{i.prorogatedFrom ? `${formatDate(i.prorogatedFrom)} → reporté` : "—"}</td>
                               <td className="px-3 py-2.5 text-center">
                                 <Badge tone={i.status === "en_retard" ? "rose" : "sky"}>{i.status === "en_retard" ? "En retard" : "À venir"}</Badge>
                               </td>
@@ -482,7 +482,7 @@ export default function Obligations() {
             <h3 className="mb-2 text-sm font-bold text-slate-800">Limites du calendrier — affichées, pas masquées</h3>
             <ul className="space-y-1 text-xs text-slate-500">
               {legalCalendar.summary.limits.map((l) => (
-                <li key={l} className="flex gap-2"><AlertTriangle size={13} className="mt-0.5 shrink-0 text-amber-500" /><span>{l}</span></li>
+                <li key={l} className="flex gap-2"><AlertTriangle size={13} className="mt-0.5 shrink-0 text-amber-700" /><span>{l}</span></li>
               ))}
             </ul>
           </Card>

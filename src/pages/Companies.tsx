@@ -42,21 +42,21 @@ export function Companies() {
         <div><h2 className="text-xl font-black tracking-tight text-slate-900">Entreprises clientes</h2><p className="text-sm text-slate-500">{list.length} client(s) du portefeuille</p></div>
         <Button onClick={() => setOpen(true)}><Plus size={15} /> Nouvelle entreprise</Button>
       </div>
-      <div className="mb-4 max-w-xs"><div className="relative"><Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><Input className="pl-9" placeholder="Rechercher (nom, NIF)…" value={q} onChange={(e) => setQ(e.target.value)} /></div></div>
+      <div className="mb-4 max-w-xs"><div className="relative"><Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" /><Input className="pl-9" placeholder="Rechercher (nom, NIF)…" value={q} onChange={(e) => setQ(e.target.value)} /></div></div>
       {list.length === 0 ? <EmptyState icon={<Building2 />} title="Aucune entreprise" description="Ajoutez votre première entreprise cliente." /> : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {list.map((c, i) => (
             <motion.div key={c.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
               <Card hover className="cursor-pointer p-5" onClick={() => navigate(`/app/entreprises/${c.id}`)}>
                 <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3"><div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 font-bold text-white">{(c.tradeName || c.name).slice(0, 2).toUpperCase()}</div><div><p className="font-bold text-slate-900">{c.tradeName || c.name}</p><p className="text-xs text-slate-400">{c.legalForm} · {REGIMES[c.taxRegime]}</p></div></div>
+                  <div className="flex items-center gap-3"><div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 font-bold text-white">{(c.tradeName || c.name).slice(0, 2).toUpperCase()}</div><div><p className="font-bold text-slate-900">{c.tradeName || c.name}</p><p className="text-xs text-slate-500">{c.legalForm} · {REGIMES[c.taxRegime]}</p></div></div>
                   <Badge tone={c.riskLevel === "high" ? "rose" : c.riskLevel === "medium" ? "amber" : "emerald"}>{c.riskLevel}</Badge>
                 </div>
                 <div className="mt-4 space-y-1.5 text-xs text-slate-500">
                   <p className="flex items-center gap-1.5"><MapPin size={12} /> {c.city} · {c.sector || "—"}</p>
                   <p className="flex items-center gap-1.5"><CreditCard size={12} /> NIF : {c.nif || "—"}</p>
                 </div>
-                <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3"><span className="text-xs text-slate-400">{db.entries.filter((e) => e.companyId === c.id).length} écritures</span><span className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600">Ouvrir <ArrowRight size={13} /></span></div>
+                <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3"><span className="text-xs text-slate-500">{db.entries.filter((e) => e.companyId === c.id).length} écritures</span><span className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600">Ouvrir <ArrowRight size={13} /></span></div>
               </Card>
             </motion.div>
           ))}
@@ -75,9 +75,9 @@ export function Companies() {
               </span>
             </div>
             <div className="rounded-xl border border-slate-100 p-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Identifiant de connexion</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Identifiant de connexion</p>
               <p className="mt-1 font-mono text-sm font-semibold text-slate-800">{access.email}</p>
-              <p className="mt-3 text-xs font-medium uppercase tracking-wide text-slate-400">Mot de passe temporaire</p>
+              <p className="mt-3 text-xs font-medium uppercase tracking-wide text-slate-500">Mot de passe temporaire</p>
               <p className="mt-1 font-mono text-sm font-bold text-indigo-600">{access.tempPassword}</p>
             </div>
             <div className="flex flex-wrap justify-end gap-2">
@@ -191,13 +191,13 @@ export function CompanyDetail() {
         <Card className="p-5 lg:col-span-2">
           <SectionHeading title="Fiche entreprise" subtitle="Informations générales et juridiques" />
           <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
-            {info.map((i) => <div key={i.label}><dt className="text-xs font-medium uppercase tracking-wide text-slate-400">{i.label}</dt><dd className="mt-0.5 text-sm font-semibold text-slate-800">{i.value}</dd></div>)}
+            {info.map((i) => <div key={i.label}><dt className="text-xs font-medium uppercase tracking-wide text-slate-500">{i.label}</dt><dd className="mt-0.5 text-sm font-semibold text-slate-800">{i.value}</dd></div>)}
           </dl>
         </Card>
         <Card className="p-5">
           <SectionHeading title="Profil fiscal" />
-          {profile ? <div className="space-y-2">{profile.obligations.map((o) => <div key={o} className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700"><ShieldAlert size={14} className="text-amber-500" /> {o}</div>)}</div> : <p className="text-sm text-slate-400">Profil non configuré</p>}
-          <div className="mt-4 border-t border-slate-100 pt-3"><p className="mb-2 text-xs font-semibold uppercase text-slate-400">Échéances</p>{deadlines.length === 0 ? <p className="text-sm text-slate-400">Aucune</p> : deadlines.map((d) => <p key={d.id} className="text-sm text-slate-600">{d.taxCode} · {formatDate(d.dueDate)}</p>)}</div>
+          {profile ? <div className="space-y-2">{profile.obligations.map((o) => <div key={o} className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700"><ShieldAlert size={14} className="text-amber-700" /> {o}</div>)}</div> : <p className="text-sm text-slate-500">Profil non configuré</p>}
+          <div className="mt-4 border-t border-slate-100 pt-3"><p className="mb-2 text-xs font-semibold uppercase text-slate-500">Échéances</p>{deadlines.length === 0 ? <p className="text-sm text-slate-500">Aucune</p> : deadlines.map((d) => <p key={d.id} className="text-sm text-slate-600">{d.taxCode} · {formatDate(d.dueDate)}</p>)}</div>
         </Card>
       </div>
       <Card className="mt-6 p-5">
@@ -209,7 +209,7 @@ export function CompanyDetail() {
           <Button onClick={() => { if (docForm.name) { addPermanentDoc(company.id, { name: docForm.name, category: docForm.category, date: docForm.date || new Date().toISOString().slice(0, 10), note: docForm.note }); setDocForm({ name: "", category: "juridique", date: "", note: "" }); } }}><Plus size={15} /> Ajouter</Button>
         </div>
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">{permanentDocs.map((d) => (
-          <div key={d.id} className="flex items-start justify-between rounded-xl border border-slate-100 p-3"><div><p className="font-semibold text-slate-800">{d.name}</p><Badge tone="indigo">{d.category}</Badge><p className="mt-1 text-xs text-slate-400">{formatDate(d.date)}{d.note ? ` · ${d.note}` : ""}</p></div><button onClick={() => deletePermanentDoc(d.id)} className="text-slate-300 hover:text-rose-500"><X size={15} /></button></div>
+          <div key={d.id} className="flex items-start justify-between rounded-xl border border-slate-100 p-3"><div><p className="font-semibold text-slate-800">{d.name}</p><Badge tone="indigo">{d.category}</Badge><p className="mt-1 text-xs text-slate-500">{formatDate(d.date)}{d.note ? ` · ${d.note}` : ""}</p></div><button onClick={() => deletePermanentDoc(d.id)} className="text-slate-500 hover:text-rose-700"><X size={15} /></button></div>
         ))}</div>
       </Card>
 
@@ -223,17 +223,17 @@ export function CompanyDetail() {
         {accessUser ? (
           <div className="grid gap-4 lg:grid-cols-3">
             <div className="rounded-xl border border-slate-100 p-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Identifiant de connexion</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Identifiant de connexion</p>
               <p className="mt-1 truncate font-mono text-sm font-semibold text-slate-800">{accessUser.email}</p>
-              <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-400"><Mail size={12} /> utilisé pour se connecter au portail</p>
+              <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-500"><Mail size={12} /> utilisé pour se connecter au portail</p>
             </div>
             <div className="rounded-xl border border-slate-100 p-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Dernière connexion</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Dernière connexion</p>
               <p className="mt-1 text-sm font-semibold text-slate-800">{accessUser.lastLoginAt ? formatDate(accessUser.lastLoginAt) : "Jamais connecté"}</p>
-              {accessUser.mustChangePassword && <p className="mt-2 flex items-center gap-1.5 text-xs text-amber-600"><Clock size={12} /> Changement de mot de passe exigé à la prochaine connexion</p>}
+              {accessUser.mustChangePassword && <p className="mt-2 flex items-center gap-1.5 text-xs text-amber-700"><Clock size={12} /> Changement de mot de passe exigé à la prochaine connexion</p>}
             </div>
             <div className="rounded-xl border border-slate-100 p-4">
-              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">Actions</p>
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">Actions</p>
               <div className="space-y-2">
                 <Button size="sm" variant="outline" className="w-full" onClick={doRegenerate}><KeyRound size={14} /> Régénérer le mot de passe</Button>
                 <Button size="sm" variant="outline" className="w-full" onClick={() => { setNewEmail(accessUser.email); setEmailOpen(true); }}><Mail size={14} /> Modifier l&apos;e-mail</Button>
@@ -260,9 +260,9 @@ export function CompanyDetail() {
               <span>Transmettez-les <b>de façon sécurisée</b>. Ce mot de passe <b>ne sera plus affiché</b> ; l&apos;entreprise devra le changer à sa prochaine connexion.</span>
             </div>
             <div className="rounded-xl border border-slate-100 p-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Identifiant</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Identifiant</p>
               <p className="mt-1 font-mono text-sm font-semibold text-slate-800">{accessOut.email}</p>
-              <p className="mt-3 text-xs font-medium uppercase tracking-wide text-slate-400">Mot de passe temporaire</p>
+              <p className="mt-3 text-xs font-medium uppercase tracking-wide text-slate-500">Mot de passe temporaire</p>
               <p className="mt-1 font-mono text-sm font-bold text-indigo-600">{accessOut.tempPassword}</p>
             </div>
             <div className="flex justify-end gap-2">

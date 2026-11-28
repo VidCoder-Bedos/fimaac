@@ -24,11 +24,11 @@ interface SheetSummary {
 
 const TYPE_COLORS: Record<CellType, string> = {
   FORMULE: "text-violet-600",
-  NOMBRE: "text-emerald-600",
+  NOMBRE: "text-emerald-700",
   TEXTE: "text-slate-500",
-  BOOLEEN: "text-amber-600",
-  AUTRE: "text-rose-500",
-  VIDE: "text-slate-300",
+  BOOLEEN: "text-amber-700",
+  AUTRE: "text-rose-700",
+  VIDE: "text-slate-500",
 };
 
 interface CellVal { formula?: string; sharedFormula?: string; result?: unknown; richText?: { text: string }[]; text?: string; hyperlink?: string }
@@ -207,11 +207,11 @@ export default function WorkbookExtractor() {
               </div>
             ) : (
               <div className="flex flex-col items-center gap-3 py-6">
-                <UploadCloud size={36} className="text-indigo-500" />
+                <UploadCloud size={36} className="text-indigo-600" />
                 <p className="font-bold text-slate-700">
                   {fileName || "Cliquez pour téléverser le classeur .xlsx"}
                 </p>
-                <p className="text-xs text-slate-400">Le fichier reste dans votre navigateur — rien n'est envoyé sur un serveur</p>
+                <p className="text-xs text-slate-500">Le fichier reste dans votre navigateur — rien n'est envoyé sur un serveur</p>
               </div>
             )}
           </label>
@@ -226,19 +226,19 @@ export default function WorkbookExtractor() {
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <div className="rounded-xl border border-slate-200 bg-white p-4 text-center">
               <p className="text-2xl font-black text-indigo-600">{summaries.length}</p>
-              <p className="text-xs text-slate-400">Feuilles</p>
+              <p className="text-xs text-slate-500">Feuilles</p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-white p-4 text-center">
               <p className="text-2xl font-black text-violet-600">{totalFormulas}</p>
-              <p className="text-xs text-slate-400">Formules</p>
+              <p className="text-xs text-slate-500">Formules</p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-white p-4 text-center">
-              <p className="text-2xl font-black text-emerald-600">{totalInputs}</p>
-              <p className="text-xs text-slate-400">Cellules saisies</p>
+              <p className="text-2xl font-black text-emerald-700">{totalInputs}</p>
+              <p className="text-xs text-slate-500">Cellules saisies</p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-white p-4 text-center">
-              <p className="text-2xl font-black text-amber-600">{summaries.reduce((s, x) => s + x.merges.length, 0)}</p>
-              <p className="text-xs text-slate-400">Fusions</p>
+              <p className="text-2xl font-black text-amber-700">{summaries.reduce((s, x) => s + x.merges.length, 0)}</p>
+              <p className="text-xs text-slate-500">Fusions</p>
             </div>
           </div>
         )}
@@ -263,7 +263,7 @@ export default function WorkbookExtractor() {
                   <option key={s.name} value={s.name}>{s.name}</option>
                 ))}
               </select>
-              <ChevronDown size={14} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400" />
+              <ChevronDown size={14} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-500" />
             </div>
           </div>
         )}
@@ -276,17 +276,17 @@ export default function WorkbookExtractor() {
                   onClick={() => setExpandedSheet(expandedSheet === s.name ? null : s.name)}
                   className="flex w-full items-center gap-2 px-4 py-3 text-left hover:bg-slate-50"
                 >
-                  {expandedSheet === s.name ? <ChevronDown size={16} className="text-slate-400" /> : <ChevronRight size={16} className="text-slate-400" />}
-                  <FileSpreadsheet size={15} className="text-indigo-500" />
+                  {expandedSheet === s.name ? <ChevronDown size={16} className="text-slate-500" /> : <ChevronRight size={16} className="text-slate-500" />}
+                  <FileSpreadsheet size={15} className="text-indigo-600" />
                   <span className="flex-1 font-semibold text-slate-800">{s.name}</span>
-                  <span className="text-xs text-violet-500">{s.formulaCount} formules</span>
-                  <span className="text-xs text-emerald-500">{s.inputCount} saisies</span>
-                  <span className="text-xs text-slate-400">{s.rows}×{s.cols}</span>
+                  <span className="text-xs text-violet-600">{s.formulaCount} formules</span>
+                  <span className="text-xs text-emerald-700">{s.inputCount} saisies</span>
+                  <span className="text-xs text-slate-500">{s.rows}×{s.cols}</span>
                 </button>
                 {expandedSheet === s.name && sheets && (
                   <div className="max-h-80 overflow-auto border-t border-slate-100 px-4 py-2">
                     <table className="w-full text-xs">
-                      <thead className="sticky top-0 bg-white text-slate-400">
+                      <thead className="sticky top-0 bg-white text-slate-500">
                         <tr><th className="px-2 py-1 text-left">Cellule</th><th className="px-2 py-1 text-left">Type</th><th className="px-2 py-1 text-left">Contenu</th><th className="px-2 py-1 text-left">Résultat</th></tr>
                       </thead>
                       <tbody>
@@ -295,12 +295,12 @@ export default function WorkbookExtractor() {
                             <td className="px-2 py-1 font-mono font-semibold text-slate-600">{c.addr}</td>
                             <td className={`px-2 py-1 font-semibold ${TYPE_COLORS[c.type]}`}>{c.type}</td>
                             <td className="px-2 py-1 text-slate-600">{c.raw.slice(0, 80)}</td>
-                            <td className="px-2 py-1 text-slate-400">{c.result?.slice(0, 40) || "—"}</td>
+                            <td className="px-2 py-1 text-slate-500">{c.result?.slice(0, 40) || "—"}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
-                    {(sheets[s.name] || []).length > 200 && <p className="py-2 text-center text-xs text-slate-400">… {(sheets[s.name] || []).length - 200} cellules de plus (voir le dump complet)</p>}
+                    {(sheets[s.name] || []).length > 200 && <p className="py-2 text-center text-xs text-slate-500">… {(sheets[s.name] || []).length - 200} cellules de plus (voir le dump complet)</p>}
                   </div>
                 )}
               </div>
@@ -312,11 +312,11 @@ export default function WorkbookExtractor() {
           <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
             <div className="border-b border-slate-100 px-4 py-3">
               <h3 className="font-bold text-slate-800">{selectedSheet}</h3>
-              <p className="text-xs text-slate-400">{(sheets[selectedSheet] || []).length} cellules non vides</p>
+              <p className="text-xs text-slate-500">{(sheets[selectedSheet] || []).length} cellules non vides</p>
             </div>
             <div className="max-h-[60vh] overflow-auto">
               <table className="w-full text-xs">
-                <thead className="sticky top-0 bg-slate-50 text-slate-400">
+                <thead className="sticky top-0 bg-slate-50 text-slate-500">
                   <tr><th className="px-3 py-2 text-left">Cellule</th><th className="px-3 py-2 text-left">Type</th><th className="px-3 py-2 text-left">Contenu</th><th className="px-3 py-2 text-left">Résultat</th></tr>
                 </thead>
                 <tbody>
@@ -325,7 +325,7 @@ export default function WorkbookExtractor() {
                       <td className="px-3 py-1.5 font-mono font-semibold text-slate-600">{c.addr}</td>
                       <td className={`px-3 py-1.5 font-semibold ${TYPE_COLORS[c.type]}`}>{c.type}</td>
                       <td className="px-3 py-1.5 text-slate-600">{c.raw.slice(0, 120)}</td>
-                      <td className="px-3 py-1.5 text-slate-400">{c.result?.slice(0, 50) || "—"}</td>
+                      <td className="px-3 py-1.5 text-slate-500">{c.result?.slice(0, 50) || "—"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -341,8 +341,8 @@ export default function WorkbookExtractor() {
                 <span className="text-sm font-semibold text-slate-600">
                   {selectedSheet ? `Dump: ${selectedSheet}` : "Dump: Vue d'ensemble + cellules saisies"}
                 </span>
-                <span className="text-xs text-slate-400">{charCount.toLocaleString("fr-FR")} caractères</span>
-                {charCount > 50000 && <span className="flex items-center gap-1 text-xs text-amber-600"><AlertTriangle size={11} /> Dump volumineux</span>}
+                <span className="text-xs text-slate-500">{charCount.toLocaleString("fr-FR")} caractères</span>
+                {charCount > 50000 && <span className="flex items-center gap-1 text-xs text-amber-700"><AlertTriangle size={11} /> Dump volumineux</span>}
               </div>
               <button onClick={copy} className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700">
                 {copied ? <><CheckCircle2 size={15} /> Copié !</> : <><Copy size={15} /> Copier le dump</>}
@@ -351,18 +351,18 @@ export default function WorkbookExtractor() {
             <textarea
               readOnly
               value={dump}
-              className="h-64 w-full resize-y rounded-xl border border-slate-200 bg-slate-900 p-4 font-mono text-xs text-slate-300 outline-none"
+              className="h-64 w-full resize-y rounded-xl border border-slate-200 bg-slate-900 p-4 font-mono text-xs text-slate-500 outline-none"
               placeholder="Le dump apparaîtra ici…"
             />
-            <p className="text-center text-xs text-slate-400">
+            <p className="text-center text-xs text-slate-500">
               Copie ce texte et colle-le dans notre conversation pour que je puisse construire le renderer fidèle au modèle.
             </p>
           </div>
         )}
         {!summaries && !loading && (
           <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
-            <FileSpreadsheet size={32} className="mx-auto mb-3 text-slate-300" />
-            <p className="text-sm text-slate-400">Téléverse un classeur .xlsx pour commencer l'analyse</p>
+            <FileSpreadsheet size={32} className="mx-auto mb-3 text-slate-500" />
+            <p className="text-sm text-slate-500">Téléverse un classeur .xlsx pour commencer l'analyse</p>
           </div>
         )}
       </div>

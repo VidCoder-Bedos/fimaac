@@ -50,9 +50,9 @@ export function Bank() {
         <SectionHeading title="Relevé & pointage" subtitle="Pointage manuel ou rapprochement automatique par montant correspondant." />
         {txs.length === 0 ? <EmptyState icon={<Landmark />} title="Aucune transaction" /> : (
           <div className="overflow-x-auto"><table className="w-full text-sm">
-            <thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-400"><th className="px-3 py-2">Date</th><th className="px-3 py-2">Libellé</th><th className="px-3 py-2 text-right">Montant</th><th className="px-3 py-2">Lettré</th><th className="px-3 py-2 text-right">Pointage</th></tr></thead>
+            <thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-500"><th className="px-3 py-2">Date</th><th className="px-3 py-2">Libellé</th><th className="px-3 py-2 text-right">Montant</th><th className="px-3 py-2">Lettré</th><th className="px-3 py-2 text-right">Pointage</th></tr></thead>
             <tbody>{txs.map((t) => (
-              <tr key={t.id} className="border-b border-slate-50"><td className="px-3 py-2.5 text-slate-500">{formatDate(t.date)}</td><td className="px-3 py-2.5 text-slate-700">{t.label}</td><td className={`px-3 py-2.5 text-right font-semibold tabular-nums ${t.amount >= 0 ? "text-emerald-600" : "text-rose-600"}`}>{t.amount >= 0 ? "+" : ""}{fcfa(t.amount)}</td><td className="px-3 py-2.5">{t.reconciled ? <Badge tone="emerald"><Check size={11} /> Lettré</Badge> : <Badge tone="amber">À pointer</Badge>}</td><td className="px-3 py-2.5 text-right"><Button size="sm" variant={t.reconciled ? "outline" : "primary"} onClick={() => toggleReconcile(t.id)}>{t.reconciled ? "Dépointer" : "Pointer"}</Button></td></tr>
+              <tr key={t.id} className="border-b border-slate-50"><td className="px-3 py-2.5 text-slate-500">{formatDate(t.date)}</td><td className="px-3 py-2.5 text-slate-700">{t.label}</td><td className={`px-3 py-2.5 text-right font-semibold tabular-nums ${t.amount >= 0 ? "text-emerald-700" : "text-rose-700"}`}>{t.amount >= 0 ? "+" : ""}{fcfa(t.amount)}</td><td className="px-3 py-2.5">{t.reconciled ? <Badge tone="emerald"><Check size={11} /> Lettré</Badge> : <Badge tone="amber">À pointer</Badge>}</td><td className="px-3 py-2.5 text-right"><Button size="sm" variant={t.reconciled ? "outline" : "primary"} onClick={() => toggleReconcile(t.id)}>{t.reconciled ? "Dépointer" : "Pointer"}</Button></td></tr>
             ))}</tbody>
           </table></div>
         )}
@@ -61,31 +61,31 @@ export function Bank() {
         <SectionHeading title="État de rapprochement" subtitle="Compte 521 (comptabilité) ↔ relevé bancaire" />
         <div className="grid gap-6 lg:grid-cols-2">
           <div>
-            <p className="mb-2 text-xs font-bold uppercase text-slate-400">Selon la comptabilité (521)</p>
+            <p className="mb-2 text-xs font-bold uppercase text-slate-500">Selon la comptabilité (521)</p>
             <div className="space-y-1.5 text-sm">
               <div className="flex justify-between rounded-lg bg-slate-50 px-3 py-1.5"><span className="text-slate-500">Solde 521 en comptabilité</span><span className="font-semibold tabular-nums text-slate-800">{fcfa(soldeCompta)}</span></div>
-              <div className="flex justify-between rounded-lg bg-slate-50 px-3 py-1.5"><span className="text-slate-500">+ Encaissements non pointés</span><span className="font-semibold tabular-nums text-emerald-600">{fcfa(encNP)}</span></div>
-              <div className="flex justify-between rounded-lg bg-slate-50 px-3 py-1.5"><span className="text-slate-500">− Décaissements non pointés</span><span className="font-semibold tabular-nums text-rose-600">{fcfa(-decNP)}</span></div>
+              <div className="flex justify-between rounded-lg bg-slate-50 px-3 py-1.5"><span className="text-slate-500">+ Encaissements non pointés</span><span className="font-semibold tabular-nums text-emerald-700">{fcfa(encNP)}</span></div>
+              <div className="flex justify-between rounded-lg bg-slate-50 px-3 py-1.5"><span className="text-slate-500">− Décaissements non pointés</span><span className="font-semibold tabular-nums text-rose-700">{fcfa(-decNP)}</span></div>
               <div className="flex justify-between rounded-lg bg-indigo-50 px-3 py-2"><span className="font-bold text-slate-700">Solde rapproché</span><span className="font-bold tabular-nums text-indigo-700">{fcfa(soldeRapproche)}</span></div>
             </div>
           </div>
           <div>
-            <p className="mb-2 text-xs font-bold uppercase text-slate-400">Selon le relevé bancaire</p>
+            <p className="mb-2 text-xs font-bold uppercase text-slate-500">Selon le relevé bancaire</p>
             <div className="space-y-1.5 text-sm">
               <div className="flex justify-between rounded-lg bg-slate-50 px-3 py-1.5"><span className="text-slate-500">Solde de départ (relevé)</span><span className="font-semibold tabular-nums text-slate-800">{fcfa(opening)}</span></div>
               <div className="flex justify-between rounded-lg bg-slate-50 px-3 py-1.5"><span className="text-slate-500">+ Mouvements du relevé</span><span className="font-semibold tabular-nums text-slate-800">{fcfa(txs.reduce((s, t) => s + t.amount, 0))}</span></div>
               <div className="flex justify-between rounded-lg bg-slate-50 px-3 py-2"><span className="font-bold text-slate-700">Solde final relevé</span><span className="font-bold tabular-nums text-slate-800">{fcfa(soldeReleve)}</span></div>
-              <div className={`flex justify-between rounded-lg px-3 py-2 ${Math.abs(ecart) < 1 ? "bg-emerald-50" : "bg-amber-50"}`}><span className="font-bold text-slate-700">Écart de rapprochement</span><span className={`font-bold tabular-nums ${Math.abs(ecart) < 1 ? "text-emerald-600" : "text-amber-600"}`}>{fcfa(ecart)}</span></div>
+              <div className={`flex justify-between rounded-lg px-3 py-2 ${Math.abs(ecart) < 1 ? "bg-emerald-50" : "bg-amber-50"}`}><span className="font-bold text-slate-700">Écart de rapprochement</span><span className={`font-bold tabular-nums ${Math.abs(ecart) < 1 ? "text-emerald-700" : "text-amber-700"}`}>{fcfa(ecart)}</span></div>
             </div>
           </div>
         </div>
         <div className="mt-5 grid gap-6 lg:grid-cols-2">
           <div>
-            <p className="mb-2 text-xs font-bold uppercase text-slate-400">Relevé ({txs.length})</p>
-            <div className="max-h-52 overflow-auto rounded-xl border border-slate-100"><table className="w-full text-xs"><tbody>{txs.map((t) => <tr key={t.id} className="border-b border-slate-50"><td className="px-3 py-1.5 text-slate-500">{formatDate(t.date)}</td><td className="px-3 py-1.5 text-slate-700">{t.label}</td><td className={`px-3 py-1.5 text-right tabular-nums ${t.amount >= 0 ? "text-emerald-600" : "text-rose-600"}`}>{fcfa(t.amount)}</td><td className="px-2 py-1.5">{t.reconciled ? <Badge tone="emerald">✓</Badge> : <span className="text-slate-300">•</span>}</td></tr>)}</tbody></table></div>
+            <p className="mb-2 text-xs font-bold uppercase text-slate-500">Relevé ({txs.length})</p>
+            <div className="max-h-52 overflow-auto rounded-xl border border-slate-100"><table className="w-full text-xs"><tbody>{txs.map((t) => <tr key={t.id} className="border-b border-slate-50"><td className="px-3 py-1.5 text-slate-500">{formatDate(t.date)}</td><td className="px-3 py-1.5 text-slate-700">{t.label}</td><td className={`px-3 py-1.5 text-right tabular-nums ${t.amount >= 0 ? "text-emerald-700" : "text-rose-700"}`}>{fcfa(t.amount)}</td><td className="px-2 py-1.5">{t.reconciled ? <Badge tone="emerald">✓</Badge> : <span className="text-slate-500">•</span>}</td></tr>)}</tbody></table></div>
           </div>
           <div>
-            <p className="mb-2 text-xs font-bold uppercase text-slate-400">Compta 521 ({c521.lines.length})</p>
+            <p className="mb-2 text-xs font-bold uppercase text-slate-500">Compta 521 ({c521.lines.length})</p>
             <div className="max-h-52 overflow-auto rounded-xl border border-slate-100"><table className="w-full text-xs"><tbody>{c521.lines.map((l, i) => <tr key={i} className="border-b border-slate-50"><td className="px-3 py-1.5 text-slate-500">{formatDate(l.date)}</td><td className="px-3 py-1.5 text-slate-700">{l.label}</td><td className="px-3 py-1.5 text-right tabular-nums text-slate-800">{fcfa(l.debit - l.credit)}</td></tr>)}</tbody></table></div>
           </div>
         </div>
@@ -100,7 +100,7 @@ export function Bank() {
       </Modal>
       <Modal open={ruleOpen} onClose={() => setRuleOpen(false)} title="Règles de rapprochement automatique">
         <div className="space-y-3">
-          {rules.length > 0 && <div className="space-y-1">{rules.map((r) => <div key={r.id} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm"><span>{r.label} <span className="text-xs text-slate-400">« {r.pattern} » → {r.accountId}</span></span><button onClick={() => deleteReconRule(r.id)} className="text-slate-300 hover:text-rose-500"><Trash2 size={14} /></button></div>)}</div>}
+          {rules.length > 0 && <div className="space-y-1">{rules.map((r) => <div key={r.id} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm"><span>{r.label} <span className="text-xs text-slate-500">« {r.pattern} » → {r.accountId}</span></span><button onClick={() => deleteReconRule(r.id)} className="text-slate-500 hover:text-rose-700"><Trash2 size={14} /></button></div>)}</div>}
           <Field label="Libellé"><Input value={rule.label} onChange={(e) => setRule({ ...rule, label: e.target.value })} placeholder="Prélèvement eau" /></Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Mot-clé (libellé)"><Input value={rule.pattern} onChange={(e) => setRule({ ...rule, pattern: e.target.value })} placeholder="SDE" /></Field>
@@ -133,9 +133,9 @@ export function FixedAssets() {
           const cumul = sched[0]?.cumulative || 0;
           return (
             <Card key={a.id} className="p-5">
-              <div className="flex items-center justify-between"><div><p className="font-bold text-slate-800">{a.name}</p><p className="text-xs text-slate-400">{a.accountCode} · acquis le {formatDate(a.acquisitionDate)}</p></div><Badge tone="indigo">{a.method}</Badge></div>
-              <div className="mt-3 grid grid-cols-3 gap-2 text-center"><div><p className="text-xs text-slate-400">Coût</p><p className="font-bold text-slate-800">{fcfa(a.cost)}</p></div><div><p className="text-xs text-slate-400">Durée</p><p className="font-bold text-slate-800">{a.usefulLifeYears} ans</p></div><div><p className="text-xs text-slate-400">Cumul</p><p className="font-bold text-slate-800">{fcfa(cumul)}</p></div></div>
-              <div className="mt-3 max-h-32 overflow-y-auto rounded-lg border border-slate-100"><table className="w-full text-xs"><thead><tr className="bg-slate-50 text-slate-400 sticky top-0"><th className="px-2 py-1.5 text-left">Année</th><th className="px-2 py-1.5 text-right">Annuité</th><th className="px-2 py-1.5 text-right">VNC</th></tr></thead><tbody>{sched.map((s) => <tr key={s.year} className="border-t border-slate-50"><td className="px-2 py-1.5">{s.year}</td><td className="px-2 py-1.5 text-right tabular-nums">{fcfa(s.annuity)}</td><td className="px-2 py-1.5 text-right tabular-nums">{fcfa(s.netBookValue)}</td></tr>)}</tbody></table></div>
+              <div className="flex items-center justify-between"><div><p className="font-bold text-slate-800">{a.name}</p><p className="text-xs text-slate-500">{a.accountCode} · acquis le {formatDate(a.acquisitionDate)}</p></div><Badge tone="indigo">{a.method}</Badge></div>
+              <div className="mt-3 grid grid-cols-3 gap-2 text-center"><div><p className="text-xs text-slate-500">Coût</p><p className="font-bold text-slate-800">{fcfa(a.cost)}</p></div><div><p className="text-xs text-slate-500">Durée</p><p className="font-bold text-slate-800">{a.usefulLifeYears} ans</p></div><div><p className="text-xs text-slate-500">Cumul</p><p className="font-bold text-slate-800">{fcfa(cumul)}</p></div></div>
+              <div className="mt-3 max-h-32 overflow-y-auto rounded-lg border border-slate-100"><table className="w-full text-xs"><thead><tr className="bg-slate-50 text-slate-500 sticky top-0"><th className="px-2 py-1.5 text-left">Année</th><th className="px-2 py-1.5 text-right">Annuité</th><th className="px-2 py-1.5 text-right">VNC</th></tr></thead><tbody>{sched.map((s) => <tr key={s.year} className="border-t border-slate-50"><td className="px-2 py-1.5">{s.year}</td><td className="px-2 py-1.5 text-right tabular-nums">{fcfa(s.annuity)}</td><td className="px-2 py-1.5 text-right tabular-nums">{fcfa(s.netBookValue)}</td></tr>)}</tbody></table></div>
               <Button className="mt-3 w-full" size="sm" variant="outline" onClick={() => generateDepreciationEntry(company.id, a.id)}><FileText size={14} /> Générer l'écriture de dotation</Button>
             </Card>
           );
@@ -171,11 +171,11 @@ export function Inventory() {
       <div className="mb-6 grid grid-cols-2 gap-4"><StatCard title="Articles" value={String(items.length)} icon={<Boxes size={18} />} tone="indigo" /><StatCard title="Valeur du stock" value={fcfa(total)} icon={<Calculator size={18} />} tone="emerald" /></div>
       {items.length === 0 ? <EmptyState icon={<Boxes />} title="Aucun article" /> : (
         <Card className="overflow-x-auto p-5"><table className="w-full text-sm">
-          <thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-400"><th className="px-3 py-2">Désignation</th><th className="px-3 py-2">Catégorie</th><th className="px-3 py-2 text-right">Qté</th><th className="px-3 py-2 text-right">P.U.</th><th className="px-3 py-2 text-right">Valeur</th><th className="px-3 py-2 text-right">Mouvements</th><th className="px-3 py-2"></th></tr></thead>
+          <thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-500"><th className="px-3 py-2">Désignation</th><th className="px-3 py-2">Catégorie</th><th className="px-3 py-2 text-right">Qté</th><th className="px-3 py-2 text-right">P.U.</th><th className="px-3 py-2 text-right">Valeur</th><th className="px-3 py-2 text-right">Mouvements</th><th className="px-3 py-2"></th></tr></thead>
           <tbody>{items.map((i) => (
             <tr key={i.id} className="border-b border-slate-50"><td className="px-3 py-2.5 font-medium text-slate-800">{i.name}</td><td className="px-3 py-2.5 text-slate-500">{i.category}</td><td className="px-3 py-2.5 text-right tabular-nums">{i.qty}</td><td className="px-3 py-2.5 text-right tabular-nums">{fcfa(i.unitPrice)}</td><td className="px-3 py-2.5 text-right font-semibold tabular-nums text-slate-800">{fcfa(i.qty * i.unitPrice)}</td>
-              <td className="px-3 py-2.5 text-right"><div className="flex justify-end gap-1"><button onClick={() => adjustStock(i.id, 1)} className="rounded bg-emerald-50 px-1.5 text-emerald-600 hover:bg-emerald-100">+</button><button onClick={() => adjustStock(i.id, -1)} className="rounded bg-rose-50 px-1.5 text-rose-600 hover:bg-rose-100">−</button></div></td>
-              <td className="px-3 py-2.5 text-right"><button onClick={() => deleteStockItem(i.id)} className="text-slate-300 hover:text-rose-500"><X size={15} /></button></td></tr>
+              <td className="px-3 py-2.5 text-right"><div className="flex justify-end gap-1"><button onClick={() => adjustStock(i.id, 1)} className="rounded bg-emerald-50 px-1.5 text-emerald-700 hover:bg-emerald-100">+</button><button onClick={() => adjustStock(i.id, -1)} className="rounded bg-rose-50 px-1.5 text-rose-700 hover:bg-rose-100">−</button></div></td>
+              <td className="px-3 py-2.5 text-right"><button onClick={() => deleteStockItem(i.id)} className="text-slate-500 hover:text-rose-700"><X size={15} /></button></td></tr>
           ))}</tbody>
         </table></Card>
       )}
@@ -235,16 +235,16 @@ export function Payroll() {
       </Card>
       {payslips.length > 0 && (
         <Card className="mb-6 p-5"><SectionHeading title="Derniers bulletins" />
-          <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-400"><th className="px-3 py-2">Employé</th><th className="px-3 py-2">Période</th><th className="px-3 py-2 text-right">Brut</th><th className="px-3 py-2 text-right">CNSS sal.</th><th className="px-3 py-2 text-right">AMU sal.</th><th className="px-3 py-2 text-right">IRPP</th><th className="px-3 py-2 text-right">Net</th></tr></thead>
+          <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-500"><th className="px-3 py-2">Employé</th><th className="px-3 py-2">Période</th><th className="px-3 py-2 text-right">Brut</th><th className="px-3 py-2 text-right">CNSS sal.</th><th className="px-3 py-2 text-right">AMU sal.</th><th className="px-3 py-2 text-right">IRPP</th><th className="px-3 py-2 text-right">Net</th></tr></thead>
             <tbody>{payslips.slice(0, 12).map((p) => { const emp = employees.find((e) => e.id === p.employeeId); return (
-              <tr key={p.id} className="border-b border-slate-50"><td className="px-3 py-2.5 font-medium text-slate-800">{emp ? `${emp.firstName} ${emp.lastName}` : "—"}</td><td className="px-3 py-2.5 text-slate-500">{p.periodLabel}</td><td className="px-3 py-2.5 text-right tabular-nums">{fcfa(p.gross)}</td><td className="px-3 py-2.5 text-right tabular-nums text-rose-500">{fcfa(p.cnssEmployee)}</td><td className="px-3 py-2.5 text-right tabular-nums text-rose-500">{fcfa(p.amuEmployee ?? 0)}</td><td className="px-3 py-2.5 text-right tabular-nums text-rose-500">{fcfa(p.irpp ?? p.withholding)}</td><td className="px-3 py-2.5 text-right font-bold tabular-nums text-emerald-600">{fcfa(p.net)}</td></tr>
+              <tr key={p.id} className="border-b border-slate-50"><td className="px-3 py-2.5 font-medium text-slate-800">{emp ? `${emp.firstName} ${emp.lastName}` : "—"}</td><td className="px-3 py-2.5 text-slate-500">{p.periodLabel}</td><td className="px-3 py-2.5 text-right tabular-nums">{fcfa(p.gross)}</td><td className="px-3 py-2.5 text-right tabular-nums text-rose-700">{fcfa(p.cnssEmployee)}</td><td className="px-3 py-2.5 text-right tabular-nums text-rose-700">{fcfa(p.amuEmployee ?? 0)}</td><td className="px-3 py-2.5 text-right tabular-nums text-rose-700">{fcfa(p.irpp ?? p.withholding)}</td><td className="px-3 py-2.5 text-right font-bold tabular-nums text-emerald-700">{fcfa(p.net)}</td></tr>
             ); })}</tbody>
           </table></div>
         </Card>
       )}
       <Card className="p-5"><SectionHeading title="Effectifs" />
         {employees.length === 0 ? <EmptyState icon={<Users />} title="Aucun employé" /> : (
-          <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-400"><th className="px-3 py-2">Employé</th><th className="px-3 py-2">Poste</th><th className="px-3 py-2">Contrat</th><th className="px-3 py-2 text-right">Salaire brut</th></tr></thead>
+          <div className="overflow-x-auto"><table className="w-full text-sm"><thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-500"><th className="px-3 py-2">Employé</th><th className="px-3 py-2">Poste</th><th className="px-3 py-2">Contrat</th><th className="px-3 py-2 text-right">Salaire brut</th></tr></thead>
             <tbody>{employees.map((e) => <tr key={e.id} className="border-b border-slate-50"><td className="px-3 py-2.5 font-medium text-slate-800">{e.firstName} {e.lastName}</td><td className="px-3 py-2.5 text-slate-600">{e.position}</td><td className="px-3 py-2.5"><Badge tone="sky">{e.contractType.toUpperCase()}</Badge></td><td className="px-3 py-2.5 text-right font-semibold tabular-nums text-slate-800">{fcfa(e.grossSalary)}</td></tr>)}</tbody>
           </table></div>
         )}

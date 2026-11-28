@@ -219,15 +219,15 @@ export default function Liasse() {
                 </Card>
                 <Card className="p-5"><SectionHeading title="Bilan synthétique (N)" />
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <div><p className="mb-1 text-xs font-bold uppercase text-slate-400">Actif</p><Row2 l="Immo nettes" v={fcfa(stmt.bilan.immoNet)} /><Row2 l="Stocks" v={fcfa(stmt.bilan.stocks)} /><Row2 l="Créances" v={fcfa(stmt.bilan.creances)} /><Row2 l="Trésorerie" v={fcfa(stmt.bilan.tresorerie)} /><Row2 l="TOTAL" v={fcfa(stmt.bilan.actifTotal)} bold /></div>
-                    <div><p className="mb-1 text-xs font-bold uppercase text-slate-400">Passif</p><Row2 l="Capitaux" v={fcfa(stmt.bilan.capitaux)} /><Row2 l="Résultat" v={fcfa(stmt.bilan.resultat)} /><Row2 l="Dettes fin." v={fcfa(stmt.bilan.dettesFin)} /><Row2 l="Fournisseurs" v={fcfa(stmt.bilan.dettesFourn)} /><Row2 l="TOTAL" v={fcfa(stmt.bilan.passifTotal)} bold /></div>
+                    <div><p className="mb-1 text-xs font-bold uppercase text-slate-500">Actif</p><Row2 l="Immo nettes" v={fcfa(stmt.bilan.immoNet)} /><Row2 l="Stocks" v={fcfa(stmt.bilan.stocks)} /><Row2 l="Créances" v={fcfa(stmt.bilan.creances)} /><Row2 l="Trésorerie" v={fcfa(stmt.bilan.tresorerie)} /><Row2 l="TOTAL" v={fcfa(stmt.bilan.actifTotal)} bold /></div>
+                    <div><p className="mb-1 text-xs font-bold uppercase text-slate-500">Passif</p><Row2 l="Capitaux" v={fcfa(stmt.bilan.capitaux)} /><Row2 l="Résultat" v={fcfa(stmt.bilan.resultat)} /><Row2 l="Dettes fin." v={fcfa(stmt.bilan.dettesFin)} /><Row2 l="Fournisseurs" v={fcfa(stmt.bilan.dettesFourn)} /><Row2 l="TOTAL" v={fcfa(stmt.bilan.passifTotal)} bold /></div>
                   </div>
                 </Card>
               </div>
               <Card className="p-5"><SectionHeading title="Export de la liasse" subtitle="Feuilles : Balance N-1, Balance N, Compte de résultat, Bilan, Contrôles — styles et formules préservés" />
                 <div className="flex flex-wrap items-center gap-3">
                   <Button onClick={generate} disabled={loading === "gen"}><FileDown size={16} /> Générer & exporter (Mode A)</Button>
-                  <span className="text-sm text-slate-400">ou</span>
+                  <span className="text-sm text-slate-500">ou</span>
                   <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-semibold text-indigo-700 hover:bg-indigo-100">
                     <Wand2 size={16} /> Remplir un modèle GUDEF (Mode B)
                     <input type="file" accept=".xlsx" className="hidden" onChange={(e) => fillTpl(e.target.files?.[0] || null)} />
@@ -245,14 +245,14 @@ export default function Liasse() {
           {!stmt ? <EmptyState icon={<ShieldCheck />} title="Importez une Balance N pour lancer les contrôles" next={missingFor("liasse", db, company.id) ?? undefined} /> : (
             <>
               <div className="mb-4 grid grid-cols-3 gap-3 text-center">
-                <div className="rounded-xl bg-emerald-50 p-3"><p className="text-2xl font-black text-emerald-600">{checks.filter((c) => c.status === "ok").length}</p><p className="text-xs text-slate-500">Conformes</p></div>
-                <div className="rounded-xl bg-amber-50 p-3"><p className="text-2xl font-black text-amber-600">{checks.filter((c) => c.status === "warning").length}</p><p className="text-xs text-slate-500">Avertissements</p></div>
-                <div className="rounded-xl bg-rose-50 p-3"><p className="text-2xl font-black text-rose-600">{checks.filter((c) => c.status === "blocking").length}</p><p className="text-xs text-slate-500">Bloquants</p></div>
+                <div className="rounded-xl bg-emerald-50 p-3"><p className="text-2xl font-black text-emerald-700">{checks.filter((c) => c.status === "ok").length}</p><p className="text-xs text-slate-500">Conformes</p></div>
+                <div className="rounded-xl bg-amber-50 p-3"><p className="text-2xl font-black text-amber-700">{checks.filter((c) => c.status === "warning").length}</p><p className="text-xs text-slate-500">Avertissements</p></div>
+                <div className="rounded-xl bg-rose-50 p-3"><p className="text-2xl font-black text-rose-700">{checks.filter((c) => c.status === "blocking").length}</p><p className="text-xs text-slate-500">Bloquants</p></div>
               </div>
               <div className="space-y-2">{checks.map((c) => (
                 <div key={c.id} className="flex items-start gap-3 rounded-xl border border-slate-100 px-4 py-3">
-                  {c.status === "ok" ? <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-emerald-500" /> : c.status === "warning" ? <AlertTriangle size={18} className="mt-0.5 shrink-0 text-amber-500" /> : <XCircle size={18} className="mt-0.5 shrink-0 text-rose-500" />}
-                  <div className="flex-1"><div className="flex items-center justify-between"><p className="font-semibold text-slate-800">{c.title}</p><Badge tone="slate">{c.sheet}</Badge></div><p className="text-xs text-slate-400">{c.detail}</p><p className="mt-1 text-xs tabular-nums text-slate-500">Attendu {fcfa(c.expected)} · Constaté {fcfa(c.actual)} · Écart {fcfa(c.diff)}</p></div>
+                  {c.status === "ok" ? <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-emerald-700" /> : c.status === "warning" ? <AlertTriangle size={18} className="mt-0.5 shrink-0 text-amber-700" /> : <XCircle size={18} className="mt-0.5 shrink-0 text-rose-700" />}
+                  <div className="flex-1"><div className="flex items-center justify-between"><p className="font-semibold text-slate-800">{c.title}</p><Badge tone="slate">{c.sheet}</Badge></div><p className="text-xs text-slate-500">{c.detail}</p><p className="mt-1 text-xs tabular-nums text-slate-500">Attendu {fcfa(c.expected)} · Constaté {fcfa(c.actual)} · Écart {fcfa(c.diff)}</p></div>
                 </div>
               ))}</div>
               <div className="mt-3 flex items-start gap-2 rounded-xl bg-indigo-50 px-3 py-2 text-xs text-indigo-700"><ShieldCheck size={14} className="mt-0.5 shrink-0" /> Les cellules dérivées (totaux, reports, soldes) sont recalculées automatiquement à partir des comptes sources ; chaque correction est consignée dans l'audit trail.</div>
@@ -286,7 +286,7 @@ export default function Liasse() {
                             <tr className="bg-slate-50"><td colSpan={2} className="px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-500">{z.label}</td></tr>
                             {z.fluxes.map((f) => (
                               <tr key={f.label} className="border-b border-slate-50">
-                                <td className="px-3 py-2 pl-6 text-slate-700">{f.label}<p className="text-[11px] text-slate-400">{f.basis}</p></td>
+                                <td className="px-3 py-2 pl-6 text-slate-700">{f.label}<p className="text-[11px] text-slate-500">{f.basis}</p></td>
                                 <td className="px-3 py-2 text-right tabular-nums text-slate-700">{fcfa(f.amount)}</td>
                               </tr>
                             ))}
@@ -302,7 +302,7 @@ export default function Liasse() {
                 <div className="mt-4 space-y-2">
                   {tafire.controls.map((c) => (
                     <div key={c.id} className="flex items-start gap-3 rounded-xl border border-slate-100 px-3 py-2.5">
-                      {c.level === "ok" ? <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-emerald-500" /> : <AlertTriangle size={16} className={`mt-0.5 shrink-0 ${c.level === "blocking" ? "text-rose-500" : "text-amber-500"}`} />}
+                      {c.level === "ok" ? <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-emerald-700" /> : <AlertTriangle size={16} className={`mt-0.5 shrink-0 ${c.level === "blocking" ? "text-rose-700" : "text-amber-700"}`} />}
                       <div className="min-w-0"><p className="text-sm font-semibold text-slate-800">{c.label}</p><p className="text-xs text-slate-500">{c.detail}</p></div>
                     </div>
                   ))}
@@ -329,7 +329,7 @@ export default function Liasse() {
                 <div className="space-y-2">
                   {annex.controls.map((c) => (
                     <div key={c.id} className="flex items-start gap-3 rounded-xl border border-slate-100 px-3 py-2.5">
-                      {c.level === "ok" ? <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-emerald-500" /> : <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-500" />}
+                      {c.level === "ok" ? <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-emerald-700" /> : <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-700" />}
                       <div className="min-w-0"><p className="text-sm font-semibold text-slate-800">{c.label}</p><p className="text-xs text-slate-500">{c.detail}</p></div>
                     </div>
                   ))}
@@ -345,14 +345,14 @@ export default function Liasse() {
                           <span className="flex items-center gap-2"><Badge tone="indigo">{note.code}</Badge><span className="text-sm font-semibold text-slate-800">{note.title}</span></span>
                           <span className="flex items-center gap-4 text-sm tabular-nums text-slate-600">
                             <span>N {note.totalN === null ? "—" : fcfa(note.totalN)}</span>
-                            <span className="text-slate-400">N-1 {note.totalN1 === null ? "—" : fcfa(note.totalN1)}</span>
-                            <span className={note.variation && note.variation !== 0 ? "font-semibold text-indigo-600" : "text-slate-400"}>Δ {note.variation === null ? "—" : fcfa(note.variation)}</span>
+                            <span className="text-slate-500">N-1 {note.totalN1 === null ? "—" : fcfa(note.totalN1)}</span>
+                            <span className={note.variation && note.variation !== 0 ? "font-semibold text-indigo-600" : "text-slate-500"}>Δ {note.variation === null ? "—" : fcfa(note.variation)}</span>
                           </span>
                         </summary>
                         {note.rows.length > 0 && (
                           <div className="overflow-x-auto border-t border-slate-100">
                             <table className="w-full text-xs">
-                              <thead className="bg-slate-50 text-slate-400"><tr><th className="px-4 py-2 text-left">Réf.</th><th className="px-4 py-2 text-left">Libellé</th><th className="px-4 py-2 text-right">N</th><th className="px-4 py-2 text-right">N-1</th><th className="px-4 py-2 text-right">Variation</th></tr></thead>
+                              <thead className="bg-slate-50 text-slate-500"><tr><th className="px-4 py-2 text-left">Réf.</th><th className="px-4 py-2 text-left">Libellé</th><th className="px-4 py-2 text-right">N</th><th className="px-4 py-2 text-right">N-1</th><th className="px-4 py-2 text-right">Variation</th></tr></thead>
                               <tbody>{note.rows.map((r, i) => (
                                 <Fragment key={i}>
                                   <tr className="border-t border-slate-50">
@@ -364,10 +364,10 @@ export default function Liasse() {
                                   </tr>
                                   {r.details?.map((d) => (
                                     <tr key={`${r.ref}-${d.code}`} className="bg-slate-50/40 text-[11px]">
-                                      <td className="px-4 py-1 pl-7 font-mono text-slate-400">{d.code}</td>
+                                      <td className="px-4 py-1 pl-7 font-mono text-slate-500">{d.code}</td>
                                       <td className="px-4 py-1 text-slate-500">{d.label}</td>
                                       <td className="px-4 py-1 text-right tabular-nums text-slate-600">{d.n === null ? "—" : fcfa(d.n)}</td>
-                                      <td className="px-4 py-1 text-right tabular-nums text-slate-400">{d.n1 === null ? "—" : fcfa(d.n1)}</td>
+                                      <td className="px-4 py-1 text-right tabular-nums text-slate-500">{d.n1 === null ? "—" : fcfa(d.n1)}</td>
                                       <td className="px-4 py-1" />
                                     </tr>
                                   ))}
@@ -433,17 +433,17 @@ export default function Liasse() {
               <Upload size={16} /> Importer la balance 6 colonnes
               <input type="file" accept=".xlsx,.xls" className="hidden" onChange={(e) => onBal6(e.target.files?.[0] || null)} />
             </label>
-            {loading === "bal6" && <Spinner className="text-indigo-500" />}
+            {loading === "bal6" && <Spinner className="text-indigo-600" />}
             {bal6 && <Badge tone="emerald">{bal6.n.length} comptes N · {bal6.n1.length} N-1 · {bal6.subtotals.length} sous-totaux</Badge>}
           </div>
           {bal6 && (
             <>
               <div className="mb-4 grid grid-cols-2 gap-3">
-                <div className="rounded-xl border border-slate-100 p-3"><p className="text-xs text-slate-400">Σ Balance N</p><p className="font-bold text-slate-800">D {fcfa(bal6.n.reduce((s, r) => s + r.debit, 0))} / C {fcfa(bal6.n.reduce((s, r) => s + r.credit, 0))}</p></div>
-                <div className="rounded-xl border border-slate-100 p-3"><p className="text-xs text-slate-400">Σ Balance N-1</p><p className="font-bold text-slate-800">D {fcfa(bal6.n1.reduce((s, r) => s + r.debit, 0))} / C {fcfa(bal6.n1.reduce((s, r) => s + r.credit, 0))}</p></div>
+                <div className="rounded-xl border border-slate-100 p-3"><p className="text-xs text-slate-500">Σ Balance N</p><p className="font-bold text-slate-800">D {fcfa(bal6.n.reduce((s, r) => s + r.debit, 0))} / C {fcfa(bal6.n.reduce((s, r) => s + r.credit, 0))}</p></div>
+                <div className="rounded-xl border border-slate-100 p-3"><p className="text-xs text-slate-500">Σ Balance N-1</p><p className="font-bold text-slate-800">D {fcfa(bal6.n1.reduce((s, r) => s + r.debit, 0))} / C {fcfa(bal6.n1.reduce((s, r) => s + r.credit, 0))}</p></div>
               </div>
               <div className="max-h-72 overflow-auto rounded-xl border border-slate-100"><table className="w-full text-xs">
-                <thead className="sticky top-0 bg-slate-50 text-slate-400"><tr><th className="px-3 py-2 text-left">Compte</th><th className="px-3 py-2 text-left">Libellé</th><th className="px-3 py-2 text-right">SD N</th><th className="px-3 py-2 text-right">SC N</th><th className="px-3 py-2 text-right">SD N-1</th><th className="px-3 py-2 text-right">SC N-1</th></tr></thead>
+                <thead className="sticky top-0 bg-slate-50 text-slate-500"><tr><th className="px-3 py-2 text-left">Compte</th><th className="px-3 py-2 text-left">Libellé</th><th className="px-3 py-2 text-right">SD N</th><th className="px-3 py-2 text-right">SC N</th><th className="px-3 py-2 text-right">SD N-1</th><th className="px-3 py-2 text-right">SC N-1</th></tr></thead>
                 <tbody>{bal6.n.map((r, i) => (<tr key={i} className="border-t border-slate-50"><td className="px-3 py-1.5 font-mono">{r.code}</td><td className="px-3 py-1.5 text-slate-600">{r.label}</td><td className="px-3 py-1.5 text-right tabular-nums">{r.debit || "—"}</td><td className="px-3 py-1.5 text-right tabular-nums">{r.credit || "—"}</td><td className="px-3 py-1.5 text-right tabular-nums">{bal6.n1[i]?.debit || "—"}</td><td className="px-3 py-1.5 text-right tabular-nums">{bal6.n1[i]?.credit || "—"}</td></tr>))}</tbody>
               </table></div>
               <Button className="mt-4" onClick={onRunChecks}><ShieldCheck size={15} /> Lancer les contrôles de cohérence</Button>
@@ -474,13 +474,13 @@ export default function Liasse() {
                   <details className="mt-2">
                     <summary className="cursor-pointer text-[11px] font-semibold text-indigo-600">Aperçu (5 premiers comptes)</summary>
                     <table className="mt-1 w-full text-[11px]">
-                      <thead className="text-slate-400"><tr><th className="px-1 py-0.5 text-left">Cpte</th><th className="px-1 py-0.5 text-right">Débit</th><th className="px-1 py-0.5 text-right">Crédit</th></tr></thead>
+                      <thead className="text-slate-500"><tr><th className="px-1 py-0.5 text-left">Cpte</th><th className="px-1 py-0.5 text-right">Débit</th><th className="px-1 py-0.5 text-right">Crédit</th></tr></thead>
                       <tbody>{cur.slice(0, 5).map((r, i) => <tr key={i} className="border-t border-slate-100"><td className="px-1 py-0.5 font-mono">{r.code}</td><td className="px-1 py-0.5 text-right tabular-nums">{r.debit || "—"}</td><td className="px-1 py-0.5 text-right tabular-nums">{r.credit || "—"}</td></tr>)}</tbody>
                     </table>
                   </details>
                 </>
               ) : (
-                <p className="py-4 text-center text-sm text-slate-400">⚠️ Aucune balance N importée.<br />Utilisez l'onglet « Génération » ou « Balance 6 colonnes ».</p>
+                <p className="py-4 text-center text-sm text-slate-500">⚠️ Aucune balance N importée.<br />Utilisez l'onglet « Génération » ou « Balance 6 colonnes ».</p>
               )}
             </div>
             {/* Balance N-1 */}
@@ -498,7 +498,7 @@ export default function Liasse() {
                   </div>
                 </>
               ) : (
-                <p className="py-4 text-center text-sm text-slate-400">ℹ️ Aucune balance N-1 importée.<br />Optionnelle (comparatif N/N-1).</p>
+                <p className="py-4 text-center text-sm text-slate-500">ℹ️ Aucune balance N-1 importée.<br />Optionnelle (comparatif N/N-1).</p>
               )}
             </div>
           </div>
@@ -507,10 +507,10 @@ export default function Liasse() {
             <div className="mt-4 rounded-xl border border-indigo-100 bg-indigo-50/40 p-4">
               <p className="mb-2 text-xs font-bold uppercase tracking-wide text-indigo-600">📊 Valeurs calculées par le moteur (seront écrites dans l'état)</p>
               <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
-                <div className="rounded-lg bg-white px-3 py-2"><p className="text-[10px] text-slate-400">Total Actif</p><p className="font-bold tabular-nums text-slate-800">{fcfaCompact(stmt.bilan.actifTotal)}</p></div>
-                <div className="rounded-lg bg-white px-3 py-2"><p className="text-[10px] text-slate-400">Total Passif</p><p className="font-bold tabular-nums text-slate-800">{fcfaCompact(stmt.bilan.passifTotal)}</p></div>
-                <div className="rounded-lg bg-white px-3 py-2"><p className="text-[10px] text-slate-400">Résultat</p><p className={`font-bold tabular-nums ${stmt.result.resultat >= 0 ? "text-emerald-600" : "text-rose-600"}`}>{fcfaCompact(stmt.result.resultat)}</p></div>
-                <div className="rounded-lg bg-white px-3 py-2"><p className="text-[10px] text-slate-400">Trésorerie</p><p className="font-bold tabular-nums text-slate-800">{fcfaCompact(stmt.bilan.tresorerie)}</p></div>
+                <div className="rounded-lg bg-white px-3 py-2"><p className="text-[10px] text-slate-500">Total Actif</p><p className="font-bold tabular-nums text-slate-800">{fcfaCompact(stmt.bilan.actifTotal)}</p></div>
+                <div className="rounded-lg bg-white px-3 py-2"><p className="text-[10px] text-slate-500">Total Passif</p><p className="font-bold tabular-nums text-slate-800">{fcfaCompact(stmt.bilan.passifTotal)}</p></div>
+                <div className="rounded-lg bg-white px-3 py-2"><p className="text-[10px] text-slate-500">Résultat</p><p className={`font-bold tabular-nums ${stmt.result.resultat >= 0 ? "text-emerald-700" : "text-rose-700"}`}>{fcfaCompact(stmt.result.resultat)}</p></div>
+                <div className="rounded-lg bg-white px-3 py-2"><p className="text-[10px] text-slate-500">Trésorerie</p><p className="font-bold tabular-nums text-slate-800">{fcfaCompact(stmt.bilan.tresorerie)}</p></div>
               </div>
             </div>
           )}
@@ -519,19 +519,19 @@ export default function Liasse() {
         <Card className="p-5">
           <SectionHeading title="Éditer un état fourni (remplissage non destructif)" subtitle="Téléversez un modèle d'état (Bilan, CR, TAFIRE…) — il est rempli à partir des balances sans altérer fusions, styles ni formules" />
           <div className="mb-4 flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-700"><AlertTriangle size={14} className="mt-0.5 shrink-0" /> L'état fourni est détecté par ses codes de référence SYSCOHADA (AE, TA, RA…) puis rempli. La structure d'origine est préservée.</div>
-          {!cur && <p className="mb-3 text-sm text-rose-500">Importez d'abord une balance (onglet « Balance 6 colonnes » ou « Génération »).</p>}
-          <label className={`inline-flex cursor-pointer items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold ${cur ? "bg-indigo-600 text-white hover:bg-indigo-700" : "bg-slate-200 text-slate-400"}`}>
+          {!cur && <p className="mb-3 text-sm text-rose-700">Importez d'abord une balance (onglet « Balance 6 colonnes » ou « Génération »).</p>}
+          <label className={`inline-flex cursor-pointer items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold ${cur ? "bg-indigo-600 text-white hover:bg-indigo-700" : "bg-slate-200 text-slate-500"}`}>
             <Wand2 size={16} /> {loading === "state" ? "Édition…" : "Téléverser le modèle d'état & éditer"}
             <input type="file" accept=".xlsx,.xls" className="hidden" disabled={!cur} onChange={(e) => onFillState(e.target.files?.[0] || null)} />
           </label>
           {stateFilled && (
             <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50/50 p-4">
               <p className="flex items-center gap-2 font-semibold text-emerald-700"><CheckCircle2 size={16} /> {stateFilled.filled} cellule(s) renseignée(s) — état exporté sans altération du modèle.</p>
-              {stateFilled.unmatched.length > 0 && <p className="mt-1 text-xs text-amber-600">Références non reconnues (ignorées) : {stateFilled.unmatched.join(", ")}</p>}
+              {stateFilled.unmatched.length > 0 && <p className="mt-1 text-xs text-amber-700">Références non reconnues (ignorées) : {stateFilled.unmatched.join(", ")}</p>}
               {stateFilled.report && stateFilled.report.length > 0 && (
                 <details className="mt-3">
                   <summary className="cursor-pointer text-xs font-bold uppercase tracking-wide text-slate-500">Rapport de vérification ({stateFilled.report.length} valeurs écrites)</summary>
-                  <div className="mt-2 max-h-48 overflow-y-auto rounded-lg bg-slate-900 p-3 font-mono text-[11px] text-slate-300">
+                  <div className="mt-2 max-h-48 overflow-y-auto rounded-lg bg-slate-900 p-3 font-mono text-[11px] text-slate-500">
                     {stateFilled.report.map((r, i) => <div key={i}>{r}</div>)}
                   </div>
                 </details>
@@ -548,9 +548,9 @@ export default function Liasse() {
           {!report ? <EmptyState icon={<ShieldCheck />} title="Aucun contrôle lancé" description="Importez une balance puis cliquez sur « Lancer les contrôles de cohérence »." /> : (
             <>
               <div className="mb-4 grid grid-cols-4 gap-3 text-center">
-                <div className="rounded-xl bg-emerald-50 p-3"><p className="text-2xl font-black text-emerald-600">{report.okCount}</p><p className="text-xs text-slate-500">OK!</p></div>
-                <div className="rounded-xl bg-rose-50 p-3"><p className="text-2xl font-black text-rose-600">{report.koCount}</p><p className="text-xs text-slate-500">Déséquilibrés</p></div>
-                <div className="rounded-xl bg-amber-50 p-3"><p className="text-2xl font-black text-amber-600">{report.warnCount}</p><p className="text-xs text-slate-500">Avertissements</p></div>
+                <div className="rounded-xl bg-emerald-50 p-3"><p className="text-2xl font-black text-emerald-700">{report.okCount}</p><p className="text-xs text-slate-500">OK!</p></div>
+                <div className="rounded-xl bg-rose-50 p-3"><p className="text-2xl font-black text-rose-700">{report.koCount}</p><p className="text-xs text-slate-500">Déséquilibrés</p></div>
+                <div className="rounded-xl bg-amber-50 p-3"><p className="text-2xl font-black text-amber-700">{report.warnCount}</p><p className="text-xs text-slate-500">Avertissements</p></div>
                 <div className="rounded-xl bg-indigo-50 p-3"><p className="text-2xl font-black text-indigo-600">{report.score}%</p><p className="text-xs text-slate-500">Score cohérence</p></div>
               </div>
               {[...new Set(report.lines.map((l) => l.cat))].map((cat) => {
@@ -560,8 +560,8 @@ export default function Liasse() {
                   <div key={cat} className="mb-4">
                     <p className="mb-1.5 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500">{cat} {ko ? <Badge tone="rose">déséquilibré</Badge> : <Badge tone="emerald">OK!</Badge>}</p>
                     <div className="overflow-x-auto rounded-xl border border-slate-100"><table className="w-full text-xs">
-                      <thead className="bg-slate-50 text-slate-400"><tr><th className="px-2 py-2 text-left">Réf.</th><th className="px-3 py-2 text-left">Intitulé</th><th className="px-3 py-2 text-right">État N</th><th className="px-3 py-2 text-right">Note N</th><th className="px-2 py-2 text-right">Écart N</th><th className="px-3 py-2 text-right">État N-1</th><th className="px-2 py-2 text-right">Écart N-1</th><th className="px-2 py-2 text-center">Statut</th></tr></thead>
-                      <tbody>{cl.map((l, i) => (<tr key={i} className="border-t border-slate-50"><td className="px-2 py-1.5 font-mono font-semibold text-slate-600">{l.ref}</td><td className="px-3 py-1.5 text-slate-700">{l.label}</td><td className="px-3 py-1.5 text-right tabular-nums">{fcfa(l.etatN)}</td><td className="px-3 py-1.5 text-right tabular-nums">{fcfa(l.noteN)}</td><td className={`px-2 py-1.5 text-right tabular-nums ${l.ecartN !== 0 ? "text-rose-600 font-semibold" : "text-slate-400"}`}>{fcfa(l.ecartN)}</td><td className="px-3 py-1.5 text-right tabular-nums">{fcfa(l.etatN1)}</td><td className={`px-2 py-1.5 text-right tabular-nums ${l.ecartN1 !== 0 ? "text-rose-600 font-semibold" : "text-slate-400"}`}>{fcfa(l.ecartN1)}</td><td className="px-2 py-1.5 text-center"><span className={l.status === "OK!" ? "font-bold text-emerald-600" : "font-bold text-rose-600"}>{l.status}</span></td></tr>))}</tbody>
+                      <thead className="bg-slate-50 text-slate-500"><tr><th className="px-2 py-2 text-left">Réf.</th><th className="px-3 py-2 text-left">Intitulé</th><th className="px-3 py-2 text-right">État N</th><th className="px-3 py-2 text-right">Note N</th><th className="px-2 py-2 text-right">Écart N</th><th className="px-3 py-2 text-right">État N-1</th><th className="px-2 py-2 text-right">Écart N-1</th><th className="px-2 py-2 text-center">Statut</th></tr></thead>
+                      <tbody>{cl.map((l, i) => (<tr key={i} className="border-t border-slate-50"><td className="px-2 py-1.5 font-mono font-semibold text-slate-600">{l.ref}</td><td className="px-3 py-1.5 text-slate-700">{l.label}</td><td className="px-3 py-1.5 text-right tabular-nums">{fcfa(l.etatN)}</td><td className="px-3 py-1.5 text-right tabular-nums">{fcfa(l.noteN)}</td><td className={`px-2 py-1.5 text-right tabular-nums ${l.ecartN !== 0 ? "text-rose-700 font-semibold" : "text-slate-500"}`}>{fcfa(l.ecartN)}</td><td className="px-3 py-1.5 text-right tabular-nums">{fcfa(l.etatN1)}</td><td className={`px-2 py-1.5 text-right tabular-nums ${l.ecartN1 !== 0 ? "text-rose-700 font-semibold" : "text-slate-500"}`}>{fcfa(l.ecartN1)}</td><td className="px-2 py-1.5 text-center"><span className={l.status === "OK!" ? "font-bold text-emerald-700" : "font-bold text-rose-700"}>{l.status}</span></td></tr>))}</tbody>
                     </table></div>
                   </div>
                 );
@@ -627,7 +627,7 @@ function ReconstitutionView({ cur, prev }: { cur: BalanceRow[] | null; prev: Bal
       </div>
       {/* Fiche d'identification (pour le patch) */}
       <div className="mb-5 rounded-xl border border-slate-100 p-4">
-        <p className="mb-2 text-xs font-bold uppercase text-slate-400">Fiche d'identification (renseignée dans le patch)</p>
+        <p className="mb-2 text-xs font-bold uppercase text-slate-500">Fiche d'identification (renseignée dans le patch)</p>
         <div className="grid gap-3 sm:grid-cols-3">
           <Input value={info.B2} onChange={(e) => setInfo({ ...info, B2: e.target.value })} placeholder="B2 — Raison sociale" />
           <Input value={info.B3} onChange={(e) => setInfo({ ...info, B3: e.target.value })} placeholder="B3 — NIF" />
@@ -636,12 +636,12 @@ function ReconstitutionView({ cur, prev }: { cur: BalanceRow[] | null; prev: Bal
           <Input value={info.B6} onChange={(e) => setInfo({ ...info, B6: e.target.value })} placeholder="B6 — Capital" />
           <Input value={info.B7} onChange={(e) => setInfo({ ...info, B7: e.target.value })} placeholder="B7 — Exercice" />
         </div>
-        <p className="mt-2 text-[11px] text-slate-400">Balances : {cur ? `${cur.length} comptes N` : "N non chargée"} · {prev ? `${prev.length} N-1` : "N-1 non chargée"} (importez-les via l'onglet « Import universel »).</p>
+        <p className="mt-2 text-[11px] text-slate-500">Balances : {cur ? `${cur.length} comptes N` : "N non chargée"} · {prev ? `${prev.length} N-1` : "N-1 non chargée"} (importez-les via l'onglet « Import universel »).</p>
       </div>
       {patched && (
         <div className="mb-5 rounded-xl border border-emerald-100 bg-emerald-50/50 p-4">
           <p className="flex items-center gap-2 font-semibold text-emerald-700"><CheckCircle2 size={16} /> Édition non destructive terminée : {patched.patched} cellule(s) d'entrée renseignée(s), {patched.preserved} cellule(s) de formule préservée(s), recalcul forcé à l'ouverture.</p>
-          {patched.errors.length > 0 && <p className="mt-1 text-xs text-amber-600">{patched.errors.slice(0, 4).join(" · ")}</p>}
+          {patched.errors.length > 0 && <p className="mt-1 text-xs text-amber-700">{patched.errors.slice(0, 4).join(" · ")}</p>}
         </div>
       )}
       {/* Audit (radiographie) */}
@@ -650,15 +650,15 @@ function ReconstitutionView({ cur, prev }: { cur: BalanceRow[] | null; prev: Bal
           <p className="mb-2 font-display text-sm font-bold text-slate-700">Radiographie du modèle — {audit.fileName}</p>
           <div className="mb-3 grid grid-cols-3 gap-3 sm:grid-cols-6">
             {[["Feuilles", audit.sheetNames.length], ["Valeurs", audit.totalValues], ["Formules", audit.formulas], ["Fusions", audit.totalMerged], ["Feuilles GUDEF", audit.matchedKeySheets.length], ["Taille (Ko)", Math.round(audit.size / 1024)]].map(([l, v]) => (
-              <div key={l as string} className="rounded-xl border border-slate-100 p-3 text-center"><p className="text-lg font-bold text-slate-800">{v as number}</p><p className="text-[10px] text-slate-400">{l}</p></div>
+              <div key={l as string} className="rounded-xl border border-slate-100 p-3 text-center"><p className="text-lg font-bold text-slate-800">{v as number}</p><p className="text-[10px] text-slate-500">{l}</p></div>
             ))}
           </div>
-          <div className="mb-3 flex flex-wrap gap-2">{audit.matchedKeySheets.map((s) => <Badge key={s} tone="emerald">✓ {s}</Badge>)}{audit.matchedKeySheets.length === 0 && <span className="text-xs text-amber-600">Aucune feuille GUDEF standard reconnue.</span>}</div>
+          <div className="mb-3 flex flex-wrap gap-2">{audit.matchedKeySheets.map((s) => <Badge key={s} tone="emerald">✓ {s}</Badge>)}{audit.matchedKeySheets.length === 0 && <span className="text-xs text-amber-700">Aucune feuille GUDEF standard reconnue.</span>}</div>
           <div className="overflow-x-auto rounded-xl border border-slate-100"><table className="w-full text-xs">
-            <thead className="bg-slate-50 text-slate-400"><tr><th className="px-3 py-2 text-left">Feuille</th><th className="px-2 py-2 text-right">Valeurs</th><th className="px-2 py-2 text-right">Formules</th><th className="px-2 py-2 text-right">Saisie</th><th className="px-2 py-2 text-right">Calculées</th><th className="px-2 py-2 text-right">Fusions</th><th className="px-2 py-2">Exemples de formules</th></tr></thead>
-            <tbody>{audit.sheetDetails.map((s) => (<tr key={s.name} className={`border-t border-slate-50 ${s.key ? "bg-emerald-50/30" : ""}`}><td className="px-3 py-1.5 font-medium text-slate-700">{s.name}{s.key && <span className="ml-1 text-emerald-500">★</span>}</td><td className="px-2 py-1.5 text-right tabular-nums">{s.values}</td><td className="px-2 py-1.5 text-right tabular-nums">{s.formulas}</td><td className="px-2 py-1.5 text-right tabular-nums">{s.inputCells}</td><td className="px-2 py-1.5 text-right tabular-nums">{s.calcCells}</td><td className="px-2 py-1.5 text-right tabular-nums">{s.merged}</td><td className="px-2 py-1.5 text-slate-400">{s.formulaSamples.slice(0, 2).join(" · ")}</td></tr>))}</tbody>
+            <thead className="bg-slate-50 text-slate-500"><tr><th className="px-3 py-2 text-left">Feuille</th><th className="px-2 py-2 text-right">Valeurs</th><th className="px-2 py-2 text-right">Formules</th><th className="px-2 py-2 text-right">Saisie</th><th className="px-2 py-2 text-right">Calculées</th><th className="px-2 py-2 text-right">Fusions</th><th className="px-2 py-2">Exemples de formules</th></tr></thead>
+            <tbody>{audit.sheetDetails.map((s) => (<tr key={s.name} className={`border-t border-slate-50 ${s.key ? "bg-emerald-50/30" : ""}`}><td className="px-3 py-1.5 font-medium text-slate-700">{s.name}{s.key && <span className="ml-1 text-emerald-700">★</span>}</td><td className="px-2 py-1.5 text-right tabular-nums">{s.values}</td><td className="px-2 py-1.5 text-right tabular-nums">{s.formulas}</td><td className="px-2 py-1.5 text-right tabular-nums">{s.inputCells}</td><td className="px-2 py-1.5 text-right tabular-nums">{s.calcCells}</td><td className="px-2 py-1.5 text-right tabular-nums">{s.merged}</td><td className="px-2 py-1.5 text-slate-500">{s.formulaSamples.slice(0, 2).join(" · ")}</td></tr>))}</tbody>
           </table></div>
-          {audit.creator !== "—" && <p className="mt-2 text-[11px] text-slate-400">Métadonnées : créateur {audit.creator} · créé {audit.created.slice(0, 10)} · modifié {audit.modified.slice(0, 10)} · recalcul auto : {audit.fullCalcOnLoad ? "oui" : "non"}.</p>}
+          {audit.creator !== "—" && <p className="mt-2 text-[11px] text-slate-500">Métadonnées : créateur {audit.creator} · créé {audit.created.slice(0, 10)} · modifié {audit.modified.slice(0, 10)} · recalcul auto : {audit.fullCalcOnLoad ? "oui" : "non"}.</p>}
         </div>
       )}
     </Card>
@@ -692,37 +692,37 @@ function UniversalImportView({ onResult }: { onResult: (n: NormalizedDoc) => voi
       <SectionHeading title="Import universel" subtitle="Déposez n'importe quel Excel/CSV : FIMAAC détecte la structure, normalise et alimente les états financiers" />
       <div className="mb-4 flex items-start gap-2 rounded-xl bg-sky-50 px-3 py-2 text-xs text-sky-700"><Info size={14} className="mt-0.5 shrink-0" /> Aucun format imposé : balance, balance 6 colonnes, modèle d'état, plan comptable… Tout séparateur CSV, montants universels (espaces, virgules, parenthèses), multi-feuilles.</div>
       <label className="mb-4 flex w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed py-10 hover:border-indigo-300 hover:bg-slate-50">
-        {loading ? <Spinner className="text-indigo-500" /> : <Upload size={28} className="mb-2 text-indigo-500" />}
+        {loading ? <Spinner className="text-indigo-600" /> : <Upload size={28} className="mb-2 text-indigo-600" />}
         <p className="font-semibold text-slate-700">{fileName || "Déposez n'importe quel fichier (Excel/CSV)"}</p>
-        <p className="text-xs text-slate-400">.xlsx · .xls · .csv</p>
+        <p className="text-xs text-slate-500">.xlsx · .xls · .csv</p>
         <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={(e) => onFile(e.target.files?.[0] || null)} />
       </label>
       {norm && grid && (
         <>
           <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div className="rounded-xl border border-slate-100 p-3"><p className="text-xs text-slate-400">Type détecté</p><p className="font-bold text-indigo-600">{KIND_LABELS[norm.kind]}</p></div>
-            <div className="rounded-xl border border-slate-100 p-3"><p className="text-xs text-slate-400">Lignes / Colonnes</p><p className="font-bold text-slate-800">{norm.rowCount} / {norm.colCount}</p></div>
-            <div className="rounded-xl border border-slate-100 p-3"><p className="text-xs text-slate-400">Comptes N / N-1</p><p className="font-bold text-slate-800">{norm.balanceN.length} / {norm.balanceN1.length}</p></div>
-            <div className="rounded-xl border border-slate-100 p-3"><p className="text-xs text-slate-400">Totaux détectés</p><p className="font-bold text-slate-800">{norm.totals.length}</p></div>
+            <div className="rounded-xl border border-slate-100 p-3"><p className="text-xs text-slate-500">Type détecté</p><p className="font-bold text-indigo-600">{KIND_LABELS[norm.kind]}</p></div>
+            <div className="rounded-xl border border-slate-100 p-3"><p className="text-xs text-slate-500">Lignes / Colonnes</p><p className="font-bold text-slate-800">{norm.rowCount} / {norm.colCount}</p></div>
+            <div className="rounded-xl border border-slate-100 p-3"><p className="text-xs text-slate-500">Comptes N / N-1</p><p className="font-bold text-slate-800">{norm.balanceN.length} / {norm.balanceN1.length}</p></div>
+            <div className="rounded-xl border border-slate-100 p-3"><p className="text-xs text-slate-500">Totaux détectés</p><p className="font-bold text-slate-800">{norm.totals.length}</p></div>
           </div>
           <div className="mb-4">
-            <p className="mb-2 text-xs font-bold uppercase text-slate-400">Mapping détecté (modifiable)</p>
+            <p className="mb-2 text-xs font-bold uppercase text-slate-500">Mapping détecté (modifiable)</p>
             <div className="overflow-x-auto rounded-xl border border-slate-100"><table className="w-full text-xs">
-              <thead className="bg-slate-50 text-slate-400"><tr><th className="px-3 py-2 text-left">Colonne source</th><th className="px-3 py-2 text-left">Rôle assigné</th></tr></thead>
+              <thead className="bg-slate-50 text-slate-500"><tr><th className="px-3 py-2 text-left">Colonne source</th><th className="px-3 py-2 text-left">Rôle assigné</th></tr></thead>
               <tbody>{cols.map((c) => (
                 <tr key={c.index} className="border-t border-slate-50"><td className="px-3 py-1.5 font-medium text-slate-700">{c.header}</td><td className="px-3 py-1.5"><select value={c.role} onChange={(e) => recompute(cols.map((x) => x.index === c.index ? { ...x, role: e.target.value as ColRole } : x))} className="h-7 rounded-lg border border-slate-200 px-2 text-xs">{roles.map((r) => <option key={r} value={r}>{r}</option>)}</select></td></tr>
               ))}</tbody>
             </table></div>
           </div>
           <div className="mb-4">
-            <p className="mb-2 text-xs font-bold uppercase text-slate-400">Aperçu normalisé (5 premières lignes)</p>
+            <p className="mb-2 text-xs font-bold uppercase text-slate-500">Aperçu normalisé (5 premières lignes)</p>
             <div className="overflow-x-auto rounded-xl border border-slate-100"><table className="w-full text-xs">
-              <thead className="bg-slate-50 text-slate-400"><tr><th className="px-3 py-2 text-left">Compte</th><th className="px-3 py-2 text-left">Libellé</th><th className="px-3 py-2 text-right">Débit N</th><th className="px-3 py-2 text-right">Crédit N</th>{norm.balanceN1.length > 0 && <><th className="px-3 py-2 text-right">Débit N-1</th><th className="px-3 py-2 text-right">Crédit N-1</th></>}</tr></thead>
+              <thead className="bg-slate-50 text-slate-500"><tr><th className="px-3 py-2 text-left">Compte</th><th className="px-3 py-2 text-left">Libellé</th><th className="px-3 py-2 text-right">Débit N</th><th className="px-3 py-2 text-right">Crédit N</th>{norm.balanceN1.length > 0 && <><th className="px-3 py-2 text-right">Débit N-1</th><th className="px-3 py-2 text-right">Crédit N-1</th></>}</tr></thead>
               <tbody>{norm.balanceN.slice(0, 5).map((r, i) => (<tr key={i} className="border-t border-slate-50"><td className="px-3 py-1.5 font-mono">{r.code}</td><td className="px-3 py-1.5 text-slate-600">{r.label}</td><td className="px-3 py-1.5 text-right tabular-nums">{fcfa(r.debit)}</td><td className="px-3 py-1.5 text-right tabular-nums">{fcfa(r.credit)}</td>{norm.balanceN1.length > 0 && <><td className="px-3 py-1.5 text-right tabular-nums">{fcfa(norm.balanceN1[i]?.debit || 0)}</td><td className="px-3 py-1.5 text-right tabular-nums">{fcfa(norm.balanceN1[i]?.credit || 0)}</td></>}</tr>))}</tbody>
             </table></div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <div className="rounded-xl bg-slate-50 px-4 py-2 text-sm"><span className="text-slate-400">Σ Débit N : </span><b className="tabular-nums text-slate-800">{fcfa(norm.balanceN.reduce((s, r) => s + r.debit, 0))}</b><span className="text-slate-400"> · Σ Crédit N : </span><b className="tabular-nums text-slate-800">{fcfa(norm.balanceN.reduce((s, r) => s + r.credit, 0))}</b></div>
+            <div className="rounded-xl bg-slate-50 px-4 py-2 text-sm"><span className="text-slate-500">Σ Débit N : </span><b className="tabular-nums text-slate-800">{fcfa(norm.balanceN.reduce((s, r) => s + r.debit, 0))}</b><span className="text-slate-500"> · Σ Crédit N : </span><b className="tabular-nums text-slate-800">{fcfa(norm.balanceN.reduce((s, r) => s + r.credit, 0))}</b></div>
             <Button onClick={validate}><ShieldCheck size={15} /> Valider & continuer vers les états</Button>
           </div>
         </>
@@ -741,21 +741,21 @@ function PlanCoherenceView({ companyId }: { companyId: string }) {
       <SectionHeading title="Cohérence du plan comptable & de la chaîne des écritures" subtitle="Le plan SYSCOHADA révisé est la source de vérité unique : écritures → balance → états financiers" />
       <div className="mb-4 flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-700"><AlertTriangle size={14} className="mt-0.5 shrink-0" /> Plan SYSCOHADA révisé (norme 2016) — version de travail profonde, <b>à valider contre les textes officiels AUDCIF</b>. La cohérence interne (écritures/balance/états) est garantie par ce contrôle.</div>
       <div className="mb-4 grid grid-cols-4 gap-3 text-center">
-        <div className="rounded-xl bg-emerald-50 p-3"><p className="text-2xl font-black text-emerald-600">{report.okCount}</p><p className="text-xs text-slate-500">OK!</p></div>
-        <div className="rounded-xl bg-rose-50 p-3"><p className="text-2xl font-black text-rose-600">{report.koCount}</p><p className="text-xs text-slate-500">Déséquilibrés</p></div>
-        <div className="rounded-xl bg-amber-50 p-3"><p className="text-2xl font-black text-amber-600">{report.warnCount}</p><p className="text-xs text-slate-500">Avertissements</p></div>
+        <div className="rounded-xl bg-emerald-50 p-3"><p className="text-2xl font-black text-emerald-700">{report.okCount}</p><p className="text-xs text-slate-500">OK!</p></div>
+        <div className="rounded-xl bg-rose-50 p-3"><p className="text-2xl font-black text-rose-700">{report.koCount}</p><p className="text-xs text-slate-500">Déséquilibrés</p></div>
+        <div className="rounded-xl bg-amber-50 p-3"><p className="text-2xl font-black text-amber-700">{report.warnCount}</p><p className="text-xs text-slate-500">Avertissements</p></div>
         <div className="rounded-xl bg-indigo-50 p-3"><p className="text-2xl font-black text-indigo-600">{report.score}%</p><p className="text-xs text-slate-500">Score normatif</p></div>
       </div>
       <div className="space-y-2">{report.checks.map((c) => (
         <div key={c.id} className="flex items-start gap-3 rounded-xl border border-slate-100 px-4 py-3">
-          {c.status === "OK!" ? <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-emerald-500" /> : c.status === "Avertissement" ? <AlertTriangle size={18} className="mt-0.5 shrink-0 text-amber-500" /> : <XCircle size={18} className="mt-0.5 shrink-0 text-rose-500" />}
-          <div className="flex-1"><div className="flex items-center justify-between"><p className="font-semibold text-slate-800">{c.title}</p><span className="flex items-center gap-2"><Badge tone="slate">{c.category}</Badge><span className={c.status === "OK!" ? "text-xs font-bold text-emerald-600" : c.status === "Avertissement" ? "text-xs font-bold text-amber-600" : "text-xs font-bold text-rose-600"}>{c.status}</span></span></div><p className="mt-0.5 text-xs text-slate-500">{c.detail}</p>{c.data && <p className="mt-0.5 text-[11px] tabular-nums text-slate-400">{c.data}</p>}</div>
+          {c.status === "OK!" ? <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-emerald-700" /> : c.status === "Avertissement" ? <AlertTriangle size={18} className="mt-0.5 shrink-0 text-amber-700" /> : <XCircle size={18} className="mt-0.5 shrink-0 text-rose-700" />}
+          <div className="flex-1"><div className="flex items-center justify-between"><p className="font-semibold text-slate-800">{c.title}</p><span className="flex items-center gap-2"><Badge tone="slate">{c.category}</Badge><span className={c.status === "OK!" ? "text-xs font-bold text-emerald-700" : c.status === "Avertissement" ? "text-xs font-bold text-amber-700" : "text-xs font-bold text-rose-700"}>{c.status}</span></span></div><p className="mt-0.5 text-xs text-slate-500">{c.detail}</p>{c.data && <p className="mt-0.5 text-[11px] tabular-nums text-slate-500">{c.data}</p>}</div>
         </div>
       ))}</div>
       <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-8">
-        {Object.entries(report.chartStats.classes).map(([k, v]) => <div key={k} className="rounded-xl border border-slate-100 p-3 text-center"><p className="text-xs text-slate-400">Classe {k}</p><p className="text-lg font-bold text-slate-800">{v}</p></div>)}
+        {Object.entries(report.chartStats.classes).map(([k, v]) => <div key={k} className="rounded-xl border border-slate-100 p-3 text-center"><p className="text-xs text-slate-500">Classe {k}</p><p className="text-lg font-bold text-slate-800">{v}</p></div>)}
       </div>
-      <p className="mt-3 text-[11px] text-slate-400">Plan : {report.chartStats.total} comptes · profondeur {report.chartStats.maxDepth} niveaux · {report.chartStats.postable} imputables · mapping états : {coverage.covered}/{coverage.total} références couvertes.</p>
+      <p className="mt-3 text-[11px] text-slate-500">Plan : {report.chartStats.total} comptes · profondeur {report.chartStats.maxDepth} niveaux · {report.chartStats.postable} imputables · mapping états : {coverage.covered}/{coverage.total} références couvertes.</p>
     </Card>
   );
 }
@@ -765,9 +765,9 @@ function UploadZone({ label, hint, loading, onFile }: { label: string; hint: str
     <Card className="p-5">
       <p className="mb-2 text-sm font-bold text-slate-700">{label}</p>
       <label className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed py-8 transition-all hover:border-indigo-300 hover:bg-slate-50 ${loading ? "border-indigo-300 bg-indigo-50" : "border-slate-200"}`}>
-        {loading ? <Spinner className="text-indigo-500" /> : <Upload size={24} className="mb-2 text-indigo-500" />}
+        {loading ? <Spinner className="text-indigo-600" /> : <Upload size={24} className="mb-2 text-indigo-600" />}
         <p className="text-sm font-semibold text-slate-700">{loading ? "Lecture…" : "Cliquer pour importer"}</p>
-        <p className="text-xs text-slate-400">{hint}</p>
+        <p className="text-xs text-slate-500">{hint}</p>
         <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={(e) => onFile(e.target.files?.[0] || null)} />
       </label>
     </Card>
@@ -775,7 +775,7 @@ function UploadZone({ label, hint, loading, onFile }: { label: string; hint: str
 }
 
 function Row2({ l, v, tone, bold }: { l: string; v: string; tone?: string; bold?: boolean }) {
-  return <div className="flex items-center justify-between rounded-lg px-3 py-1.5 text-sm"><span className={bold ? "font-black text-slate-900" : "text-slate-600"}>{l}</span><span className={`tabular-nums ${bold ? "text-base font-black" : "font-semibold"} ${tone === "emerald" ? "text-emerald-600" : tone === "rose" ? "text-rose-600" : "text-slate-800"}`}>{v}</span></div>;
+  return <div className="flex items-center justify-between rounded-lg px-3 py-1.5 text-sm"><span className={bold ? "font-black text-slate-900" : "text-slate-600"}>{l}</span><span className={`tabular-nums ${bold ? "text-base font-black" : "font-semibold"} ${tone === "emerald" ? "text-emerald-700" : tone === "rose" ? "text-rose-700" : "text-slate-800"}`}>{v}</span></div>;
 }
 
 function StatMini({ label, value, tone }: { label: string; value: string; tone: "emerald" | "sky" | "indigo" | "rose" }) {

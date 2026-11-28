@@ -2,7 +2,7 @@
 
 > Registre tenu à jour à chaque lot livré. Il sert de point de reprise : tout ce
 > qui est ici est **non fait**, avec sa raison et son blocage éventuel.
-> Dernière mise à jour : 28/11/2026, après les PR #5 à #45.
+> Dernière mise à jour : 28/11/2026, après les PR #5 à #46.
 
 ## Déjà réglé (ne plus y revenir)
 
@@ -48,6 +48,7 @@
 | P28 | Ouverture d'exercice : implémentation unique, période à la vraie fin de mois, bouton N+1 | #43 |
 | P29 | Cinq dernières actions : trois mutations auditées, un renommage honnête, une suppression | #44 |
 | P30 | Tri des tableaux au clavier, `aria-sort`, comparaison française et vides en fin | #45 |
+| P31 | Contraste : formule WCAG, 32 écrans corrigés, garde-fou de balayage | #46 |
 
 ## 1. Bloqué par une décision d'infrastructure (à arbitrer par le porteur)
 
@@ -134,9 +135,12 @@ Ces points ne peuvent pas avancer sans base de données et hébergement d'API.
     logique de tri pure (`tableSort.ts`), en-têtes **boutons** avec `aria-sort`,
     bascule croissant → décroissant → ordre d'origine, montants comparés comme
     des nombres, textes à la française, vides toujours en fin et tri stable.
-    Reste : **contraste** à auditer (plusieurs textes secondaires en `slate-400`
-    sur blanc sont sous le seuil AA de 4,5:1) et l'extension du tri aux autres
-    tables (balance, documents, échéances).
+    ~~Contraste~~ — **fait (PR #46)** : formule WCAG mesurée (`contrast.ts`),
+    `slate-400` (2,56:1, **327** occurrences) et cinq autres teintes corrigées,
+    deux tests qui balaient les écrans pour empêcher le retour. Reste : le
+    **texte blanc sur fond coloré** (`bg-emerald-500`, `bg-rose-500` : 3,77:1 et
+    3,67:1) — à traiter avec les badges, et l'extension du tri aux autres tables
+    (balance, documents, échéances).
 13. **Densité des écrans** — jusqu'à 9 onglets ; cible ≤ 5 + sous-navigation.
 14. ~~**Parcours d'amorçage**~~ — **fait (PR #38)** : six étapes **déduites de
     l'état réel** (organisation, NIF, exercice ouvert, écritures, équilibre de la

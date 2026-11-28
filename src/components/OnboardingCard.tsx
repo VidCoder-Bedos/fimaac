@@ -30,7 +30,7 @@ export function OnboardingCard({ report }: { report: OnboardingReport }) {
         {current ? (
           <span className="hidden shrink-0 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white sm:block">{current.cta}</span>
         ) : null}
-        {open ? <ChevronUp size={16} className="shrink-0 text-slate-400" /> : <ChevronDown size={16} className="shrink-0 text-slate-400" />}
+        {open ? <ChevronUp size={16} className="shrink-0 text-slate-500" /> : <ChevronDown size={16} className="shrink-0 text-slate-500" />}
       </button>
 
       {open && (
@@ -56,7 +56,7 @@ export function OnboardingCard({ report }: { report: OnboardingReport }) {
                     {step.status === "done" ? <Check size={12} /> : step.order}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className={`text-sm ${isCurrent ? "font-semibold text-slate-900" : step.status === "done" ? "text-slate-400 line-through" : "text-slate-600"}`}>
+                    <p className={`text-sm ${isCurrent ? "font-semibold text-slate-900" : step.status === "done" ? "text-slate-500 line-through" : "text-slate-600"}`}>
                       {step.title}
                     </p>
                     <p className="text-[11px] text-slate-500">

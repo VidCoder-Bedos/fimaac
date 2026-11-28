@@ -43,10 +43,10 @@ export default function AIAssistant() {
       <div className="mb-5"><h2 className="text-xl font-black tracking-tight text-slate-900">Assistant IA FIMAAC</h2><p className="text-sm text-slate-500">{company.name} · agents spécialisés</p></div>
       <div className="grid gap-6 lg:grid-cols-4">
         <Card className="p-4 lg:col-span-1">
-          <p className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-400">Agents</p>
+          <p className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">Agents</p>
           <div className="space-y-1">{AGENTS.map((a) => (
             <button key={a.id} onClick={() => setAgent(a.id)} className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all ${agent === a.id ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg" : "hover:bg-slate-100"}`}>
-              <span className="text-xl">{a.icon}</span><div><p className="text-sm font-semibold">{a.name}</p><p className={`text-[10px] ${agent === a.id ? "text-indigo-100" : "text-slate-400"}`}>{a.desc}</p></div>
+              <span className="text-xl">{a.icon}</span><div><p className="text-sm font-semibold">{a.name}</p><p className={`text-[10px] ${agent === a.id ? "text-indigo-100" : "text-slate-500"}`}>{a.desc}</p></div>
             </button>
           ))}</div>
           <div className="mt-4 rounded-xl bg-rose-50 p-3 text-[11px] text-rose-700"><ShieldAlert size={13} className="mb-1" /> L'IA n'invente jamais de taux, article, obligation ou chiffre. Information non vérifiée = signalée.</div>
@@ -57,7 +57,7 @@ export default function AIAssistant() {
               <div className="flex h-full flex-col items-center justify-center text-center">
                 <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white"><Bot size={26} /></div>
                 <p className="font-bold text-slate-800">{AGENTS.find((a) => a.id === agent)?.name}</p>
-                <p className="mb-4 text-sm text-slate-400">Posez votre question ou choisissez une suggestion.</p>
+                <p className="mb-4 text-sm text-slate-500">Posez votre question ou choisissez une suggestion.</p>
                 <div className="flex flex-wrap justify-center gap-2">{suggestions.map((s) => <button key={s} onClick={() => send(s)} className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:border-indigo-300 hover:text-indigo-600">{s}</button>)}</div>
               </div>
             )}
@@ -69,7 +69,7 @@ export default function AIAssistant() {
                     <div className="mt-2 space-y-1.5 border-t border-slate-200 pt-2">
                       {!m.verified && <Badge tone="amber"><ShieldAlert size={11} /> Information non vérifiée</Badge>}
                       {m.verified && <Badge tone="emerald"><CheckCircle2 size={11} /> Basé sur les données</Badge>}
-                      {m.sources.length > 0 && <p className="text-[10px] text-slate-400">Sources : {m.sources.join(" · ")}</p>}
+                      {m.sources.length > 0 && <p className="text-[10px] text-slate-500">Sources : {m.sources.join(" · ")}</p>}
                     </div>
                   )}
                 </div>

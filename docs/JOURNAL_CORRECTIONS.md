@@ -428,3 +428,13 @@
 | Livré | `tableSort.ts` (`toggleSort`, `ariaSort`, `compareValues`, `sortRows`) ; `SortableTh` et tri du journal (N°, date, libellé, montant, statut) dans Écritures ; en-têtes de `slate-400` → `slate-500` ; 12 tests. |
 | Mesures | croissant montants → **445, 601, 4011, 4111**, vide en fin · décroissant → **4111, 4011, 601, 445**, vide **toujours** en fin · libellés → `Achats, Clients, État, TVA, fournisseurs, Sans compte` (accents et casse ignorés) · ex æquo → `1, 3, 2, 4` · entrée jamais modifiée |
 | Vérifications | `tsc` 0 erreur · `vitest` **363/363** (12 nouveaux) · build 12,17 s |
+
+## P31 — Contraste mesuré et corrigé (PR #46)
+| Point | Détail |
+|---|---|
+| Symptôme | Le contraste n'avait jamais été audité. Mesure faite : `text-slate-400` — **327 occurrences** — donne **2,56:1** sur blanc, très sous le seuil AA de 4,5:1 ; `text-slate-300` 1,48:1 ; `indigo-500` 4,47:1 ; `amber-600` 3,19:1 ; `rose-500` 3,67:1 ; `emerald-600` 3,77:1. Le texte secondaire des tableaux comptables était moins lisible qu'un texte gris de site vitrine. |
+| Décision | Mesurer avec la formule WCAG 2.1 plutôt que d'affirmer, corriger les teintes de texte jusqu'à 4,5:1 sur blanc **et** sur le fond des cartes, puis empêcher le retour par un balayage automatisé. |
+| Livré | `contrast.ts` (`hexToRgb`, `relativeLuminance`, `contrastRatio`, `wcagLevel`, `PALETTE`, `describeContrast`) ; 32 fichiers corrigés (slate-300/400 → 500, indigo-500 → 600, amber-500/600 → 700, rose-500/600 → 700, emerald-500/600 → 700, sky-600 → 700, violet-500 → 600) ; `contrast.test.ts` (12 tests dont 2 balayages). |
+| Mesures | blanc/blanc **1:1**, noir/blanc **21:1** · `slate-400` **2,56** → `slate-500` **4,76** · `indigo-500` **4,47** → `indigo-600` **6,29** · `amber-600` **3,19** → `amber-700` **5,02** · `rose-500` **3,67** → `rose-700` **5,72** (sur rose-50) · `emerald-600` **3,77** → `emerald-700` **5,48** · classes abandonnées restantes dans `src/` : **0** |
+| Vérifications | `tsc` 0 erreur · `vitest` **375/375** (12 nouveaux) · build 12,03 s |
+| Limite déclarée | Le **texte blanc sur fond coloré** (`bg-emerald-500` 3,77:1, `bg-rose-500` 3,67:1) reste sous AA : cela demande de revoir les badges, pas seulement les classes de texte. Inscrit au registre. |

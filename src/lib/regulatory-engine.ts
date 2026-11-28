@@ -350,10 +350,10 @@ export const INITIAL_SOCIAL_RULES: Omit<SocialRule, "id">[] = [
   {
     versionId: "reg-togo-2026", organism: "AMU", code: "AMU_STANDARD",
     name: "Cotisation AMU standard",
-    employeeRate: 2, employerRate: 4,
+    employeeRate: 5, employerRate: 5,
     ceiling: 300000, periodicity: "monthly",
     active: true,
-    source: "Assurance Maladie Universelle — À VÉRIFIER",
+    source: "Assurance Maladie Universelle — 5 % salarié / 5 % employeur (taux arbitrés le 28/11/2026)",
   },
 ];
 

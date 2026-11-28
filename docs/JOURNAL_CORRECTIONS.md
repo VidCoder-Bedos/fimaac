@@ -141,3 +141,11 @@
 | Correctif | `Financials.tsx` affiche `buildStatements(trialBalance(...))` — source unique P0-1 — avec toutes les composantes, l'écart et les comptes non rattachés. `PrintSheet` (portail + `window.print`) et `StatementsPrint` (document A4 : en-tête société, actif, passif, compte de résultat, contrôles, mention de validation). CSS `@page A4`. |
 | Non-régression | `financialSummary` et `computeRatios` inchangés ; aucune dépendance PDF ajoutée ; le document déclare lui-même un déséquilibre au lieu de le masquer. |
 | Vérifications | `tsc` 0 erreur · `npm run build` 13,03 s · `vitest` 65/65 |
+
+## P0-3c — Taux AMU arbitrés : 5 % salarié / 5 % employeur
+| Point | Détail |
+|---|---|
+| Décision | Le porteur confirme les taux de l'Assurance Maladie Universelle : **5 % salarié et 5 % employeur** (le dossier portait 2 %/4 %, marqué « à vérifier »). |
+| Correctif | `seed.ts` (`payrollConfig.amuEmployeeRate`/`amuEmployerRate` et règle `AMU_STANDARD`), `regulatory-engine.ts` (règle sociale de référence), libellés de `types.ts` et commentaire de `paie.ts`. |
+| Valeurs mesurées (seed) | 450 000 → AMU 15 000, assiette IRPP 423 000, IRPP **48 660**, net 374 340 · 350 000 → AMU 15 000, assiette 323 000, IRPP **31 660**, net 291 340 · total retenues **134 320** |
+| Contrôle | Un test vérifie que le paramétrage effectif du dossier vaut bien 5/5 après chargement du seed. |

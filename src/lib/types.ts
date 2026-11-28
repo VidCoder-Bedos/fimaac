@@ -211,9 +211,9 @@ export interface Payslip {
   /** IRPP retenu (alias historique : withholding). */
   withholding: number;
   net: number;
-  /** AMU salarié (2 % plafonné) — absent des bulletins antérieurs à P0-3. */
+  /** AMU salarié (5 % plafonné, taux arbitré le 28/11/2026). */
   amuEmployee?: number;
-  /** AMU patronal (4 % plafonné). */
+  /** AMU patronal (5 % plafonné, taux arbitré le 28/11/2026). */
   amuEmployer?: number;
   /** IRPP explicite, égal à `withholding` sur les bulletins récents. */
   irpp?: number;

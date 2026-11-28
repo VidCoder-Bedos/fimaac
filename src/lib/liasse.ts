@@ -1,5 +1,6 @@
 import ExcelJS from "exceljs";
 import { loadXlsxSafe } from "./xlsx-sanitizer";
+import { computePostes, money } from "./etatsMapping";
 // FIMAAC liasse engine — GUDEF / SYSCOHADA
 export interface BalanceRow {
   code: string;
@@ -13,9 +14,21 @@ export interface LiasseStatements {
     creances: number; tresorerie: number; actifTotal: number;
     capitaux: number; resultat: number; dettesFin: number; dettesFourn: number;
     autresDettes: number; tresoPassif: number; passifTotal: number;
+    // P0-1 — composantes auparavant calculées mais jamais exposées (le total
+    // ne doit jamais contenir un montant invisible à l'écran).
+    dettesFiscalesSociales: number;
+    creancesClients: number;
+    creancesEtat: number;
+    deprecTiers: number;
+    deprecStocks: number;
+    stocksBrut: number;
+    capitauxHorsReport: number;
+    reportANouveau: number;
   };
-  result: { produits: number; charges: number; resultat: number };
+  result: { produits: number; charges: number; resultat: number; produitsHAO: number; chargesHAO: number };
   totals: { debit: number; credit: number };
+  /** Comptes à solde non nul qu'aucun poste ne couvre (garde-fou anti-silence). */
+  nonMappes: { code: string; solde: number }[];
 }
 export interface CoherenceCheck {
   id: string;
@@ -125,32 +138,68 @@ export async function parseBalance(file: File): Promise<BalanceRow[]> {
   return parseSheet(wb.worksheets[0]);
 }
 
+/**
+ * P0-1 — Construit les états financiers à partir de la table de mapping unique
+ * (`src/lib/etatsMapping.ts`). Chaque compte alimente un seul poste avec son
+ * solde : l'identité actif = passif découle de Σ soldes = 0, elle n'est plus
+ * constatée après coup. Un compte non couvert est signalé, jamais ignoré.
+ */
 export function buildStatements(rows: BalanceRow[]): LiasseStatements {
-  let immoBrut = 0, amort = 0, stocks = 0, creances = 0, tresorerie = 0;
-  let capitaux = 0, dettesFin = 0, dettesFourn = 0, autresDettes = 0, tresoPassif = 0;
-  let produits = 0, charges = 0, debit = 0, credit = 0;
+  const { postes, nonMappes } = computePostes(rows);
+
+  let debit = 0, credit = 0;
   for (const r of rows) {
-    const c = r.code;
-    const solde = r.debit - r.credit;
-    debit += r.debit; credit += r.credit;
-    if (c.startsWith("16")) dettesFin += -solde;
-    else if (c.startsWith("1")) capitaux += -solde;
-    else if (c.startsWith("28") || c.startsWith("29")) amort += -solde;
-    else if (c.startsWith("2")) immoBrut += solde;
-    else if (c.startsWith("3")) stocks += solde;
-    else if (c.startsWith("4")) { if (solde > 0) creances += solde; else if (c.startsWith("40")) dettesFourn += -solde; else autresDettes += -solde; }
-    else if (c.startsWith("5")) { if (solde > 0) tresorerie += solde; else tresoPassif += -solde; }
-    else if (c.startsWith("6")) charges += solde;
-    else if (c.startsWith("7")) produits += -solde;
+    debit += Number(r.debit) || 0;
+    credit += Number(r.credit) || 0;
   }
-  const resultat = produits - charges;
+
+  // --- ACTIF ---
+  const immoBrut = money(postes.immoBrut);
+  const amort = money(postes.amort);
   const immoNet = immoBrut - amort;
+  const stocksBrut = money(postes.stocks);
+  const deprecStocks = money(postes.deprecStocks);
+  const stocks = stocksBrut - deprecStocks;
+  const creancesClients = money(postes.creancesClients);
+  const creancesEtat = money(postes.creancesEtat);
+  const deprecTiers = money(postes.deprecTiers);
+  const creances = creancesClients + creancesEtat + money(postes.autresCreances) - deprecTiers;
+  const tresorerie = money(postes.tresorerie);
   const actifTotal = immoNet + stocks + creances + tresorerie;
-  const passifTotal = capitaux + resultat + dettesFin + dettesFourn + autresDettes + tresoPassif;
+
+  // --- RÉSULTAT ---
+  const produitsAO = money(postes.produits);
+  const chargesAO = money(postes.charges);
+  const produitsHAO = money(postes.produitsHAO);
+  const chargesHAO = money(postes.chargesHAO);
+  const produits = produitsAO + produitsHAO;
+  const charges = chargesAO + chargesHAO;
+  // 13 = résultat net comptabilisé : prioritaire s'il est mouvementé (exercice
+  // déjà clôturé) ; sinon on retient le résultat calculé, jamais 0 par défaut.
+  const resultat = postes.resultatPoste !== 0 ? money(postes.resultatPoste) : produits - charges;
+
+  // --- PASSIF ---
+  const capitauxHorsReport = money(postes.capitaux);
+  const reportANouveau = money(postes.reportANouveau);
+  const capitaux = capitauxHorsReport + reportANouveau;
+  const dettesFin = money(postes.dettesFin);
+  const dettesFourn = money(postes.dettesFourn);
+  const dettesFiscalesSociales = money(postes.dettesFiscalesSociales);
+  const autresDettes = money(postes.autresDettes);
+  const tresoPassif = money(postes.tresoreriePassif);
+  const passifTotal =
+    capitaux + resultat + dettesFin + dettesFourn + dettesFiscalesSociales + autresDettes + tresoPassif;
+
   return {
-    bilan: { immoBrut, amort, immoNet, stocks, creances, tresorerie, actifTotal, capitaux, resultat, dettesFin, dettesFourn, autresDettes, tresoPassif, passifTotal },
-    result: { produits, charges, resultat },
+    bilan: {
+      immoBrut, amort, immoNet, stocks, creances, tresorerie, actifTotal,
+      capitaux, resultat, dettesFin, dettesFourn, autresDettes, tresoPassif, passifTotal,
+      dettesFiscalesSociales, creancesClients, creancesEtat, deprecTiers, deprecStocks,
+      stocksBrut, capitauxHorsReport, reportANouveau,
+    },
+    result: { produits, charges, resultat, produitsHAO, chargesHAO },
     totals: { debit, credit },
+    nonMappes,
   };
 }
 
@@ -165,6 +214,21 @@ export function runChecks(st: LiasseStatements): CoherenceCheck[] {
   checks.push({ id: "amort", title: "Amortissements ≤ Immobilisations brutes", sheet: "Bilan / Actif", expected: st.bilan.immoBrut, actual: st.bilan.amort, diff: st.bilan.immoBrut - st.bilan.amort, status: amortOk ? "ok" : "warning", detail: "Le cumul des amortissements ne peut pas dépasser la valeur brute." });
   checks.push({ id: "treso", title: "Trésorerie ≥ 0", sheet: "Bilan", expected: 0, actual: st.bilan.tresorerie, diff: st.bilan.tresorerie, status: st.bilan.tresorerie >= 0 ? "ok" : "warning", detail: "Une trésorerie négative doit être justifiée (découvert)." });
   checks.push({ id: "capital", title: "Capitaux propres renseignés", sheet: "Bilan / Passif", expected: 1, actual: st.bilan.capitaux > 0 ? 1 : 0, diff: st.bilan.capitaux > 0 ? 0 : 1, status: st.bilan.capitaux > 0 ? "ok" : "warning", detail: "Les capitaux propres (classe 1) doivent figurer au passif." });
+  // P0-1 — garde-fou : un compte non mappé ne doit jamais passer inaperçu.
+  const unmapped = st.nonMappes ?? [];
+  const unmappedTotal = unmapped.reduce((s, x) => s + x.solde, 0);
+  checks.push({
+    id: "unmapped",
+    title: "Tous les comptes sont rattachés à un poste",
+    sheet: "Balance",
+    expected: 0,
+    actual: unmapped.length,
+    diff: unmappedTotal,
+    status: unmapped.length === 0 ? "ok" : "blocking",
+    detail: unmapped.length === 0
+      ? "Aucun compte non mappé."
+      : `${unmapped.length} compte(s) non mappé(s) pour un solde de ${unmappedTotal} FCFA : ${unmapped.map((u) => u.code).join(", ")}`,
+  });
   checks.push({ id: "prod", title: "Produits et charges présents", sheet: "Compte de résultat", expected: 1, actual: st.result.produits > 0 || st.result.charges > 0 ? 1 : 0, diff: 0, status: st.result.produits > 0 || st.result.charges > 0 ? "ok" : "warning", detail: "Le compte de résultat doit contenir les classes 6 et 7." });
   return checks;
 }

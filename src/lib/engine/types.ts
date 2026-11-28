@@ -87,6 +87,9 @@ export interface BilanResult {
   resultat: number;
   dettesFin: number;
   dettesFourn: number;
+  /** P0-1 — dette fiscale et sociale (42/43/44 hors 445/4492) : comptée dans
+   *  totalPassif mais auparavant absente de l'objet, donc invisible à l'écran. */
+  dettesFiscalesSociales: number;
   autresDettes: number;
   tresoPassif: number;
   totalPassif: number;

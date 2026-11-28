@@ -2,7 +2,7 @@
 
 > Registre tenu à jour à chaque lot livré. Il sert de point de reprise : tout ce
 > qui est ici est **non fait**, avec sa raison et son blocage éventuel.
-> Dernière mise à jour : 28/11/2026, après les PR #5 à #20.
+> Dernière mise à jour : 28/11/2026, après les PR #5 à #21.
 
 ## Déjà réglé (ne plus y revenir)
 
@@ -23,6 +23,7 @@
 | P4 | Échéances légales reportées aux jours ouvrés + calendrier affiché | #18 |
 | P5 | Ventilation de la TVA par taux (18 / 9 / exonéré) | #19 |
 | P6 | Numérotation des pièces sans recyclage + contrôle affiché | #20 |
+| P7 | TAFIRE calculé, bouclé et imprimé (liasse, PDF, XLSX) | #21 |
 
 ## 1. Bloqué par une décision d'infrastructure (à arbitrer par le porteur)
 
@@ -41,8 +42,10 @@ Ces points ne peuvent pas avancer sans base de données et hébergement d'API.
 
 ## 2. Faisable sans infrastructure (ordre recommandé)
 
-5. ~~**Liasse GUDEF imprimable**~~ — **fait (PR #16)**. Reste à y brancher la
-   **TAFIRE** et les **notes annexes** (`notes.ts` existe, non connecté).
+5. ~~**Liasse GUDEF imprimable**~~ — **fait (PR #16)** ;
+   ~~**TAFIRE**~~ — **fait (PR #21)**. Reste les **notes annexes** (`notes.ts`
+   existe, toujours non connecté) : tableau des immobilisations, des créances et
+   dettes, effectifs, engagements hors bilan.
 6. ~~**Journal d'audit chaîné localement**~~ — **fait (PR #14)**. Reste la
    version serveur : ancrage hors du poste, acteur et IP réels (point 4).
 7. ~~**Export FEC conforme**~~ — **fait (PR #17)** : 18 colonnes, point décimal,

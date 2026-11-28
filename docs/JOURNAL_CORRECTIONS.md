@@ -210,3 +210,13 @@
 | Mesures (seed) | 102 écritures contrôlées, **0 doublon**, 0 numéro illisible, 7 séries, 348 trous d'import (conséquence de la numérotation manuelle du seed, désormais mesurée au lieu d'être invisible). |
 | Règle | Un trou est une information (reprise d'historique) ; un doublon est une erreur. Les deux sont distingués à l'écran. |
 | Vérifications | `tsc` 0 erreur · `npm run build` 12,03 s · `vitest` **139/139** (12 nouveaux) |
+
+## P7 — TAFIRE (PR #21)
+| Point | Détail |
+|---|---|
+| Manque | Le TAFIRE obligatoire du modèle GUDEF était absent de la liasse, alors que la balance N-1 est importée depuis la PR #16 et n'alimentait que le remplissage Excel. |
+| Livré | `src/lib/tafire.ts` : CAFG (résultat + dotations nettes), BFR classé **par le sens du solde** (un préfixe « clients »/« fournisseurs » compte deux fois 419, 421, 443/445), investissement = variation des immobilisations brutes, financement = capitaux hors résultat + dettes 16/17, bouclage obligatoire. Diffusion : onglet TAFIRE, section du document imprimé, feuille XLSX — mêmes montants. |
+| Mesures (jeu de test reconstitué pièce par pièce) | CAFG 600 000 · ΔBFR −450 000 · investissement −500 000 · financement −100 000 · trésorerie 500 000 → 950 000 · **écart 0**. |
+| Refus explicite | Sans balance N-1 : `available: false` + motif, trésorerie de clôture affichée, **aucun zéro inventé**. Un flux manquant de 100 000 → écart −100 000 et contrôle bloquant. |
+| Limite affichée | Cessions non isolées (aucun prix de cession dans une balance) : investissements présentés nets des cessions. |
+| Vérifications | `tsc` 0 erreur · `npm run build` 12,48 s · `vitest` **150/150** (11 nouveaux) |

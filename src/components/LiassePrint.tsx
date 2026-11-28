@@ -6,9 +6,11 @@
 // page de garde, bilan actif/passif, compte de résultat, contrôles de
 // cohérence. Tous les montants viennent de `buildStatements` (source unique).
 // ============================================================================
+import { Fragment } from "react";
 import { fcfa, formatDate } from "../lib/format";
 import { PrintLine } from "./StatementsPrint";
 import type { CoherenceCheck, LiasseStatements } from "../lib/liasse";
+import type { Tafire } from "../lib/tafire";
 import type { Company } from "../lib/types";
 
 interface Props {
@@ -16,6 +18,8 @@ interface Props {
   stmt: LiasseStatements;
   checks: CoherenceCheck[];
   exercise: string;
+  /** TAFIRE calculé depuis les balances N-1 et N (null = non calculé). */
+  tafire?: Tafire | null;
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -32,7 +36,7 @@ function CheckBadge({ status }: { status: CoherenceCheck["status"] }) {
   return <span className="border border-black px-1.5 py-[1px] text-[9px] font-bold uppercase">{label}</span>;
 }
 
-export default function LiassePrint({ company, stmt, checks, exercise }: Props) {
+export default function LiassePrint({ company, stmt, checks, exercise, tafire }: Props) {
   const b = stmt.bilan;
   const blocking = checks.filter((c) => c.status === "blocking").length;
   const warnings = checks.filter((c) => c.status === "warning").length;
@@ -110,6 +114,53 @@ export default function LiassePrint({ company, stmt, checks, exercise }: Props) 
           </tbody>
         </table>
       </Section>
+
+      {/* ---------- TAFIRE ---------- */}
+      {tafire && (
+        <Section title="Tableau des flux de trésorerie (TAFIRE)">
+          {!tafire.available ? (
+            <div className="border border-black p-3">
+              <p className="font-bold">TAFIRE non calculable</p>
+              <p className="mt-1 text-[10.5px]">{tafire.reason}</p>
+              <p className="mt-2">Trésorerie de clôture constatée : <strong>{fcfa(tafire.tresorerieCloture)}</strong></p>
+            </div>
+          ) : (
+            <>
+              <table className="w-full text-[10.5px]">
+                <tbody>
+                  <PrintLine label="Trésorerie d'ouverture" value={tafire.tresorerieOuverture} bold />
+                  {tafire.zones.map((z) => (
+                    <Fragment key={z.id}>
+                      <tr key={z.id} className="border-b border-black">
+                        <td colSpan={2} className="pt-2 pb-0.5 font-black uppercase tracking-wide">{z.label}</td>
+                      </tr>
+                      {z.fluxes.map((f) => (
+                        <tr key={f.label}>
+                          <td className="pl-3 pr-2 py-[2px]">{f.label}</td>
+                          <td className="py-[2px] text-right tabular-nums">{fcfa(f.amount)}</td>
+                        </tr>
+                      ))}
+                      <tr key={`${z.id}-total`} className="border-t border-slate-400">
+                        <td className="pl-3 pr-2 py-[2px] font-bold">Total de la zone</td>
+                        <td className="py-[2px] text-right font-bold tabular-nums">{fcfa(z.total)}</td>
+                      </tr>
+                    </Fragment>
+                  ))}
+                  <PrintLine label="Trésorerie de clôture (calculée)" value={tafire.tresorerieCalculee} bold />
+                  <PrintLine label="Trésorerie de clôture (balance)" value={tafire.tresorerieCloture} />
+                  {tafire.ecart !== 0 && <PrintLine label="Écart de bouclage" value={tafire.ecart} bold />}
+                </tbody>
+              </table>
+              <p className="mt-2 text-[9.5px] text-slate-700">
+                {tafire.ecart === 0
+                  ? "Bouclage vérifié : trésorerie d'ouverture + flux = trésorerie de clôture."
+                  : `Bouclage rompu (écart ${fcfa(tafire.ecart)}) : tableau à corriger avant dépôt.`}
+                {" "}CAFG {fcfa(tafire.cafg)} · variation du BFR {fcfa(tafire.variationBfr)}. Investissements présentés nets des cessions faute de prix de cession dans la balance.
+              </p>
+            </>
+          )}
+        </Section>
+      )}
 
       {/* ---------- Contrôles ---------- */}
       <Section title="Contrôles de cohérence">

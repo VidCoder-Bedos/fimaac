@@ -64,6 +64,8 @@ export interface ObligationInstance {
   proofDocId: string | null;
   paymentRef: string | null;
   createdAt: string;
+  /** Date d'échéance légale avant report (week-end / jour férié), si reportée. */
+  prorogatedFrom?: string | null;
 }
 
 // ============================================================================
@@ -277,102 +279,286 @@ export function determineApplicableObligations(profile: CompanyProfile): Assujet
 }
 
 // ============================================================================
-// GÉNÉRATION DU CALENDRIER — Crée les instances d'obligations
+// JOURS OUVRÉS ET JOURS FÉRIÉS (Togo)
 // ============================================================================
+// Fériés à date fixe. Les fêtes religieuses musulmanes (Aïd el-Fitr, Aïd
+// el-Adha) suivent le calendrier lunaire : elles ne sont pas calculables ici et
+// doivent être ajoutées chaque année par paramétrage — c'est écrit dans l'écran
+// plutôt que deviné.
+const FIXED_HOLIDAYS: [number, number, string][] = [
+  [1, 1, "Nouvel An"],
+  [1, 13, "Fête de la Libération"],
+  [4, 27, "Fête de l'Indépendance"],
+  [5, 1, "Fête du Travail"],
+  [6, 21, "Journée des Martyrs"],
+  [8, 15, "Assomption"],
+  [11, 1, "Toussaint"],
+  [12, 25, "Noël"],
+];
+
+/** Dimanche de Pâques (algorithme grégorien anonyme). */
+export function easterSunday(year: number): Date {
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31);
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
+const isoOf = (d: Date): string => d.toISOString().slice(0, 10);
+
+/** Jours fériés légaux d'une année, indexés par date ISO. */
+export function togoHolidays(year: number): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [m, d, label] of FIXED_HOLIDAYS) {
+    out[isoOf(new Date(Date.UTC(year, m - 1, d)))] = label;
+  }
+  const easter = easterSunday(year);
+  const at = (offset: number) => isoOf(new Date(easter.getTime() + offset * 86400000));
+  out[at(1)] = "Lundi de Pâques";
+  out[at(39)] = "Ascension";
+  out[at(50)] = "Lundi de Pentecôte";
+  return out;
+}
+
+/** Vrai si la date (ISO) est un samedi, un dimanche ou un jour férié togolais. */
+export function isNonWorkingDay(iso: string): boolean {
+  const d = new Date(`${iso}T00:00:00Z`);
+  const day = d.getUTCDay();
+  if (day === 0 || day === 6) return true;
+  return Boolean(togoHolidays(d.getUTCFullYear())[iso]);
+}
+
+/**
+ * Report au jour ouvré suivant (règle de prorogation) : une échéance qui tombe
+ * un samedi, un dimanche ou un jour férié est repoussée au premier jour ouvré.
+ * Le motif est renvoyé pour être affiché, jamais silencieux.
+ */
+export function nextBusinessDay(iso: string): { date: string; reason: string | null } {
+  let current = iso;
+  let reason: string | null = null;
+  for (let guard = 0; guard < 15; guard++) {
+    const d = new Date(`${current}T00:00:00Z`);
+    const day = d.getUTCDay();
+    if (day === 6) reason = reason ?? "samedi";
+    else if (day === 0) reason = reason ?? "dimanche";
+    const holiday = togoHolidays(d.getUTCFullYear())[current];
+    if (!isNonWorkingDay(current)) return { date: current, reason };
+    if (holiday && !reason) reason = holiday;
+    if (holiday && reason && reason !== holiday && reason !== "samedi" && reason !== "dimanche") {
+      reason = `${reason}, ${holiday}`;
+    }
+    d.setUTCDate(d.getUTCDate() + 1);
+    current = isoOf(d);
+  }
+  return { date: current, reason };
+}
+
+const isoDate = (year: number, month1: number, day: number): string => {
+  // month1 est 1-based et peut déborder (13 = janvier N+1).
+  const d = new Date(Date.UTC(year, month1 - 1, day));
+  return isoOf(d);
+};
+
+/** Échéance mensuelle légale : le 15 du mois suivant, reportée si non ouvré. */
+export function computeMonthlyDueDate(year: number, month: number): string {
+  return nextBusinessDay(isoDate(year, month + 2, 15)).date;
+}
+
+/** Échéance trimestrielle légale : le 15 du mois suivant la fin du trimestre. */
+export function computeQuarterlyDueDate(year: number, quarter: number): string {
+  return nextBusinessDay(isoDate(year, quarter * 3 + 1, 15)).date;
+}
+
+/** Échéance annuelle : règle par code, puis report au jour ouvré. */
+export function computeAnnualDueDate(code: string, year: number): string {
+  if (code === "DAS_ANNUELLE") return nextBusinessDay(`${year + 1}-01-31`).date;
+  if (code === "TPU" || code === "TVM") return nextBusinessDay(`${year}-03-31`).date;
+  return nextBusinessDay(`${year + 1}-03-31`).date;
+}
+
+/** Motif de report d'une échéance légale, ou null si déjà ouvrée. */
+export function prorogationReason(rawDate: string, finalDate: string): string | null {
+  if (rawDate === finalDate) return null;
+  return nextBusinessDay(rawDate).reason;
+}
+
+export interface GenerationOptions {
+  /** Premier jour couvert (ISO). Par défaut : 1er du mois courant. */
+  from?: string;
+  /** Dernier jour couvert (ISO). Par défaut : 12 mois après `from`. */
+  until?: string;
+  /** Date de référence pour statuer « en retard ». */
+  today?: string;
+}
+
+/**
+ * Génère le calendrier réglementaire sur une **fenêtre glissante**.
+ *
+ * L'ancienne version générait les 12 mois de l'année civile, y compris les
+ * échéances déjà passées : un dossier neuf affichait des dizaines de « en
+ * retard » qui n'avaient jamais été dus. On ne génère plus que la fenêtre
+ * demandée (12 mois par défaut), et le statut « en_retard » n'est posé que pour
+ * une échéance réellement dépassée dans cette fenêtre.
+ */
 export function generateObligationInstances(
   companyId: string,
   companyName: string,
   profile: CompanyProfile,
-  year: number = new Date().getFullYear(),
+  options: GenerationOptions | number = {},
 ): ObligationInstance[] {
+  const opts: GenerationOptions = typeof options === "number" ? { from: `${options}-01-01`, until: `${options}-12-31` } : options;
+  const now = new Date().toISOString();
+  const todayIso = opts.today ?? now.slice(0, 10);
+
+  const start = opts.from ? new Date(`${opts.from}T00:00:00Z`) : (() => {
+    const d = new Date(`${todayIso}T00:00:00Z`);
+    return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
+  })();
+  const end = opts.until
+    ? new Date(`${opts.until}T00:00:00Z`)
+    : new Date(Date.UTC(start.getUTCFullYear() + 1, start.getUTCMonth(), 0));
+
   const { applicable } = determineApplicableObligations(profile);
   const instances: ObligationInstance[] = [];
-  const now = new Date().toISOString();
-  const today = new Date();
+  const inWindow = (iso: string) => iso >= isoOf(start) && iso <= isoOf(end);
+
+  const make = (
+    obl: ObligationDef,
+    id: string,
+    periodLabel: string,
+    rawDue: string,
+    due: string,
+    createdAt = now,
+  ): ObligationInstance => {
+    const reason = prorogationReason(rawDue, due);
+    return {
+      id: `${id}_${companyId}`,
+      obligationCode: obl.code,
+      obligationName: obl.name,
+      organism: obl.organism,
+      category: obl.category,
+      companyId,
+      companyName,
+      periodLabel,
+      dueDate: due,
+      status: due < todayIso ? "en_retard" : "creee",
+      assignedTo: null,
+      amount: null,
+      calculatedAmount: null,
+      declarationId: null,
+      receiptNumber: null,
+      proofDocId: null,
+      paymentRef: null,
+      createdAt,
+      prorogatedFrom: reason ? rawDue : null,
+    };
+  };
 
   for (const obl of applicable) {
     if (obl.periodicity === "monthly") {
-      for (let month = 0; month < 12; month++) {
-        const dueDate = computeMonthlyDueDate(year, month);
-        instances.push({
-          id: `${obl.code}_${year}_${String(month + 1).padStart(2, "0")}_${companyId}`,
-          obligationCode: obl.code,
-          obligationName: obl.name,
-          organism: obl.organism,
-          category: obl.category,
-          companyId,
-          companyName,
-          periodLabel: new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(new Date(year, month, 1)),
-          dueDate,
-          status: new Date(dueDate) < today ? "en_retard" : "creee",
-          assignedTo: null,
-          amount: null,
-          calculatedAmount: null,
-          declarationId: null,
-          receiptNumber: null,
-          proofDocId: null,
-          paymentRef: null,
-          createdAt: now,
-        });
+      // On parcourt les mois de la fenêtre, un mois avant le début pour couvrir
+      // l'échéance du mois précédent tombant dans la fenêtre.
+      const cursor = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() - 1, 1));
+      for (let guard = 0; guard < 36; guard++) {
+        const y = cursor.getUTCFullYear();
+        const m = cursor.getUTCMonth();
+        const due = computeMonthlyDueDate(y, m);
+        if (due > isoOf(end)) break;
+        if (inWindow(due)) {
+          const label = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(Date.UTC(y, m, 1)));
+          instances.push(make(obl, `${obl.code}_${y}_${String(m + 1).padStart(2, "0")}`, label, isoDate(y, m + 2, 15), due));
+        }
+        cursor.setUTCMonth(cursor.getUTCMonth() + 1);
       }
     } else if (obl.periodicity === "quarterly") {
-      for (let q = 1; q <= 4; q++) {
-        const dueMonth = q * 3; // Fin de trimestre + délai
-        const dueDate = `${year}-${String(Math.min(dueMonth + 1, 12)).padStart(2, "0")}-15`;
-        instances.push({
-          id: `${obl.code}_${year}_Q${q}_${companyId}`,
-          obligationCode: obl.code,
-          obligationName: obl.name,
-          organism: obl.organism,
-          category: obl.category,
-          companyId,
-          companyName,
-          periodLabel: `T${q} ${year}`,
-          dueDate,
-          status: new Date(dueDate) < today ? "en_retard" : "creee",
-          assignedTo: null, amount: null, calculatedAmount: null,
-          declarationId: null, receiptNumber: null, proofDocId: null, paymentRef: null,
-          createdAt: now,
-        });
+      const firstYear = start.getUTCFullYear() - 1;
+      for (let year = firstYear; year <= end.getUTCFullYear(); year++) {
+        for (let q = 1; q <= 4; q++) {
+          const due = computeQuarterlyDueDate(year, q);
+          if (due > isoOf(end)) continue;
+          if (!inWindow(due)) continue;
+          const rawMonth = q * 3 + 1;
+          const raw = isoDate(year, rawMonth, 15);
+          instances.push(make(obl, `${obl.code}_${year}_Q${q}`, `T${q} ${year}`, raw, due));
+        }
       }
     } else if (obl.periodicity === "annual") {
-      const dueDate = computeAnnualDueDate(obl.code, year);
-      instances.push({
-        id: `${obl.code}_${year}_${companyId}`,
-        obligationCode: obl.code,
-        obligationName: obl.name,
-        organism: obl.organism,
-        category: obl.category,
-        companyId,
-        companyName,
-        periodLabel: `Exercice ${year}`,
-        dueDate,
-        status: new Date(dueDate) < today ? "en_retard" : "creee",
-        assignedTo: null, amount: null, calculatedAmount: null,
-        declarationId: null, receiptNumber: null, proofDocId: null, paymentRef: null,
-        createdAt: now,
-      });
+      for (let year = start.getUTCFullYear() - 1; year <= end.getUTCFullYear(); year++) {
+        const due = computeAnnualDueDate(obl.code, year);
+        if (due > isoOf(end)) continue;
+        if (!inWindow(due)) continue;
+        const raw = obl.code === "DAS_ANNUELLE" ? `${year + 1}-01-31`
+          : obl.code === "TPU" || obl.code === "TVM" ? `${year}-03-31`
+          : `${year + 1}-03-31`;
+        instances.push(make(obl, `${obl.code}_${year}`, `Exercice ${year}`, raw, due));
+      }
     }
   }
 
-  return instances.sort((a, b) => +new Date(a.dueDate) - +new Date(b.dueDate));
+  return instances.sort((a, b) => a.dueDate.localeCompare(b.dueDate) || a.obligationCode.localeCompare(b.obligationCode));
 }
 
-/** Calcule la date d'échéance d'une obligation mensuelle. */
-function computeMonthlyDueDate(year: number, month: number): string {
-  // Règle générale : déclaration du mois M est due le 15 du mois M+1
-  // ⚠️ Les dates exactes doivent être paramétrées dans le Regulatory Engine
-  const nextMonth = month + 1;
-  const dueYear = nextMonth > 11 ? year + 1 : year;
-  const dueMonth = nextMonth > 11 ? 0 : nextMonth;
-  return `${dueYear}-${String(dueMonth + 1).padStart(2, "0")}-15`;
+export interface ObligationSummary {
+  total: number;
+  overdue: number;
+  next30: number;
+  byOrganism: Record<string, number>;
+  prorogated: number;
+  window: { from: string; to: string };
+  /** Limites connues du calendrier, affichées telles quelles. */
+  limits: string[];
 }
 
-/** Calcule la date d'échéance d'une obligation annuelle. */
-function computeAnnualDueDate(code: string, year: number): string {
-  // Règles indicatives — À VÉRIFIER dans le Cahier fiscal 2026
-  if (code === "DAS_ANNUELLE") return `${year + 1}-01-31`; // 31 janvier N+1
-  if (code === "LIASSE_FISCALE" || code === "IMPOT_BENEFICE" || code === "ETATS_FINANCIERS") return `${year + 1}-03-31`;
-  if (code === "TPU" || code === "TVM") return `${year}-03-31`;
-  return `${year + 1}-03-31`; // défaut
+export function summarizeObligations(
+  instances: ObligationInstance[],
+  opts: { today?: string; from?: string; until?: string } = {},
+): ObligationSummary {
+  const today = opts.today ?? new Date().toISOString().slice(0, 10);
+  const limit = new Date(`${today}T00:00:00Z`);
+  limit.setUTCDate(limit.getUTCDate() + 30);
+  const limitIso = limit.toISOString().slice(0, 10);
+  const byOrganism: Record<string, number> = {};
+  for (const i of instances) byOrganism[i.organism] = (byOrganism[i.organism] || 0) + 1;
+  return {
+    total: instances.length,
+    overdue: instances.filter((i) => i.status === "en_retard").length,
+    next30: instances.filter((i) => i.dueDate >= today && i.dueDate <= limitIso).length,
+    byOrganism,
+    prorogated: instances.filter((i) => i.prorogatedFrom).length,
+    window: { from: opts.from ?? "—", to: opts.until ?? "—" },
+    limits: [
+      "Fêtes religieuses musulmanes (Aïd el-Fitr, Aïd el-Adha) non paramétrées : à saisir chaque année.",
+      "Dates légales indicatives (15 du mois suivant, 31 mars, 31 janvier) : source TOGO_2026_REFERENCE, à valider avec un fiscaliste.",
+      "Le statut « en retard » ne connaît pas les dépôts effectués hors plateforme.",
+    ],
+  };
+}
+
+/** Profil réglementaire dérivé d'une entreprise (assujettissements). */
+export function companyProfileFrom(
+  company: { legalForm: string; taxRegime: string; vatPayer: boolean; sector: string; capital: number },
+  extras: { hasEmployees?: boolean; isTransporter?: boolean; hasVehicles?: boolean; hasRealEstateIncome?: boolean } = {},
+): CompanyProfile {
+  return {
+    legalForm: company.legalForm,
+    taxRegime: company.taxRegime,
+    vatPayer: company.vatPayer,
+    sector: company.sector,
+    capital: company.capital,
+    hasEmployees: extras.hasEmployees ?? false,
+    isTransporter: extras.isTransporter,
+    hasVehicles: extras.hasVehicles,
+    hasRealEstateIncome: extras.hasRealEstateIncome,
+  };
 }

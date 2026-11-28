@@ -2,7 +2,7 @@
 
 > Registre tenu à jour à chaque lot livré. Il sert de point de reprise : tout ce
 > qui est ici est **non fait**, avec sa raison et son blocage éventuel.
-> Dernière mise à jour : 28/11/2026, après les PR #5 à #17.
+> Dernière mise à jour : 28/11/2026, après les PR #5 à #18.
 
 ## Déjà réglé (ne plus y revenir)
 
@@ -20,6 +20,7 @@
 | P2b | Journal d'audit chaîné (détection d'altération locale) | #14 |
 | P1b | Liasse fiscale imprimable (modèle GUDEF) | #16 |
 | P3 | Export FEC conforme (18 colonnes, point décimal, contrôles) | #17 |
+| P4 | Échéances légales reportées aux jours ouvrés + calendrier affiché | #18 |
 
 ## 1. Bloqué par une décision d'infrastructure (à arbitrer par le porteur)
 
@@ -48,9 +49,12 @@ Ces points ne peuvent pas avancer sans base de données et hébergement d'API.
    validé), historiser une **date de validation** et une **date de lettrage**
    réelles, et **renseigner les tiers** sur les lignes 40x/41x du seed
    (5 lignes sur 67 aujourd'hui).
-8. **Obligations : règles de report** — jour férié, week-end, prorogation,
-   périodicité trimestrielle réelle, régimes réel / forfait. La génération
-   actuelle produit 50 instances « en retard » parce qu'elle est rétroactive.
+8. ~~**Obligations : règles de report**~~ — **fait (PR #18)** : jours fériés
+   togolais (fixes + Pâques/Ascension/Pentecôte), report au jour ouvré suivant,
+   trimestre T4 au 15 janvier N+1, fenêtre glissante 12/24 mois, moteur branché
+   dans un onglet « Calendrier légal ». Reste : **fêtes musulmanes** (Aïd el-Fitr,
+   Aïd el-Adha) à paramétrer chaque année, **régimes réel / forfait** et
+   prorogations exceptionnelles décidées par l'administration.
 9. **TVA à taux multiples** — exonéré, 9 %, 18 % : un seul taux normal
    aujourd'hui. Impacte la déclaration et la grille.
 10. **Cas 441 débiteur** — présenté en diminution des dettes fiscales ; un

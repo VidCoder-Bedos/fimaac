@@ -11,6 +11,7 @@ import { useCompanyScope, Page } from "../components/Layout";
 import { Card, Badge, StatCard, EmptyState, Select, Tabs } from "../components/ui";
 import { fcfa, formatDate, daysUntil } from "../lib/format";
 import type { BadgeTone } from "../components/ui";
+import { generateObligationInstances, summarizeObligations, companyProfileFrom } from "../lib/obligations";
 
 const STATUS_META: Record<string, { tone: BadgeTone; label: string; icon: React.ReactNode }> = {
   a_venir: { tone: "slate", label: "À venir", icon: <Clock size={12} /> },
@@ -63,6 +64,7 @@ export default function Obligations() {
   const [filterCat, setFilterCat] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [calMonth, setCalMonth] = useState(new Date());
+  const [horizon, setHorizon] = useState(12);
   const companies = useMemo(() => {
     return user?.role === "super_admin"
       ? db.companies
@@ -181,6 +183,41 @@ export default function Obligations() {
 
   const categories = [...new Set(allObligations.map((o) => o.category))];
 
+  // Calendrier réglementaire — moteur des obligations (catalogue Togo 2026),
+  // jusque-là généré mais jamais affiché. Échéances légales reportées aux jours
+  // ouvrés, une ligne par obligation et par période.
+  const legalCalendar = useMemo(() => {
+    const scoped = scopeCompanyId ? companies.filter((c) => c.id === scopeCompanyId) : companies;
+    const today = new Date();
+    const from = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1));
+    const until = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth() + horizon, 0));
+    const instances = scoped.flatMap((c) => {
+      const hasEmployees = db.employees.some((e) => e.companyId === c.id);
+      const profile = companyProfileFrom(c, { hasEmployees, isTransporter: c.sector === "transport" });
+      return generateObligationInstances(c.id, c.name, profile, {
+        from: from.toISOString().slice(0, 10),
+        until: until.toISOString().slice(0, 10),
+        today: today.toISOString().slice(0, 10),
+      });
+    });
+    const summary = summarizeObligations(instances, {
+      today: today.toISOString().slice(0, 10),
+      from: from.toISOString().slice(0, 10),
+      until: until.toISOString().slice(0, 10),
+    });
+    const byMonth: { key: string; label: string; items: typeof instances }[] = [];
+    for (const i of instances) {
+      const key = i.dueDate.slice(0, 7);
+      let bucket = byMonth.find((b) => b.key === key);
+      if (!bucket) {
+        bucket = { key, items: [], label: new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(`${key}-01T00:00:00Z`)) };
+        byMonth.push(bucket);
+      }
+      bucket.items.push(i);
+    }
+    return { instances, summary, byMonth };
+  }, [companies, scopeCompanyId, db.employees, horizon]);
+
   return (
     <Page>
       <div className="mb-5">
@@ -199,6 +236,7 @@ export default function Obligations() {
         <Tabs active={tab} onChange={setTab} tabs={[
           { id: "matrix", label: "Matrice des obligations", icon: <LayoutGrid size={15} /> },
           { id: "calendar", label: "Calendrier", icon: <CalendarDays size={15} /> },
+          { id: "legal", label: "Calendrier légal", icon: <CalendarClock size={15} /> },
         ]} />
       </div>
       {/* Filtres */}
@@ -317,6 +355,83 @@ export default function Obligations() {
             <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-slate-400" /> Plus tard</span>
           </div>
         </Card>
+      )}
+      {tab === "legal" && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <StatCard title={`Échéances (${horizon} mois)`} value={String(legalCalendar.summary.total)} icon={<CalendarClock size={18} />} tone="indigo" />
+            <StatCard title="En retard" value={String(legalCalendar.summary.overdue)} icon={<AlertTriangle size={18} />} tone="rose" />
+            <StatCard title="Sous 30 jours" value={String(legalCalendar.summary.next30)} icon={<Clock size={18} />} tone="amber" />
+            <StatCard title="Reportées (jour non ouvré)" value={String(legalCalendar.summary.prorogated)} icon={<CalendarDays size={18} />} tone="sky" />
+          </div>
+          <Card className="p-5">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 className="font-bold text-slate-800">Calendrier légal des obligations</h3>
+                <p className="text-xs text-slate-500">
+                  Catalogue Togo 2026 · échéances au 15 du mois suivant, trimestres au 15 du mois suivant le trimestre, annuelles au 31 mars ·
+                  report automatique au jour ouvré suivant (week-ends et jours fériés togolais)
+                </p>
+              </div>
+              <Select value={String(horizon)} onChange={(e) => setHorizon(Number(e.target.value))} className="h-9 w-40">
+                <option value="12">12 prochains mois</option>
+                <option value="24">24 prochains mois</option>
+              </Select>
+            </div>
+            {legalCalendar.instances.length === 0 ? (
+              <EmptyState icon={<CalendarClock />} title="Aucune échéance" description="Sélectionnez une ou plusieurs entreprises." />
+            ) : (
+              <div className="space-y-5">
+                {legalCalendar.byMonth.map((bucket) => (
+                  <div key={bucket.key}>
+                    <div className="mb-2 flex items-center gap-2">
+                      <h4 className="text-sm font-bold capitalize text-slate-700">{bucket.label}</h4>
+                      <Badge tone="slate">{bucket.items.length}</Badge>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-400">
+                            <th className="px-3 py-2">Entreprise</th>
+                            <th className="px-3 py-2">Obligation</th>
+                            <th className="px-3 py-2">Organisme</th>
+                            <th className="px-3 py-2">Période</th>
+                            <th className="px-3 py-2 text-right">Échéance</th>
+                            <th className="px-3 py-2">Report</th>
+                            <th className="px-3 py-2 text-center">Statut</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {bucket.items.map((i) => (
+                            <tr key={i.id} className="border-b border-slate-50">
+                              <td className="px-3 py-2.5 font-medium text-slate-700">{i.companyName}</td>
+                              <td className="px-3 py-2.5 text-slate-600">{i.obligationName}</td>
+                              <td className="px-3 py-2.5"><Badge tone="slate">{i.organism}</Badge></td>
+                              <td className="px-3 py-2.5 capitalize text-slate-500">{i.periodLabel}</td>
+                              <td className="px-3 py-2.5 text-right tabular-nums text-slate-600">{formatDate(i.dueDate)}</td>
+                              <td className="px-3 py-2.5 text-xs text-slate-400">{i.prorogatedFrom ? `${formatDate(i.prorogatedFrom)} → reporté` : "—"}</td>
+                              <td className="px-3 py-2.5 text-center">
+                                <Badge tone={i.status === "en_retard" ? "rose" : "sky"}>{i.status === "en_retard" ? "En retard" : "À venir"}</Badge>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+          <Card className="p-5">
+            <h3 className="mb-2 text-sm font-bold text-slate-800">Limites du calendrier — affichées, pas masquées</h3>
+            <ul className="space-y-1 text-xs text-slate-500">
+              {legalCalendar.summary.limits.map((l) => (
+                <li key={l} className="flex gap-2"><AlertTriangle size={13} className="mt-0.5 shrink-0 text-amber-500" /><span>{l}</span></li>
+              ))}
+            </ul>
+          </Card>
+        </div>
       )}
     </Page>
   );

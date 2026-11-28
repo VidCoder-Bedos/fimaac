@@ -107,3 +107,12 @@
 | Valeurs mesurées (2 salariés du seed) | CNSS 24 000 · AMU **12 000** · IRPP **85 420** (51 210 + 34 210, barème 8 tranches) · retenues totales **121 420** contre 64 000 auparavant → **57 420 FCFA/mois non collectés** avant correction |
 | Non-régression | Si aucun barème n'est chargé, repli forfaitaire explicite **et signalé** (`alertes`), jamais silencieux. Champs de bulletin ajoutés en optionnel. |
 | Vérifications | `tsc` 0 erreur · `vitest` 36/36 · écriture de paie équilibrée par construction |
+
+## P0-4 — Import de balance robuste (PR #8)
+| Point | Détail |
+|---|---|
+| Symptôme | Une balance réelle (en-têtes « N° de compte / Intitulé / Mouvement débit », montants « 1 234 567 ») était importée **0 ligne sans un mot** ; le bilan vide était indistinguable d'un dossier sans activité |
+| Cause | `parseBalance` : CSV découpé sur `[;,]` + `parseFloat` ; repli positionnel silencieux sur XLSX ; aucun chemin d'erreur |
+| Correctif | `src/lib/balanceImport.ts` : délimiteur et guillemets détectés, en-têtes normalisés (sans accents), montants français (`1 234 567,89`, `(1 000)`, `12 000 FCFA`), détection par contenu de la colonne des comptes **retirée** des candidates aux montants, rapport complet (`signals` / `warnings` / `errors` / `rejected` / totaux). Refus explicite si aucun compte. |
+| Interface | `Liasse.tsx` affiche un **rapport d'import** : comptes lus, Σ débit, Σ crédit, écart, hypothèses, avertissements, lignes écartées consultables |
+| Vérifications | `tsc` 0 erreur · `vitest` 50/50 · aller-retour CSV 14 comptes → actif = passif = 13 200 000 |

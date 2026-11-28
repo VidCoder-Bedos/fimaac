@@ -1,5 +1,6 @@
 import ExcelJS from "exceljs";
 import { loadXlsxSafe } from "./xlsx-sanitizer";
+import { parseBalanceGrid, parseBalanceText, type BalanceImportResult } from "./balanceImport";
 import { computePostes, money } from "./etatsMapping";
 // FIMAAC liasse engine — GUDEF / SYSCOHADA
 export interface BalanceRow {
@@ -48,94 +49,59 @@ function fillOf(argb: string): ExcelJS.FillPattern {
 const HEADER_FILL = fillOf("FF4F46E5");
 const SECTION_FILL = fillOf("FFE0E7FF");
 
-function numCell(cell: ExcelJS.Cell): number {
-  if (cell == null) return 0;
-  let v: unknown = cell.value;
-  if (typeof v === "number") return v;
-  if (v && typeof v === "object") {
-    const o = v as { result?: unknown; text?: unknown };
-    if (typeof o.result === "number") return o.result;
-    if (typeof o.text === "string") v = o.text;
-  }
-  if (typeof v === "string") {
-    const n = parseFloat(v.replace(/\u00a0/g, "").replace(/\s/g, "").replace(",", "."));
-    return isNaN(n) ? 0 : n;
-  }
-  return 0;
-}
-
-function headerOf(ws: ExcelJS.Worksheet): { code: number; label: number; debit: number; credit: number; soldeD: number; soldeC: number; startRow: number } | null {
-  for (let r = 1; r <= Math.min(8, ws.rowCount); r++) {
+/** Convertit une feuille ExcelJS en grille de valeurs brutes. */
+function sheetToGrid(ws: ExcelJS.Worksheet): unknown[][] {
+  const grid: unknown[][] = [];
+  for (let r = 1; r <= ws.rowCount; r++) {
     const row = ws.getRow(r);
-    let code = -1, label = -1, debit = -1, credit = -1, soldeD = -1, soldeC = -1;
-    row.eachCell({ includeEmpty: true }, (cell, col) => {
-      const v = String((cell.value as { text?: string } | null)?.text ?? cell.value ?? "").toLowerCase().trim();
-      if (!v) return;
-      if (code < 0 && /compte|^n°|num[ée]ro|^n\b/.test(v)) code = col;
-      else if (label < 0 && /libell|intitul/.test(v)) label = col;
-      else if (debit < 0 && /d[ée]bit/.test(v)) debit = col;
-      else if (credit < 0 && /cr[ée]dit/.test(v)) credit = col;
-      else if (soldeD < 0 && /solde/.test(v) && /d[ée]b|mvt/.test(v)) soldeD = col;
-      else if (soldeC < 0 && /solde/.test(v) && /cr[ée]d/.test(v)) soldeC = col;
-    });
-    if (code > 0 && (debit > 0 || credit > 0 || soldeD > 0 || soldeC > 0)) {
-      return { code, label, debit, credit, soldeD, soldeC, startRow: r + 1 };
+    const cells: unknown[] = [];
+    for (let c = 1; c <= ws.columnCount; c++) {
+      const cell = row.getCell(c);
+      const raw = (cell.value as { text?: string } | null)?.text ?? cell.value;
+      if (raw && typeof raw === "object" && "result" in (raw as object)) {
+        cells.push((raw as { result?: unknown }).result ?? "");
+      } else if (raw && typeof raw === "object" && "richText" in (raw as object)) {
+        cells.push((raw as { richText: { text: string }[] }).richText.map((t) => t.text).join(""));
+      } else {
+        cells.push(raw ?? "");
+      }
     }
+    grid.push(cells);
   }
-  return null;
+  return grid;
 }
 
-function parseSheet(ws: ExcelJS.Worksheet): BalanceRow[] {
-  const rows: BalanceRow[] = [];
-  const h = headerOf(ws);
-  if (h) {
-    for (let r = h.startRow; r <= ws.rowCount; r++) {
-      const row = ws.getRow(r);
-      const codeCell = row.getCell(h.code);
-      const code = String((codeCell.value as { text?: string } | null)?.text ?? codeCell.value ?? "").trim();
-      if (!/^\d/.test(code)) continue;
-      const debit = numCell(row.getCell(h.debit > 0 ? h.debit : h.soldeD));
-      const credit = numCell(row.getCell(h.credit > 0 ? h.credit : h.soldeC));
-      if (!debit && !credit) continue;
-      const label = h.label > 0 ? String((row.getCell(h.label).value as { text?: string } | null)?.text ?? row.getCell(h.label).value ?? "") : "";
-      rows.push({ code, label, debit, credit });
-    }
-  } else {
-    for (let r = 1; r <= ws.rowCount; r++) {
-      const row = ws.getRow(r);
-      let code = "", label = "";
-      const nums: number[] = [];
-      row.eachCell({ includeEmpty: true }, (cell) => {
-        const raw = (cell.value as { text?: string } | null)?.text ?? cell.value;
-        if (typeof raw === "string" && /^\d/.test(raw.trim()) && !code) code = raw.trim();
-        else if (typeof raw === "string" && raw.trim() && code && !label) label = raw.trim();
-        const n = numCell(cell);
-        if (n !== 0) nums.push(n);
-      });
-      if (code && nums.length) rows.push({ code, label, debit: nums[0] || 0, credit: nums[1] || 0 });
-    }
-  }
-  return rows;
-}
-
-export async function parseBalance(file: File): Promise<BalanceRow[]> {
+/**
+ * P0-4 — Import de balance avec rapport complet.
+ * Détecte les en-têtes réels, déduit les colonnes par leur contenu, et refuse
+ * explicitement en expliquant pourquoi (jamais 0 ligne en silence).
+ */
+export async function parseBalanceReport(file: File): Promise<BalanceImportResult> {
   const name = file.name.toLowerCase();
-  if (name.endsWith(".csv")) {
-    const text = await file.text();
-    const lines = text.split(/\r?\n/);
-    const rows: BalanceRow[] = [];
-    for (const line of lines) {
-      const parts = line.split(/[;,]/);
-      if (!parts.length) continue;
-      const code = parts[0]?.trim();
-      if (!code || !/^\d/.test(code)) continue;
-      const nums = parts.slice(1).map((p) => parseFloat(p.replace(/\s/g, "").replace(",", "."))).filter((n) => !isNaN(n));
-      if (nums.length) rows.push({ code, label: parts[1]?.trim() || "", debit: nums[0] || 0, credit: nums[1] || 0 });
-    }
-    return rows;
+  if (name.endsWith(".csv") || name.endsWith(".txt") || name.endsWith(".tsv")) {
+    return parseBalanceText(await file.text(), { source: file.name });
   }
   const wb = await loadXlsxSafe(file);
-  return parseSheet(wb.worksheets[0]);
+  const ws = wb.worksheets[0];
+  if (!ws) {
+    return {
+      ok: false, rows: [], headerRow: null,
+      mapping: { code: -1, label: -1, debit: -1, credit: -1, solde: -1, soldeDebit: -1, soldeCredit: -1 },
+      signals: [], warnings: [], errors: ["Le classeur ne contient aucune feuille."],
+      totals: { debit: 0, credit: 0, ecart: 0 }, rejected: [],
+    };
+  }
+  return parseBalanceGrid(sheetToGrid(ws), { source: `${file.name} · feuille « ${ws.name} »` });
+}
+
+/** Compatibilité : renvoie les lignes, ou lève une erreur explicable. */
+export async function parseBalance(file: File): Promise<BalanceRow[]> {
+  const report = await parseBalanceReport(file);
+  if (!report.ok) {
+    const details = [...report.errors, ...report.warnings].slice(0, 3).join("\n");
+    throw new Error(details || "Fichier de balance illisible.");
+  }
+  return report.rows;
 }
 
 /**

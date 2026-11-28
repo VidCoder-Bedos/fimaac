@@ -782,6 +782,27 @@ export interface FSSession {
 
 export interface BalanceRowLite { code: string; label: string; debit: number; credit: number; }
 
+/**
+ * P10 — Retraitement fiscal du résultat.
+ * Une réintégration augmente le résultat imposable (amendes, dons non
+ * déductibles, charges non justifiées), une déduction le diminue. Chaque ligne
+ * est saisie, datée, attribuée et tracée : un retraitement fiscal sans trace
+ * écrite ne vaut rien devant un vérificateur.
+ */
+export interface TaxAdjustment {
+  id: ID;
+  companyId: ID;
+  /** Exercice concerné (AAAA). */
+  exercise: string;
+  type: "reintegration" | "deduction";
+  label: string;
+  amount: number;
+  /** Référence justificative (pièce, article du CGI, note). */
+  reference?: string;
+  authorId: ID;
+  createdAt: string;
+}
+
 export interface DBState {
   version: number;
   accounts: Account[];
@@ -820,6 +841,7 @@ export interface DBState {
   permanentDocs: PermanentDoc[];
   tiers: ThirdParty[];
   fsSessions: FSSession[];
+  taxAdjustments: TaxAdjustment[];
   regulatoryVersions: RegulatoryVersion[];
   taxRulesV2: TaxRuleV2[];
   taxBrackets: TaxBracket[];

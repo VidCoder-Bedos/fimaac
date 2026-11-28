@@ -2,7 +2,7 @@
 
 > Registre tenu à jour à chaque lot livré. Il sert de point de reprise : tout ce
 > qui est ici est **non fait**, avec sa raison et son blocage éventuel.
-> Dernière mise à jour : 28/11/2026, après les PR #5 à #23.
+> Dernière mise à jour : 28/11/2026, après les PR #5 à #25.
 
 ## Déjà réglé (ne plus y revenir)
 
@@ -25,6 +25,9 @@
 | P6 | Numérotation des pièces sans recyclage + contrôle affiché | #20 |
 | P7 | TAFIRE calculé, bouclé et imprimé (liasse, PDF, XLSX) | #21 |
 | P8 | Notes annexes calculées, imprimées et exportées | #22 |
+| — | Retrait des marqueurs de conflit fusionnés + build bloquant | #23 |
+| P9 | Écriture hors exercice : refus explicite, plus de déplacement | #24 |
+| P10 | Réintégrations / déductions fiscales persistées et traçables | #25 |
 
 ## 1. Bloqué par une décision d'infrastructure (à arbitrer par le porteur)
 
@@ -70,8 +73,10 @@ Ces points ne peuvent pas avancer sans base de données et hébergement d'API.
    sur les achats intracommunautaires.
 10. **Cas 441 débiteur** — présenté en diminution des dettes fiscales ; un
     éclatement par sens du solde serait plus juste (sans effet sur l'équilibre).
-11. **IS : réintégrations / déductions** — le moteur les accepte, l'écran ne
-    les expose pas encore.
+11. ~~**IS : réintégrations / déductions**~~ — **fait (PR #25)** : collection
+    persistée (DB_VERSION 4), saisie tracée, calcul unique de l'IS. Reste :
+    **reprendre ces montants dans la déclaration IS générée** et proposer des
+    **réintégrations types** (amendes 658, dons, charges non justifiées).
 
 ## 3. Qualité produit (audit §D)
 
@@ -92,7 +97,11 @@ Ces points ne peuvent pas avancer sans base de données et hébergement d'API.
     « doublons / trous / illisibles » affiché dans l'onglet Écritures. Reste :
     les **trous d'import** du seed (ex. ACH 0106-0114) à expliquer pièce par
     pièce.
-19. **Écriture hors exercice** — rattachée silencieusement à `periods[0]`.
+19. ~~**Écriture hors exercice**~~ — **fait (PR #24)** : l'exercice et la période
+    qui contiennent la date sont résolus, sinon refus explicite nommant la date
+    et les bornes ; période mensuelle absente créée et auditée. Reste : la
+    **saisie en lot** (import d'écritures) qui ne passe pas encore par ce
+    contrôle.
 20. **Moteurs encore dormants** — `financialStatements`, `liasseEngine`
     (partiellement), `obligations.generateObligationInstances`, `notes`.
     Chacun doit être soit branché, soit archivé explicitement.

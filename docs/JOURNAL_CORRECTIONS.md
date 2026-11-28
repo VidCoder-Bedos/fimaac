@@ -156,3 +156,11 @@
 | Symptôme | `crossCheck` produisait des constats justes et chiffrés, affichés nulle part. En le branchant : le résumé ne comptait pas les constats `info` (4 comptés pour 5 contrôles). |
 | Correctif | Carte « Contrôles croisés entre modules » dans le Centre de conformité (module, source A, source B, écart, niveau, constat) alimentée par les données réelles du dossier. Ajout de `infoCount` au rapport et au sous-titre. |
 | Vérifications | `tsc` 0 erreur · `npm run build` 11,56 s · `vitest` 71/71 (6 nouveaux) · écriture déséquilibrée détectée (écart 100 000, statut critique) |
+
+## P2 — Journal d'audit chaîné (PR #14)
+| Point | Détail |
+|---|---|
+| Symptôme | Le produit annonçait un « journal inviolable » sans aucun mécanisme : traces éditables dans le localStorage, altération indétectable. |
+| Correctif | `src/lib/auditChain.ts` : SHA-256 pur (vecteurs officiels vérifiés), scellement `hash = SHA-256(prevHash | contenu canonique)`, `verifyAuditChain` détectant modification / insertion / suppression / déplacement avec position. `audit()` scelle chaque trace ; page Journal d'audit dotée d'un bouton « Vérifier l'intégrité ». |
+| Portée assumée | Détecte l'altération, ne l'empêche pas : l'inviolabilité réelle exige un ancrage serveur (lot P1 infrastructure). Écrit tel quel dans l'écran. |
+| Vérifications | `tsc` 0 erreur · `npm run build` 11,66 s · `vitest` 83/83 (12 nouveaux, dont scellement réel par `runPayroll`) |

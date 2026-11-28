@@ -1,11 +1,12 @@
 import { useState } from "react";
+import { verifyAuditChain } from "../lib/auditChain";
 import { useDB } from "../lib/store";
 import { Page } from "../components/Layout";
 import { Card, Badge, StatusBadge, EmptyState, StatCard, SectionHeading, Avatar, Button, Field, Input, Select, Modal, ProgressBar } from "../components/ui";
 import { ROLE_LABELS } from "../lib/permissions";
 import { fcfa, fcfaCompact, formatDateTime, formatDate } from "../lib/format";
 import { toggleCabinetSuspension, setPlatformLogo, setCabinetLogo, publishAnnouncement, updatePlanPrice, DEFAULT_PLANS, type PlatformPlan } from "../lib/actions";
-import { Building2, Users, Database, CreditCard, Globe2, TrendingUp, ShieldAlert, Activity, Ban, Play, Image, Megaphone, FileText, ClipboardList, Receipt, HardDrive, Download, Search, ArrowUpDown, Mail, Phone, MapPin, Check, Layers, BarChart3 } from "lucide-react";
+import { Building2, Users, Database, CreditCard, Globe2, TrendingUp, ShieldAlert, Activity, Ban, Play, Image, Megaphone, FileText, ClipboardList, Receipt, HardDrive, Download, Search, ArrowUpDown, Mail, Phone, MapPin, Check, Layers, BarChart3, ShieldCheck, CheckCircle2, AlertTriangle, Info } from "lucide-react";
 
 // ============================================================================
 // HELPERS PARTAGÉS
@@ -355,11 +356,30 @@ export function AdminRegulatory() {
 export function AdminAudit() {
   const db = useDB();
   const [q, setQ] = useState("");
+  const [verif, setVerif] = useState<ReturnType<typeof verifyAuditChain> | null>(null);
   const list = db.auditLogs.filter((l) => !q || l.action.toLowerCase().includes(q.toLowerCase()) || l.after?.toLowerCase().includes(q.toLowerCase()));
   return (
     <Page>
       <div className="mb-5"><h2 className="text-xl font-black tracking-tight text-slate-900">Journal d&apos;audit</h2><p className="text-sm text-slate-500">{db.auditLogs.length} événement(s) — traçabilité complète</p></div>
-      <div className="mb-4 max-w-xs"><div className="relative"><Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><Input className="pl-9" placeholder="Rechercher une action…" value={q} onChange={(e) => setQ(e.target.value)} /></div></div>
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div className="w-full max-w-xs"><div className="relative"><Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><Input className="pl-9" placeholder="Rechercher une action…" value={q} onChange={(e) => setQ(e.target.value)} /></div></div>
+        <Button variant="outline" size="sm" onClick={() => setVerif(verifyAuditChain(db.auditLogs))}>
+          <ShieldCheck size={14} /> Vérifier l&apos;intégrité
+        </Button>
+        {verif && (
+          <span className={`flex flex-wrap items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium ${verif.ok ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
+            {verif.ok ? <CheckCircle2 size={14} /> : <AlertTriangle size={14} />}
+            {verif.ok
+              ? `Chaîne intacte : ${verif.sealed} entrée(s) scellée(s) vérifiée(s)${verif.unsealed ? ` · ${verif.unsealed} antérieure(s) au scellement` : ""}.`
+              : `Rupture à l'entrée ${verif.brokenAt} : ${verif.reason}.`}
+          </span>
+        )}
+      </div>
+      <div className="mb-4 flex items-start gap-2 rounded-xl bg-sky-50 px-3 py-2 text-xs text-sky-700">
+        <Info size={14} className="mt-0.5 shrink-0" />
+        Chaque trace est scellée par un SHA-256 enchaîné au précédent : toute modification, insertion ou suppression locale casse la chaîne à cet endroit.
+        Ce contrôle détecte l&apos;altération ; il ne l&apos;empêche pas — l&apos;inviolabilité réelle exige un ancrage serveur.
+      </div>
       <Card className="overflow-x-auto p-5"><table className="w-full text-sm"><thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-400"><th className="px-3 py-2">Date</th><th className="px-3 py-2">Utilisateur</th><th className="px-3 py-2">Action</th><th className="px-3 py-2">Entité</th><th className="px-3 py-2">Détail</th></tr></thead>
         <tbody>{list.map((l) => { const u = db.users.find((x) => x.id === l.userId); return (
           <tr key={l.id} className="border-b border-slate-50"><td className="px-3 py-2.5 text-slate-400">{formatDateTime(l.createdAt)}</td><td className="px-3 py-2.5 font-medium text-slate-700">{u?.firstName || "Système"} {u?.lastName}</td><td className="px-3 py-2.5"><Badge tone="indigo">{l.action}</Badge></td><td className="px-3 py-2.5 text-slate-500">{l.entity}</td><td className="px-3 py-2.5 text-slate-500">{l.after}</td></tr>

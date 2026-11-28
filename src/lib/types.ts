@@ -208,8 +208,20 @@ export interface Payslip {
   gross: number;
   cnssEmployee: number;
   cnssEmployer: number;
+  /** IRPP retenu (alias historique : withholding). */
   withholding: number;
   net: number;
+  /** AMU salarié (2 % plafonné) — absent des bulletins antérieurs à P0-3. */
+  amuEmployee?: number;
+  /** AMU patronal (4 % plafonné). */
+  amuEmployer?: number;
+  /** IRPP explicite, égal à `withholding` sur les bulletins récents. */
+  irpp?: number;
+  /** Mode de calcul appliqué : barème progressif ou forfait de repli. */
+  modeIRPP?: "bareme" | "forfait";
+  assietteIRPP?: number;
+  totalRetenues?: number;
+  coutEmployeur?: number;
   createdAt: string;
 }
 

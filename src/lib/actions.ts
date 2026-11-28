@@ -7,6 +7,7 @@ import type {
 } from "./types";
 import { computeTax } from "./tax";
 import { computeTvaFiscal, fiscalBaseFromMoves } from "./fiscalite";
+import { calculerBulletin, paieParamsFromConfig, totaliserBulletins, ecrituresPaie } from "./paie";
 import { movementsByAccount } from "./accounting";
 import { hashPassword, verifyPassword } from "./hash";
 import { TEMPLATE_BY_ID, scaleTemplate } from "./entryTemplates";
@@ -951,46 +952,64 @@ export function updatePayrollConfig(patch: Partial<PayrollConfig>): void {
   mutate((s) => { s.payrollConfig = { ...s.payrollConfig, ...patch }; });
 }
 
-export function runPayroll(companyId: string, periodLabel: string): { ok: boolean; slips: number; entryCreated: boolean; error?: string } {
+export function runPayroll(companyId: string, periodLabel: string): { ok: boolean; slips: number; entryCreated: boolean; error?: string; alertes?: string[] } {
   const db = getDB();
-  const cfg = db.payrollConfig;
+  // P0-3 : plus aucun calcul de paie ici — tout passe par lib/paie.ts.
+  const params = paieParamsFromConfig(db.payrollConfig, db.taxBrackets);
   const emps = db.employees.filter((e) => e.companyId === companyId);
   if (!emps.length) return { ok: false, slips: 0, entryCreated: false, error: "Aucun employé pour cette entreprise." };
   const wagesJournal = db.journals.find((j) => j.companyId === companyId && j.type === "wages");
-  let grossTot = 0, cnssEmpTot = 0, cnssPatTot = 0, whTot = 0, netTot = 0;
-  const slipRows: Payslip[] = [];
-  for (const emp of emps) {
-    const base = Math.min(emp.grossSalary, cfg.cnssPlafond);
-    const cnssEmployee = Math.round((base * cfg.cnssEmployeeRate) / 100);
-    const cnssEmployer = Math.round((base * cfg.cnssEmployerRate) / 100);
-    const withholding = Math.round((emp.grossSalary * cfg.withholdingRate) / 100);
-    const net = emp.grossSalary - cnssEmployee - withholding;
-    grossTot += emp.grossSalary; cnssEmpTot += cnssEmployee; cnssPatTot += cnssEmployer; whTot += withholding; netTot += net;
-    slipRows.push({ id: uid(), companyId, periodLabel, employeeId: emp.id, gross: emp.grossSalary, cnssEmployee, cnssEmployer, withholding, net, createdAt: new Date().toISOString() });
-  }
+
+  const bulletins = emps.map((emp) => calculerBulletin(emp.grossSalary, params));
+  const totaux = totaliserBulletins(bulletins);
+  const alertes = [...new Set(bulletins.flatMap((b) => b.alertes))];
+
+  const slipRows: Payslip[] = emps.map((emp, i) => {
+    const b = bulletins[i];
+    return {
+      id: uid(), companyId, periodLabel, employeeId: emp.id,
+      gross: b.gross,
+      cnssEmployee: b.cnssEmployee,
+      cnssEmployer: b.cnssEmployer,
+      withholding: b.irpp,
+      net: b.net,
+      amuEmployee: b.amuEmployee,
+      amuEmployer: b.amuEmployer,
+      irpp: b.irpp,
+      modeIRPP: b.modeIRPP,
+      assietteIRPP: b.assietteIRPP,
+      totalRetenues: b.totalRetenues,
+      coutEmployeur: b.coutEmployeur,
+      createdAt: new Date().toISOString(),
+    };
+  });
+
   mutate((s) => {
     s.payslips.push(...slipRows);
-    audit(s, currentUserId() || "", currentOrgId() || "", "RUN_PAYROLL", "Payslip", companyId, `Paie ${periodLabel} : ${emps.length} bulletin(s)`);
+    audit(s, currentUserId() || "", currentOrgId() || "", "RUN_PAYROLL", "Payslip", companyId,
+      `Paie ${periodLabel} : ${emps.length} bulletin(s), retenues ${totaux.retenues}, net ${totaux.net}`);
   });
+
   let entryCreated = false;
   if (wagesJournal) {
+    const ecriture = ecrituresPaie(totaux);
     addEntry(companyId, {
       date: new Date().toISOString().slice(0, 10),
       journalId: wagesJournal.id,
       reference: "PAYE-" + periodLabel,
       label: `Paie ${periodLabel}`,
       status: "draft",
-      lines: [
-        { accountId: "6611", label: "Appointements et salaires (bruts)", debit: grossTot, credit: 0 },
-        { accountId: "6641", label: "Charges sociales patronales (CNSS)", debit: cnssPatTot, credit: 0 },
-        { accountId: "4472", label: "Impôts sur salaires (retenue à la source)", debit: 0, credit: whTot },
-        { accountId: "4311", label: "Sécurité sociale - cotisations (CNSS)", debit: 0, credit: cnssEmpTot + cnssPatTot },
-        { accountId: "422", label: "Personnel, rémunérations dues (net)", debit: 0, credit: netTot },
-      ],
+      lines: ecriture.lines.map((l) => ({ accountId: l.accountId, label: l.label, debit: l.debit, credit: l.credit })),
     });
     entryCreated = true;
   }
-  return { ok: true, slips: emps.length, entryCreated, error: wagesJournal ? undefined : "Bulletins générés — aucun journal « Paie » : créez-en un pour générer l'écriture comptable." };
+  return {
+    ok: true,
+    slips: emps.length,
+    entryCreated,
+    error: wagesJournal ? undefined : "Bulletins générés — aucun journal « Paie » : créez-en un pour générer l'écriture comptable.",
+    alertes: alertes.length ? alertes : undefined,
+  };
 }
 
 // ---------------- Stocks ----------------

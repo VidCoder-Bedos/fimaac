@@ -1,0 +1,26 @@
+# Dépendances
+node_modules/
+.npm/
+
+# Build (Vercel reconstruit dist/ tout seul)
+dist/
+dist-ssr/
+
+# Cache outils
+.vite/
+.turbo/
+*.tsbuildinfo
+
+# Vercel / Netlify en local
+.vercel/
+.netlify/
+
+# Environnement
+.env
+.env.*
+!.env.example
+
+# Divers
+.DS_Store
+Thumbs.db
+*.log

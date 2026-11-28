@@ -265,7 +265,7 @@ export function buildFec(
       level: tierAccountMissing === 0 ? "ok" : "warning",
       detail: tierAccountLines === 0
         ? "Aucune ligne de compte de tiers (40x/41x) dans le périmètre."
-        : `${tierAccountLines - tierAccountMissing}/${tierAccountLines} ligne(s) de tiers portent un code auxiliaire${tierAccountMissing ? ` ; ${tierAccountMissing} sans tiers identifié` : ""}.`,
+        : `${tierAccountLines - tierAccountMissing}/${tierAccountLines} ligne(s) de tiers portent un code auxiliaire${tierAccountMissing ? ` ; ${tierAccountMissing} sans tiers identifié — à compléter dans Comptabilité › Tiers › Tiers manquants` : ""}.`,
     },
     {
       id: "lettrage",

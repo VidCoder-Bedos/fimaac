@@ -280,3 +280,11 @@
 | Livré | `FecScope` + `entriesInScope` (bornes incluses) + `fecScopeFromFiscalYear` ; `buildFec` expose `scope` et **`excludedCount`** ; nom de dépôt `FEC_AAAAMMJJ_raisonSociale_exercice.txt` (sans espace ni « & ») ; sélecteur d'exercice et 4ᵉ indicateur « hors exercice » dans l'onglet FEC. |
 | Mesures | 2026 : 102 écritures, 281 lignes, Σ 80 951 571 / 80 951 571, 0 exclue · 2025 : 0 ligne, **102 exclues** · sans périmètre : comportement inchangé |
 | Vérifications | `tsc` 0 erreur · `vitest` **211/211** (6 nouveaux) |
+
+## P14 — Tiers manquants : rendre le contrôle actionnable (PR #29)
+| Point | Détail |
+|---|---|
+| Symptôme | Le FEC annonçait « 5/67 lignes de tiers avec auxiliaire, 62 sans » ; **aucune action** ne permettait d'en rattacher un. Le contrôle était donc vrai et sans issue : ni balance âgée explicable, ni FEC complet possible. |
+| Livré | `thirdParties.ts` : détection (comptes 40x/41x, lignes non nulles, sans tiers), regroupement par compte avec enjeu FCFA et nature attendue, propositions classant le tiers du bon collectif. Actions `assignThirdPartyToLine` et `assignThirdPartyToAccount` : **jamais d'écrasement** d'une ligne déjà rattachée, refus explicites (compte non-tiers, tiers d'une autre société), décompte établi avant la mutation, **audit scellé** (`AFFECT_TIER`, `AFFECT_TIER_MASSE`). Écran : carte « Tiers manquants » en tête de l'onglet Tiers (montant en jeu, sélecteur, détail des lignes, affectation ligne à ligne). |
+| Mesures | Seed : **62** lignes à compléter sur **67** · `4011` 38 lignes / 11 157 286 FCFA · `4111` 24 lignes / 37 704 751 FCFA · affectation en masse `4011` : 38 lignes, clients intacts · seconde affectation : 0 |
+| Vérifications | `tsc` 0 erreur · `vitest` **223/223** (12 nouveaux) |

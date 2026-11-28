@@ -182,3 +182,13 @@
 | Mesures (seed) | 102 écritures, 281 lignes, **80 951 571,00 = 80 951 571,00**, écart 0, **0 bloquant**, 3 avertissements (exercice non filtré, lettrage non daté, `ValidDate` approximée, auxiliaires 5/67). |
 | Limites assumées | Date de validation et date de lettrage non historisées : affichées, jamais inventées. Export mono-devise XOF. |
 | Vérifications | `tsc` 0 erreur · `npm run build` vert · `vitest` 98/98 (14 nouveaux, dont déséquilibre → 2 bloquants et doublons de pièce) |
+
+## P4 — Échéances légales et calendrier réglementaire (PR #18)
+| Point | Détail |
+|---|---|
+| Symptôme | Moteur d'obligations (14 obligations, Togo 2026) **jamais appelé** ; trimestre T4 échu au 15 décembre au lieu du 15 janvier ; aucun jour férié, aucun report ; génération rétroactive de 12 mois produisant des dizaines de « en retard » fictifs. |
+| Livré | `obligations.ts` : `easterSunday` (grégorien), `togoHolidays` (8 fériés fixes + lundi de Pâques, Ascension, Pentecôte), `nextBusinessDay` avec motif, `computeMonthly/Quarterly/AnnualDueDate` corrigées, génération **fenêtrée** (`from`/`until`/`today`, défaut 12 mois glissants, ancien appel par année conservé), `prorogatedFrom` exposé, `summarizeObligations`, `companyProfileFrom`. |
+| Écran | Centre des Obligations → onglet **Calendrier légal** : 4 compteurs (échéances, retard, ≤ 30 j, reports), sélecteur 12/24 mois, tableau groupé par mois avec colonne report, carte des limites. |
+| Mesures | Année 2026 pleine, dossier type : **92 échéances**, 29 reportées, 0 échéance générée un week-end ou un férié. |
+| Limites affichées | Aïd el-Fitr / Aïd el-Adha (lunaire) non paramétrés ; dates légales indicatives à valider par un fiscaliste ; le statut « en retard » ignore les dépôts hors plateforme. |
+| Vérifications | `tsc` 0 erreur · `npm run build` 12,13 s · `vitest` **115/115** (17 nouveaux) |

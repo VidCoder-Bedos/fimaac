@@ -149,3 +149,10 @@
 | Correctif | `seed.ts` (`payrollConfig.amuEmployeeRate`/`amuEmployerRate` et règle `AMU_STANDARD`), `regulatory-engine.ts` (règle sociale de référence), libellés de `types.ts` et commentaire de `paie.ts`. |
 | Valeurs mesurées (seed) | 450 000 → AMU 15 000, assiette IRPP 423 000, IRPP **48 660**, net 374 340 · 350 000 → AMU 15 000, assiette 323 000, IRPP **31 660**, net 291 340 · total retenues **134 320** |
 | Contrôle | Un test vérifie que le paramétrage effectif du dossier vaut bien 5/5 après chargement du seed. |
+
+## P2 — Contrôles croisés branchés + compteur `info` (PR #13)
+| Point | Détail |
+|---|---|
+| Symptôme | `crossCheck` produisait des constats justes et chiffrés, affichés nulle part. En le branchant : le résumé ne comptait pas les constats `info` (4 comptés pour 5 contrôles). |
+| Correctif | Carte « Contrôles croisés entre modules » dans le Centre de conformité (module, source A, source B, écart, niveau, constat) alimentée par les données réelles du dossier. Ajout de `infoCount` au rapport et au sous-titre. |
+| Vérifications | `tsc` 0 erreur · `npm run build` 11,56 s · `vitest` 71/71 (6 nouveaux) · écriture déséquilibrée détectée (écart 100 000, statut critique) |

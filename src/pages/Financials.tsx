@@ -8,6 +8,7 @@ import { auxiliaryLedger, agedBalance, echeancier, exportFEC, exportAgedCSV, exp
 import { resolveCompliance, postRegularisation } from "../lib/actions";
 import { fcfa, fcfaCompact, formatDate } from "../lib/format";
 import { buildStatements, runChecks } from "../lib/liasse";
+import { runCrossChecks } from "../lib/crossCheck";
 import PrintSheet from "../components/PrintSheet";
 import StatementsPrint from "../components/StatementsPrint";
 
@@ -145,6 +146,15 @@ export function Compliance() {
   const { id: companyId } = useCompanyScope();
   const company = db.companies.find((c) => c.id === companyId);
   const issues = db.complianceIssues.filter((i) => (!companyId || i.companyId === companyId) && !i.resolved);
+  // P2 — les contrôles croisés existaient et n'étaient affichés nulle part.
+  const cross = company
+    ? runCrossChecks({
+        entries: db.entries.filter((e) => e.companyId === company.id),
+        employees: db.employees.filter((e) => e.companyId === company.id),
+        bankTransactions: db.bankTransactions.filter((t) => t.companyId === company.id),
+        fixedAssets: db.fixedAssets.filter((f) => f.companyId === company.id),
+      })
+    : null;
   if (!company) return <Page><EmptyState icon={<ShieldCheck />} title="Sélectionnez une entreprise" /></Page>;
   const score = Math.max(20, 100 - issues.reduce((s, i) => s + (i.severity === "critical" ? 15 : i.severity === "warning" ? 7 : 3), 0));
   const cats = ["accounting", "tax", "social", "legal", "documents", "deadlines"];
@@ -170,6 +180,51 @@ export function Compliance() {
           </div>
         )}
       </Card>
+
+      {cross && (
+        <Card className="mt-6 p-5">
+          <SectionHeading
+            title="Contrôles croisés entre modules"
+            subtitle={`Compta · TVA · Paie · CNSS · Banque · Immobilisations — ${cross.okCount} conforme(s) · ${cross.infoCount} constat(s) · ${cross.warningCount} avertissement(s) · ${cross.criticalCount} critique(s)`}
+            action={<Badge tone={cross.overallStatus === "critical" ? "rose" : cross.overallStatus === "warning" ? "amber" : "emerald"}>
+              {cross.overallStatus === "critical" ? "Écarts critiques" : cross.overallStatus === "warning" ? "Écarts à examiner" : "Cohérent"}
+            </Badge>}
+          />
+          <div className="mb-3 flex items-start gap-2 rounded-xl bg-sky-50 px-3 py-2 text-xs text-sky-700">
+            <FileText size={14} className="mt-0.5 shrink-0" />
+            Chaque ligne confronte deux sources indépendantes du même montant. Un écart n'est pas une erreur du logiciel : c'est un point à justifier dans le dossier.
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-400">
+                  <th className="px-3 py-2">Module</th>
+                  <th className="px-3 py-2 text-right">Source A</th>
+                  <th className="px-3 py-2 text-right">Source B</th>
+                  <th className="px-3 py-2 text-right">Écart</th>
+                  <th className="px-3 py-2">Constat</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cross.checks.map((c, i) => (
+                  <tr key={i} className="border-b border-slate-50 align-top">
+                    <td className="px-3 py-2.5 font-medium text-slate-800">{c.moduleName}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums">{fcfa(c.valueA)}</td>
+                    <td className="px-3 py-2.5 text-right tabular-nums">{fcfa(c.valueB)}</td>
+                    <td className={`px-3 py-2.5 text-right font-semibold tabular-nums ${Math.abs(c.ecart) < 1 ? "text-slate-500" : c.level === "critical" ? "text-rose-600" : "text-amber-600"}`}>{fcfa(c.ecart)}</td>
+                    <td className="max-w-[380px] px-3 py-2.5 text-xs text-slate-500">
+                      <Badge tone={c.level === "critical" ? "rose" : c.level === "warning" ? "amber" : c.level === "info" ? "sky" : "emerald"}>
+                        {c.level === "critical" ? "Critique" : c.level === "warning" ? "Avertissement" : c.level === "info" ? "Info" : "Conforme"}
+                      </Badge>
+                      <span className="ml-2">{c.detail}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
     </Page>
   );
 }

@@ -338,3 +338,12 @@
 | Livré | `taxSuggestions.ts` (catalogue 647 / 6582-6583-835 / 6581, somme des soldes débiteurs, silence sur les montants nuls) ; `TaxAdjustment.suggestionId` ; bloc « Réintégrations proposées » dans Fiscalité avec reprise en un clic ; audit « proposition … reprise ». |
 | Mesures | 6471 150 000 + 6473 50 000 + 6582 200 000 → **2** propositions (200 000 chacune) · compte soldé → **0** proposition · après reprise, `alreadyRecorded` vrai pour 2026, faux pour 2025 · saisie libre sans `suggestionId` |
 | Vérifications | `tsc` 0 erreur · `vitest` **279/279** (9 nouveaux) |
+
+## P21 — Le régime déclaré décide (PR #36)
+| Point | Détail |
+|---|---|
+| Symptôme | `company.taxRegime` était saisi, affiché, utilisé par les obligations… et **lu par aucun calcul** : un dossier déclaré exonéré affichait un IS et une TVA à payer et générait ses déclarations ; un dossier RSMI/RNC voyait le calcul du régime réel présenté comme le sien ; aucune règle ne portait de catégorie, donc aucun taux différencié n'était applicable. |
+| Décision | Les cinq régimes existants sont conservés (aucun régime inventé) ; la **règle porte sa portée** et le moteur refuse de combler un manque par le régime du voisin. |
+| Livré | `taxRegime.ts` (`resolveTaxRule`, `ruleMatchesProfile`, `describeProfile`, `validateCategory`) ; `TaxRuleRef.regimes/categories` et `Company.taxCategory` ; gardes dans `generateTvaDeclaration` et `generateIsDeclaration` ; carte « Profil fiscal déclaré » et bandeaux dans Fiscalité ; audit `COMPANY_TAX_PROFILE_UPDATE`. |
+| Mesures | RSMI + règle RSMI → règle RSMI (`ok`) · règle RI seule + RSMI → `regime_missing`, message citant RI et RSMI · `exempt` → `shouldCompute = false`, montants « — », déclarations **refusées** · `exempt` avec règle propre → calculable · PME → règle PME, « Grande entreprise » → générique · redite de profil → aucune écriture d'audit |
+| Vérifications | `tsc` 0 erreur · `vitest` **292/292** (13 nouveaux) |

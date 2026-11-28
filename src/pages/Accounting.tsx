@@ -14,6 +14,7 @@ import type { Account, Journal, JournalEntry, JournalEntryLine, ThirdParty, Acco
 import { auditNumbering } from "../lib/entryNumbering";
 import { auditFiscalYearPlacement } from "../lib/periods";
 import { missingFor } from "../lib/emptyStates";
+import { sortRows, toggleSort, ariaSort, type SortState } from "../lib/tableSort";
 import AccountInquiry from "../components/AccountInquiry";
 import { EntryEditor } from "../components/EntryEditor";
 import { Can } from "../components/Can";
@@ -269,6 +270,18 @@ function EntriesView({ entries, accounts, documents, companyId, onEdit, onAttach
   const [filter, setFilter] = useState("all");
   const [expanded, setExpanded] = useState<string | null>(null);
   const filtered = entries.filter((e) => filter === "all" || e.status === filter);
+  // P30 — tri au clavier, état annoncé (`aria-sort`), ordre d'origine restaurable.
+  const [sort, setSort] = useState<SortState>(null);
+  const sorted = sortRows(filtered, sort, (e, key) => {
+    switch (key) {
+      case "number": return e.number;
+      case "date": return e.date;
+      case "label": return e.label;
+      case "amount": return entryTotals(e.lines).debit;
+      case "status": return e.status;
+      default: return "";
+    }
+  });
   const journalName = (id: string) => db.journals.find((j) => j.id === id)?.code || "—";
   /** Pièces jointes d'une écriture (résolues depuis les métadonnées). */
   const docsOf = (e: JournalEntry) =>
@@ -289,11 +302,18 @@ function EntriesView({ entries, accounts, documents, companyId, onEdit, onAttach
       /> : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">
-              <th className="px-3 py-2">N°</th><th className="px-3 py-2">Date</th><th className="px-3 py-2">Jnl</th><th className="px-3 py-2">Libellé</th><th className="px-3 py-2 text-right">Montant</th><th className="px-3 py-2">Pièces</th><th className="px-3 py-2">Statut</th><th className="px-3 py-2 text-right">Actions</th>
+            <thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <SortableTh label="N°" sortKey="number" state={sort} onToggle={setSort} />
+              <SortableTh label="Date" sortKey="date" state={sort} onToggle={setSort} />
+              <th className="px-3 py-2">Jnl</th>
+              <SortableTh label="Libellé" sortKey="label" state={sort} onToggle={setSort} />
+              <SortableTh label="Montant" sortKey="amount" state={sort} onToggle={setSort} align="right" />
+              <th className="px-3 py-2">Pièces</th>
+              <SortableTh label="Statut" sortKey="status" state={sort} onToggle={setSort} />
+              <th className="px-3 py-2 text-right">Actions</th>
             </tr></thead>
             <tbody>
-              {filtered.map((e) => {
+              {sorted.map((e) => {
                 const t = entryTotals(e.lines);
                 const isExp = expanded === e.id;
                 return (
@@ -731,5 +751,35 @@ function MissingTiersView({ companyId, entries, tiers }: { companyId: string; en
         })}
       </div>
     </Card>
+  );
+}
+
+/**
+ * P30 — En-tête de colonne triable.
+ * L'état est porté par `aria-sort` (annoncé par les lecteurs d'écran) et par une
+ * flèche visible ; le bouton reste atteignable au clavier, comme n'importe quel
+ * contrôle, et le tri se fait avec Entrée ou Espace.
+ */
+function SortableTh({ label, sortKey, state, onToggle, align = "left" }: {
+  label: string;
+  sortKey: string;
+  state: SortState;
+  onToggle: (next: SortState) => void;
+  align?: "left" | "right";
+}) {
+  const active = state?.key === sortKey;
+  const direction = ariaSort(state, sortKey);
+  return (
+    <th scope="col" aria-sort={direction} className={`px-3 py-2 ${align === "right" ? "text-right" : ""}`}>
+      <button
+        type="button"
+        onClick={() => onToggle(toggleSort(state, sortKey))}
+        className={`inline-flex items-center gap-1 rounded font-semibold uppercase tracking-wide transition hover:text-slate-700 ${active ? "text-slate-800" : "text-slate-500"}`}
+        title={direction === "ascending" ? "Tri croissant — cliquer pour inverser" : direction === "descending" ? "Tri décroissant — cliquer pour revenir à l'ordre d'origine" : "Trier sur cette colonne"}
+      >
+        {label}
+        <span aria-hidden className={active ? "text-indigo-600" : "text-slate-300"}>{direction === "ascending" ? "▲" : direction === "descending" ? "▼" : "↕"}</span>
+      </button>
+    </th>
   );
 }

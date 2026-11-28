@@ -2,7 +2,7 @@
 
 > Registre tenu à jour à chaque lot livré. Il sert de point de reprise : tout ce
 > qui est ici est **non fait**, avec sa raison et son blocage éventuel.
-> Dernière mise à jour : 28/11/2026, après les PR #5 à #32.
+> Dernière mise à jour : 28/11/2026, après les PR #5 à #33.
 
 ## Déjà réglé (ne plus y revenir)
 
@@ -35,6 +35,7 @@
 | P15 | Sens du solde au bilan : 441 débiteur à l'actif, total 27 960 921 | #30 |
 | P16 | Notes 04 et 16A éclatées par compte (détail vérifiable) | #31 |
 | P17 | Saisie des notes manuelles persistée, datée et auditée | #32 |
+| P18 | Jours fériés exceptionnels déclarés : les échéances se décalent | #33 |
 
 ## 1. Bloqué par une décision d'infrastructure (à arbitrer par le porteur)
 
@@ -79,9 +80,11 @@ Ces points ne peuvent pas avancer sans base de données et hébergement d'API.
 8. ~~**Obligations : règles de report**~~ — **fait (PR #18)** : jours fériés
    togolais (fixes + Pâques/Ascension/Pentecôte), report au jour ouvré suivant,
    trimestre T4 au 15 janvier N+1, fenêtre glissante 12/24 mois, moteur branché
-   dans un onglet « Calendrier légal ». Reste : **fêtes musulmanes** (Aïd el-Fitr,
-   Aïd el-Adha) à paramétrer chaque année, **régimes réel / forfait** et
-   prorogations exceptionnelles décidées par l'administration.
+   dans un onglet « Calendrier légal ». ~~Fêtes musulmanes~~ — **fait (PR #33)** :
+   les jours fériés exceptionnels et prorogations se **déclarent** (date, libellé,
+   référence), décalent réellement les échéances et sont audités ; le seed n'en
+   invente aucun. Reste : **régimes réel / forfait** (assujettissement) et
+   **taux différenciés** selon la catégorie d'entreprise.
 9. ~~**TVA à taux multiples**~~ — **fait (PR #19)** : ventilation par taux avec
    résolution code taxe → taux effectif → exonération constatée, contrôles et
    affichage dans la grille. Reste : **ventilation à la ligne** (une facture

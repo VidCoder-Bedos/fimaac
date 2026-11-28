@@ -2,16 +2,18 @@ import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   CalendarClock, AlertTriangle, CheckCircle2, Clock, FileText, Receipt,
-  ChevronLeft, ChevronRight, Filter, LayoutGrid, CalendarDays,
+  ChevronLeft, ChevronRight, Filter, LayoutGrid, CalendarDays, Plus, Trash2,
 } from "lucide-react";
 import { companiesForUser } from "../lib/scope";
 import { useDB } from "../lib/store";
 import { useAuth } from "../lib/auth";
 import { useCompanyScope, Page } from "../components/Layout";
-import { Card, Badge, StatCard, EmptyState, Select, Tabs } from "../components/ui";
+import { Card, Badge, StatCard, EmptyState, Select, Tabs, Button, Field, Input, SectionHeading } from "../components/ui";
 import { fcfa, formatDate, daysUntil } from "../lib/format";
 import type { BadgeTone } from "../components/ui";
 import { generateObligationInstances, summarizeObligations, companyProfileFrom } from "../lib/obligations";
+import { holidayMonthMap, addHoliday, removeHoliday } from "../lib/actions";
+import { toast } from "../lib/toast";
 
 const STATUS_META: Record<string, { tone: BadgeTone; label: string; icon: React.ReactNode }> = {
   a_venir: { tone: "slate", label: "À venir", icon: <Clock size={12} /> },
@@ -186,6 +188,10 @@ export default function Obligations() {
   // Calendrier réglementaire — moteur des obligations (catalogue Togo 2026),
   // jusque-là généré mais jamais affiché. Échéances légales reportées aux jours
   // ouvrés, une ligne par obligation et par période.
+  // P18 — les jours fériés exceptionnels (fêtes musulmanes, prorogations) sont
+  // saisis : aucune date religieuse n'est devinée par le moteur.
+  const holidayMap = useMemo(() => holidayMonthMap(), [db.holidays]);
+  const [holidayForm, setHolidayForm] = useState({ date: "", label: "", reference: "" });
   const legalCalendar = useMemo(() => {
     const scoped = scopeCompanyId ? companies.filter((c) => c.id === scopeCompanyId) : companies;
     const today = new Date();
@@ -198,6 +204,7 @@ export default function Obligations() {
         from: from.toISOString().slice(0, 10),
         until: until.toISOString().slice(0, 10),
         today: today.toISOString().slice(0, 10),
+        holidays: holidayMap,
       });
     });
     const summary = summarizeObligations(instances, {
@@ -216,7 +223,7 @@ export default function Obligations() {
       bucket.items.push(i);
     }
     return { instances, summary, byMonth };
-  }, [companies, scopeCompanyId, db.employees, horizon]);
+  }, [companies, scopeCompanyId, db.employees, horizon, holidayMap]);
 
   return (
     <Page>
@@ -354,6 +361,54 @@ export default function Obligations() {
             <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-sky-500" /> ≤ 7 jours</span>
             <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded bg-slate-400" /> Plus tard</span>
           </div>
+        </Card>
+      )}
+      {tab === "legal" && (
+        <Card className="mb-6 p-5">
+          <SectionHeading
+            title="Jours fériés exceptionnels et prorogations"
+            subtitle="Fêtes musulmanes (Aïd el-Fitr, Aïd el-Adha) et prorogations décidées par l'administration : aucune date n'est calculée, elles sont saisies"
+            action={<Badge tone={db.holidays.length ? "emerald" : "slate"}>{db.holidays.length} déclaré(s)</Badge>}
+          />
+          <div className="grid items-end gap-3 sm:grid-cols-[160px_1fr_1fr_auto]">
+            <Field label="Date" required><Input type="date" value={holidayForm.date} onChange={(e) => setHolidayForm({ ...holidayForm, date: e.target.value })} /></Field>
+            <Field label="Libellé" required><Input placeholder="Aïd el-Fitr" value={holidayForm.label} onChange={(e) => setHolidayForm({ ...holidayForm, label: e.target.value })} /></Field>
+            <Field label="Référence" hint="Communiqué OTR, arrêté…"><Input placeholder="Communiqué n°…" value={holidayForm.reference} onChange={(e) => setHolidayForm({ ...holidayForm, reference: e.target.value })} /></Field>
+            <Button
+              onClick={() => {
+                const r = addHoliday(holidayForm.date, holidayForm.label, holidayForm.reference);
+                if (!r.ok) { toast(r.error); return; }
+                toast("Jour férié déclaré : les échéances de ce jour sont reportées.", "Le motif du report est affiché sur chaque obligation concernée.", "success");
+                setHolidayForm({ date: "", label: "", reference: "" });
+              }}
+              disabled={!holidayForm.date || !holidayForm.label}
+            >
+              <Plus size={15} /> Déclarer
+            </Button>
+          </div>
+          {db.holidays.length > 0 ? (
+            <div className="mt-4 divide-y divide-slate-100">
+              {db.holidays.map((h) => (
+                <div key={h.id} className="flex items-center justify-between gap-3 py-2 text-sm">
+                  <div className="min-w-0">
+                    <p className="font-medium text-slate-800"><span className="font-mono text-xs text-slate-500">{h.date}</span> · {h.label}</p>
+                    {h.reference && <p className="text-xs text-slate-400">{h.reference}</p>}
+                  </div>
+                  <button
+                    onClick={() => { removeHoliday(h.id); toast("Jour férié retiré : les échéances reprennent leur date légale.", undefined, "info"); }}
+                    className="rounded-lg p-1.5 text-slate-300 transition-colors hover:bg-rose-50 hover:text-rose-500"
+                    aria-label={`Retirer le jour férié ${h.label}`}
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-4 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-500">
+              Aucun jour férié exceptionnel déclaré. Les échéances suivent le calendrier légal (jours fixes, Pâques, Ascension, Pentecôte).
+            </p>
+          )}
         </Card>
       )}
       {tab === "legal" && (

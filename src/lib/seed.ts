@@ -813,6 +813,7 @@ export function seedDatabase(): DBState {
     tiers,
     taxAdjustments: [],
     manualNotes: [],
+    holidays: [],
     fsSessions: [
       { id: "fs1", organizationId: cabinet.id, companyId: company.id, exercise: String(YEAR), label: `${company.name} — Exercice ${YEAR}`, status: "controle", balanceN: [], balanceN1: [], auditSummary: null, patchResult: null, coherenceScore: 96, history: [{ id: "fsh1", at: NOW(), label: "Session créée" }, { id: "fsh2", at: NOW(), label: "Contrôles de cohérence lancés (96%)" }], createdAt: NOW(), updatedAt: NOW() },
       { id: "fs2", organizationId: cabinet.id, companyId: company2.id, exercise: String(YEAR), label: `${company2.name} — Exercice ${YEAR}`, status: "a_demarrer", balanceN: [], balanceN1: [], auditSummary: null, patchResult: null, coherenceScore: null, history: [{ id: "fsh3", at: NOW(), label: "Session créée" }], createdAt: NOW(), updatedAt: NOW() },

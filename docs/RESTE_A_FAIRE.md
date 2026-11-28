@@ -2,7 +2,7 @@
 
 > Registre tenu à jour à chaque lot livré. Il sert de point de reprise : tout ce
 > qui est ici est **non fait**, avec sa raison et son blocage éventuel.
-> Dernière mise à jour : 28/11/2026, après les PR #5 à #43.
+> Dernière mise à jour : 28/11/2026, après les PR #5 à #44.
 
 ## Déjà réglé (ne plus y revenir)
 
@@ -46,6 +46,7 @@
 | P26 | Exports sans usage : mesure, politique, moteur factorisé requalifié en oracle | #41 |
 | P27 | `actions.ts` : doublons supprimés, exports internes refermés, clé du dossier unifiée | #42 |
 | P28 | Ouverture d'exercice : implémentation unique, période à la vraie fin de mois, bouton N+1 | #43 |
+| P29 | Cinq dernières actions : trois mutations auditées, un renommage honnête, une suppression | #44 |
 
 ## 1. Bloqué par une décision d'infrastructure (à arbitrer par le porteur)
 
@@ -185,10 +186,14 @@ Ces points ne peuvent pas avancer sans base de données et hébergement d'API.
     implémentation de la création d'exercice, jamais appelée, et **rien**
     n'ouvrait l'exercice suivant (les périodes de la copie finissaient au 28).
     Désormais une seule fonction, une période à la vraie fin de mois, un bouton
-    « Ouvrir l'exercice N » dans l'onglet Clôture. Reste : 5 actions à trancher
-    (`setDocCategory`, `setDocStatus`, `setDocumentRequestStatus`,
-    `runAllSubscriptions`, `togglePlanActive`), puis `analytics`, `production`,
-    `etatsMapping`.
+    « Ouvrir l'exercice N » dans l'onglet Clôture. ~~Cinq dernières actions~~ —
+    **faites (PR #44)** : `setDocStatus`, `setDocCategory` et
+    `setDocumentRequestStatus` **auditées et branchées** (bouton « Archiver »,
+    nature corrigeable dans la modale, statut de demande côté cabinet) ;
+    `runAllSubscriptions` renommée `runAllEntryTemplates` — son nom mentait, elle
+    exécute les modèles d'écriture — et branchée en « Tout exécuter » ;
+    `togglePlanActive` **supprimée** (audit sans effet). Reste : `analytics`,
+    `production`, `etatsMapping`.
 22. ~~**Balance 6 colonnes**~~ — **fait (PR #37)** : `parseBalance6` passe par
     `balance6.ts`, entrée = grille de texte (testable sans fichier). Les **soldes**
     sont préférés aux mouvements (une balance « Débit · Crédit · SD · SC » était

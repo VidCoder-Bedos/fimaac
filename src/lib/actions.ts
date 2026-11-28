@@ -495,11 +495,19 @@ export function unlinkDocumentFromEntry(docId: string): void {
   });
 }
 
-/** Catégorie de pièce (union stricte du modèle DocumentItem). */
+/**
+ * P29 — Nature de la pièce (facture, reçu, banque…). Une reclassification change
+ * la lecture du dossier : elle s'audite, comme tout le reste.
+ */
 export function setDocCategory(docId: string, category: DocumentItem["category"]): void {
   mutate((s) => {
     const d = s.documents.find((x) => x.id === docId);
-    if (d) d.category = category;
+    if (!d) return;
+    const before = d.category;
+    if (before === category) return;
+    d.category = category;
+    audit(s, currentUserId() || "", currentOrgId() || "", "DOC_CATEGORY", "Document", docId,
+      `Nature de la pièce : ${before} → ${category}`);
   });
 }
 
@@ -515,10 +523,19 @@ export function reclassifyDocument(docId: string, exercise: string, month: numbe
   });
 }
 
+/**
+ * P29 — Statut documentaire (à traiter, traité, comptabilisé, archivé).
+ * Le statut décide de ce qui reste à faire : il est tracé, jamais silencieux.
+ */
 export function setDocStatus(docId: string, status: DocStatus): void {
   mutate((s) => {
     const d = s.documents.find((x) => x.id === docId);
-    if (d) d.docStatus = status;
+    if (!d) return;
+    const before = d.docStatus;
+    if (before === status) return;
+    d.docStatus = status;
+    audit(s, currentUserId() || "", currentOrgId() || "", "DOC_STATUS", "Document", docId,
+      `Statut documentaire : ${before} → ${status}`);
   });
 }
 
@@ -920,10 +937,19 @@ export function createDocumentRequest(data: { companyId: string; category: strin
   });
 }
 
+/**
+ * P29 — Statut d'une demande de pièce. Côté cabinet, c'est ce qui distingue une
+ * demande envoyée d'une pièce reçue : la transition s'audite.
+ */
 export function setDocumentRequestStatus(id: string, status: DocumentRequest["status"]): void {
   mutate((s) => {
     const r = s.documentRequests.find((x) => x.id === id);
-    if (r) r.status = status;
+    if (!r) return;
+    const before = r.status;
+    if (before === status) return;
+    r.status = status;
+    audit(s, currentUserId() || "", currentOrgId() || "", "DOC_REQUEST_STATUS", "DocumentRequest", id,
+      `Demande ${r.docType} (${r.periodLabel}) : ${before} → ${status}`);
   });
 }
 
@@ -1435,7 +1461,13 @@ export function pointAll(companyId: string): number {
 }
 
 // ---------------- Génération automatique d'écritures ----------------
-export function runAllSubscriptions(companyId: string): number {
+/**
+ * P29 — Exécute **tous les modèles d'écriture** du dossier (loyers, abonnements,
+ * échéances récurrentes). Nommée `runAllSubscriptions` à l'origine, alors qu'elle
+ * ne touchait ni aux abonnements ni à la facturation : un nom qui ment finit par
+ * faire coder à côté de ce qu'il décrit.
+ */
+export function runAllEntryTemplates(companyId: string): number {
   const db = getDB();
   const tpls = db.entryTemplates.filter((t) => t.companyId === companyId && t.journalId);
   let n = 0;
@@ -1940,11 +1972,9 @@ export function updatePlanPrice(planId: PlatformPlan["id"], monthlyPrice: number
 }
 
 /** Active/désactive un plan (plus vendable aux nouveaux cabinets). */
-export function togglePlanActive(planId: PlatformPlan["id"], active: boolean): void {
-  mutate((s) => {
-    s.auditLogs.unshift({ id: uid(), userId: currentUserId() || "system", organizationId: "org-platform", action: "PLAN_TOGGLE", entity: "PlatformPlan", entityId: planId, before: null, after: active ? "actif" : "désactivé", ip: "127.0.0.1", createdAt: new Date().toISOString() });
-  });
-}
+// P29 — `togglePlanActive` a été supprimée : elle n'écrivait qu'une ligne
+// d'audit (« plan activé/désactivé ») sans modifier aucun état. Un journal qui
+// annonce un changement qui n'a pas eu lieu est pire que pas de journal.
 
 /** Suspend ou réactive un cabinet. */
 export function toggleCabinetSuspension(cabinetId: string): { ok: boolean; error?: string; suspended?: boolean } {

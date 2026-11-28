@@ -4,8 +4,8 @@ import { useDB } from "../lib/store";
 import { useCompanyScope, Page } from "../components/Layout";
 import { Card, Button, Badge, EmptyState, SectionHeading, StatCard, Modal, Field, Input, Select, Tabs } from "../components/ui";
 import {
-  createDocumentRequest, deleteDocumentRequest,
-  createEntryTemplate, runEntryTemplate, deleteEntryTemplate,
+  createDocumentRequest, deleteDocumentRequest, setDocumentRequestStatus,
+  createEntryTemplate, runEntryTemplate, runAllEntryTemplates, deleteEntryTemplate,
   createTaxPaymentRequest, markTaxPaymentPaid,
   setClientRequestStatus,
   activateTemplate, runTemplateWithAmount,
@@ -24,6 +24,15 @@ const CATS = [
   { id: "caisse", label: "Caisse" }, { id: "paie", label: "Paie" }, { id: "social", label: "Social" },
   { id: "fiscal", label: "Fiscal" }, { id: "stocks", label: "Stocks" }, { id: "immobilisations", label: "Immobilisations" },
 ];
+
+/** Libellés des statuts de demande de pièce (RequestStatus). */
+const DOC_REQUEST_STATUS_LABELS: Record<"to_request" | "sent" | "partial" | "received" | "overdue", string> = {
+  to_request: "À demander",
+  sent: "Envoyée",
+  partial: "Partielle",
+  received: "Reçue",
+  overdue: "En retard",
+};
 
 export default function Requests() {
   const db = useDB();
@@ -66,7 +75,18 @@ function DocRequestsTab({ companyId, items, journals }: { companyId: string; ite
         <div className="space-y-2">{items.map((r) => (
           <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-100 px-4 py-3">
             <div className="flex items-center gap-2"><Badge tone="indigo">{r.category}</Badge><div><p className="font-semibold text-slate-800">{r.docType}</p><p className="text-xs text-slate-400">Période {r.periodLabel} · échéance {formatDate(r.dueDate)} · {r.recurring}</p></div></div>
-            <div className="flex items-center gap-2"><Badge tone={r.status === "received" ? "emerald" : r.status === "overdue" ? "rose" : "amber"}>{r.status}</Badge><button onClick={() => deleteDocumentRequest(r.id)} className="text-slate-300 hover:text-rose-500"><Trash2 size={15} /></button></div>
+            <div className="flex items-center gap-2">
+              {/* P29 — le cabinet peut enfin dire qu'une pièce est reçue ou la demande clôturée. */}
+              <select
+                value={r.status}
+                onChange={(e) => { setDocumentRequestStatus(r.id, e.target.value as typeof r.status); toast("Statut de la demande mis à jour.", undefined, "success"); }}
+                aria-label={`Statut de la demande ${r.docType}`}
+                className="h-8 rounded-lg border border-slate-200 px-2 text-xs"
+              >
+                {(["to_request", "sent", "partial", "received", "overdue"] as const).map((st) => <option key={st} value={st}>{DOC_REQUEST_STATUS_LABELS[st]}</option>)}
+              </select>
+              <button onClick={() => deleteDocumentRequest(r.id)} className="text-slate-300 hover:text-rose-500"><Trash2 size={15} /></button>
+            </div>
           </div>
         ))}</div>
       )}
@@ -96,7 +116,22 @@ function TemplatesTab({ companyId, items, accounts, journals }: { companyId: str
   const [lines, setLines] = useState<TplLine[]>([{ accountId: "", label: "", debit: "", credit: "" }]);
   return (
     <Card className="p-5">
-      <SectionHeading title="Modèles d'écritures" subtitle="Saisies récurrentes prêtes à l'emploi (loyer, abonnements…)" action={<Button size="sm" onClick={() => setOpen(true)}><Plus size={15} /> Modèle</Button>} />
+      <SectionHeading
+        title="Modèles d'écritures"
+        subtitle="Saisies récurrentes prêtes à l'emploi (loyer, abonnements…)"
+        action={
+          <div className="flex gap-2">
+            {/* P29 — générer d'un coup toutes les écritures récurrentes du mois. */}
+            {items.length > 0 && (
+              <Button size="sm" variant="outline" onClick={() => {
+                const n = runAllEntryTemplates(companyId);
+                toast(`${n} écriture(s) générée(s)`, n > 0 ? "En brouillon : à vérifier puis valider." : "Aucun modèle exécutable (journal manquant ?).", n > 0 ? "success" : "warning");
+              }}><Play size={14} /> Tout exécuter</Button>
+            )}
+            <Button size="sm" onClick={() => setOpen(true)}><Plus size={15} /> Modèle</Button>
+          </div>
+        }
+      />
       {items.length === 0 ? <EmptyState icon={<Plus />} title="Aucun modèle" /> : (
         <div className="space-y-2">{items.map((t) => (
           <div key={t.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-100 px-4 py-3">
@@ -183,6 +218,9 @@ function ClientReqsTab({ items }: { items: ClientRequest[] }) {
 
 /* ---- LOT 11 — Bibliothèque : les 49 modèles du catalogue ---- */
 function LibraryTab({ companyId, active, all }: { companyId: string; active: EntryTemplate[]; all: EntryTemplate[] }) {
+  // P29 — `runAllEntryTemplates` existait sous le nom trompeur de
+  // `runAllSubscriptions` et n'était appelée par aucun écran : générer d'un coup
+  // les écritures récurrentes du mois n'était donc pas possible.
   const [cat, setCat] = useState("all");
   const [q, setQ] = useState("");
   const [runTpl, setRunTpl] = useState<string | null>(null);

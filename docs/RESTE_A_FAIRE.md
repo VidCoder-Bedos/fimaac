@@ -2,7 +2,7 @@
 
 > Registre tenu à jour à chaque lot livré. Il sert de point de reprise : tout ce
 > qui est ici est **non fait**, avec sa raison et son blocage éventuel.
-> Dernière mise à jour : 28/11/2026, après les PR #5 à #42.
+> Dernière mise à jour : 28/11/2026, après les PR #5 à #43.
 
 ## Déjà réglé (ne plus y revenir)
 
@@ -45,6 +45,7 @@
 | P25 | Moteurs dormants : quatre modules archivés, garde-fou de test | #40 |
 | P26 | Exports sans usage : mesure, politique, moteur factorisé requalifié en oracle | #41 |
 | P27 | `actions.ts` : doublons supprimés, exports internes refermés, clé du dossier unifiée | #42 |
+| P28 | Ouverture d'exercice : implémentation unique, période à la vraie fin de mois, bouton N+1 | #43 |
 
 ## 1. Bloqué par une décision d'infrastructure (à arbitrer par le porteur)
 
@@ -180,7 +181,12 @@ Ces points ne peuvent pas avancer sans base de données et hébergement d'API.
     refermés, et la clé `fimaac_company` unifiée dans `companyScope.ts` (elle était
     recopiée dans trois fichiers ; le dossier actif ne survit plus à une
     déconnexion). Reste : 6 actions à trancher (`ensureFiscalYear`,
-    `setDocCategory`, `setDocStatus`, `setDocumentRequestStatus`,
+    ~~`ensureFiscalYear`~~ — **branché (PR #43)** : c'était une seconde
+    implémentation de la création d'exercice, jamais appelée, et **rien**
+    n'ouvrait l'exercice suivant (les périodes de la copie finissaient au 28).
+    Désormais une seule fonction, une période à la vraie fin de mois, un bouton
+    « Ouvrir l'exercice N » dans l'onglet Clôture. Reste : 5 actions à trancher
+    (`setDocCategory`, `setDocStatus`, `setDocumentRequestStatus`,
     `runAllSubscriptions`, `togglePlanActive`), puis `analytics`, `production`,
     `etatsMapping`.
 22. ~~**Balance 6 colonnes**~~ — **fait (PR #37)** : `parseBalance6` passe par

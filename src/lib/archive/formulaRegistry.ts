@@ -1,4 +1,18 @@
 // ============================================================================
+// ARCHIVÉ — formulaRegistry.ts
+//
+// Ce module n'est importé par AUCUN code de l'application (vérifié par
+// `src/lib/__tests__/archive.test.ts`). Il est conservé tel quel pour mémoire :
+// il documente registre documentaire des formules Excel.
+//
+// Pourquoi il n'est pas branché : il ferait doublon avec aucun remplaçant : c'est une documentation, pas un moteur — elle n'a jamais été branchée.
+// Deux moteurs qui calculent la même chose finissent par diverger — et c'est
+// toujours l'écran qui a tort le dernier.
+//
+// Pour le réactiver : décider explicitement de remplacer le moteur en place,
+// puis supprimer cet en-tête et retirer le fichier de `ARCHIVED_MODULES`.
+// ============================================================================
+// ============================================================================
 // FIMAAC — Registre formel DOCUMENT 4 (8 764 formules × 97 feuilles)
 // Chaque entrée relie une formule Excel à son implémentation TypeScript.
 // La formule Excel originale est conservée pour audit (@formula).

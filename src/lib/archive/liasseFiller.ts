@@ -1,15 +1,29 @@
 // ============================================================================
+// ARCHIVÉ — liasseFiller.ts
+//
+// Ce module n'est importé par AUCUN code de l'application (vérifié par
+// `src/lib/__tests__/archive.test.ts`). Il est conservé tel quel pour mémoire :
+// il documente pipeline de remplissage de la liasse.
+//
+// Pourquoi il n'est pas branché : il ferait doublon avec liasseEngine.fillStateTemplate / fillTemplate, appelés par l'écran Liasse.
+// Deux moteurs qui calculent la même chose finissent par diverger — et c'est
+// toujours l'écran qui a tort le dernier.
+//
+// Pour le réactiver : décider explicitement de remplacer le moteur en place,
+// puis supprimer cet en-tête et retirer le fichier de `ARCHIVED_MODULES`.
+// ============================================================================
+// ============================================================================
 // FIMAAC — Pipeline complet de remplissage de la liasse GUDEF
 // Fusionne : états de base + 35 notes annexes + identification + liquidation DP
 // Exécute les contrôles de cohérence sur le résultat rempli.
 // ============================================================================
-import type { BalanceRow } from "./liasse";
-import { computeLiquidationDP } from "./liasse";
-import { fillStateTemplateZip } from "./xlsx-filler";
-import { runCoherenceChecks, type StateAggregate, type CoherenceReport } from "./liasseEngine";
-import { computeAllNotes } from "./notes";
-import type { Company } from "./types";
-import type { ProdContext } from "./production/types";
+import type { BalanceRow } from "../liasse";
+import { computeLiquidationDP } from "../liasse";
+import { fillStateTemplateZip } from "../xlsx-filler";
+import { runCoherenceChecks, type StateAggregate, type CoherenceReport } from "../liasseEngine";
+import { computeAllNotes } from "../notes";
+import type { Company } from "../types";
+import type { ProdContext } from "../production/types";
 
 // ============================================================================
 // ÉTAPE 1 — buildFullValueByRef : fusionne TOUTES les valeurs
@@ -186,8 +200,8 @@ export async function fillCompleteLiasse(
 // ============================================================================
 /** Construit un ProdContext à partir des écritures d'une entreprise. */
 export function buildProdContext(
-  entries: import("./types").JournalEntry[],
-  accounts: import("./types").Account[],
+  entries: import("../types").JournalEntry[],
+  accounts: import("../types").Account[],
   company: Company | null,
   exercise: string,
   balanceN1: BalanceRow[] = [],

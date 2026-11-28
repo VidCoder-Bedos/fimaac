@@ -374,3 +374,12 @@
 | Livré | `emptyStates.ts` (`SCREEN_PREREQUISITES`, `explainMissing`, `missingFor`) ; `EmptyState.next` (encart ambre + bouton) ; branchement dans Écritures, Fiscalité et Liasse ; 7 tests. |
 | Mesures | dossier vide → « il manque d'abord : l'entreprise », lien `/app/entreprises` · dossier avec NIF sans exercice → l'**exercice** est nommé · écriture déséquilibrée de 250 → la liasse nomme les **contrôles** et cite 250 · dossier complet → **aucun** conseil |
 | Vérifications | `tsc` 0 erreur · `vitest` **317/317** (7 nouveaux) |
+
+## P25 — Moteurs dormants : archivage décidé, garde-fou de test (PR #40)
+| Point | Détail |
+|---|---|
+| Symptôme | L'audit annonçait quatre « moteurs dormants ». Vérification faite sur l'import réel : `generateObligationInstances`, `notes` et `liasseEngine` sont **branchés** (l'audit était périmé) ; en revanche `declarationEngine` (440 l.), `financialStatements` (369 l.), `liasseFiller` (267 l.) et `formulaRegistry` (244 l.) ne sont importés par personne — **1 320 lignes** qui compilaient sans jamais s'exécuter. |
+| Décision | Ni suppression en bloc, ni branchement de complaisance : chaque module est **archivé** avec son remplaçant nommé. Brancher deux moteurs qui calculent la même chose produit deux vérités, et l'écran finit par afficher celle qui n'est pas testée. |
+| Livré | `src/lib/archive/` (4 modules déplacés, imports réécrits, en-tête `ARCHIVÉ`) ; `README.md` (module → lignes → remplaçant) ; `archive.test.ts` (5 tests : balayage réel de `src/`, liste blanche, en-têtes, résolution des imports, cohérence du registre) ; point 20 du registre clos. |
+| Mesures | imports de modules archivés depuis `src/` : **0** · archive : exactement **4** modules · imports relatifs des archivés : tous résolus **hors** archive · `tsc` : les archivés restent compilés |
+| Vérifications | `tsc` 0 erreur · `vitest` **322/322** (5 nouveaux) |

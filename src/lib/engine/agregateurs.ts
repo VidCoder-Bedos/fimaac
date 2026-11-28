@@ -4,14 +4,16 @@
 // Les états, notes, annexes et contrôles consomment ces règles — jamais les cellules.
 // ============================================================================
 import type { EngineContext, Period } from "./types";
-import { aggregate } from "./soldes";
+import { aggregate, aggregateExcept } from "./soldes";
 
 // ---- FACTORISATION : chaque fonction accepte (ctx, period) — DRY ----
 // Une modification ici se propage automatiquement à TOUS les états qui l'utilisent.
 
 /** §12 — BILAN ACTIF */
+// P0-1 : les comptes 28/29 portent déjà un solde créditeur — les retirer de
+// l'agrégat suffit. L'ancienne version les déduisait une seconde fois (D-01).
 export const RULE_IMMO_BRUT = (ctx: EngineContext, p: Period) =>
-  aggregate(ctx, ["2"], p, "debit") - aggregate(ctx, ["28", "29"], p, "credit");
+  aggregateExcept(ctx, ["2"], ["28", "29", "39", "49"], p, "debit");
 
 export const RULE_AMORT = (ctx: EngineContext, p: Period) =>
   aggregate(ctx, ["28", "29"], p, "credit");
@@ -20,13 +22,25 @@ export const RULE_IMMO_NET = (ctx: EngineContext, p: Period) =>
   RULE_IMMO_BRUT(ctx, p) - RULE_AMORT(ctx, p);
 
 export const RULE_STOCKS = (ctx: EngineContext, p: Period) =>
-  aggregate(ctx, ["3"], p, "debit");
+  aggregateExcept(ctx, ["3"], ["39"], p, "debit");
+
+/** Dépréciations des stocks (39) — déduites de l'actif. */
+export const RULE_DEPREC_STOCKS = (ctx: EngineContext, p: Period) =>
+  aggregate(ctx, ["39"], p, "credit");
 
 export const RULE_CREANCES_CLIENTS = (ctx: EngineContext, p: Period) =>
-  aggregate(ctx, ["411", "412", "414", "416", "417", "418"], p, "debit");
+  aggregate(ctx, ["409", "411", "412", "414", "416", "417", "418"], p, "debit");
+
+/** Créances sur l'État : TVA récupérable (445) et avances sur impôts (4492). */
+export const RULE_CREANCES_ETAT = (ctx: EngineContext, p: Period) =>
+  aggregate(ctx, ["445", "4492"], p, "debit");
+
+/** Dépréciations des créances (49) — déduites de l'actif. */
+export const RULE_DEPREC_CREANCES = (ctx: EngineContext, p: Period) =>
+  aggregate(ctx, ["49"], p, "credit");
 
 export const RULE_AUTRES_CREANCES = (ctx: EngineContext, p: Period) =>
-  aggregate(ctx, ["46"], p, "debit");
+  aggregateExcept(ctx, ["46", "47", "48"], ["476", "477"], p, "debit");
 
 export const RULE_TITRES_PLACEMENT = (ctx: EngineContext, p: Period) =>
   aggregate(ctx, ["50"], p, "debit");
@@ -40,11 +54,15 @@ export const RULE_BANQUE_CAISSE = (ctx: EngineContext, p: Period) =>
 export const RULE_ECART_CONV_ACTIF = (ctx: EngineContext, p: Period) =>
   aggregate(ctx, ["476"], p, "debit");
 
+// P0-1 (D-02) : le total est la somme EXACTE des composantes exposées par le
+// bilan (immoNet, stocks, créances, trésorerie). Aucune règle autonome.
 export const RULE_TOTAL_ACTIF = (ctx: EngineContext, p: Period) =>
-  RULE_IMMO_NET(ctx, p) + RULE_STOCKS(ctx, p) +
-  RULE_CREANCES_CLIENTS(ctx, p) + RULE_AUTRES_CREANCES(ctx, p) +
-  RULE_TITRES_PLACEMENT(ctx, p) + RULE_VALEURS_ENCAISSER(ctx, p) +
-  RULE_BANQUE_CAISSE(ctx, p) + RULE_ECART_CONV_ACTIF(ctx, p);
+  RULE_IMMO_NET(ctx, p)
+  + (RULE_STOCKS(ctx, p) - RULE_DEPREC_STOCKS(ctx, p))
+  + (RULE_CREANCES_CLIENTS(ctx, p) + RULE_CREANCES_ETAT(ctx, p) +
+     RULE_AUTRES_CREANCES(ctx, p) - RULE_DEPREC_CREANCES(ctx, p))
+  + (RULE_TITRES_PLACEMENT(ctx, p) + RULE_VALEURS_ENCAISSER(ctx, p) +
+     RULE_BANQUE_CAISSE(ctx, p) + RULE_ECART_CONV_ACTIF(ctx, p));
 
 /** §13 — BILAN PASSIF */
 export const RULE_CAPITAL_SOCIAL = (ctx: EngineContext, p: Period) =>
@@ -54,10 +72,19 @@ export const RULE_RESERVES = (ctx: EngineContext, p: Period) =>
   aggregate(ctx, ["106", "11", "118"], p, "credit") - aggregate(ctx, ["109", "129"], p, "debit");
 
 export const RULE_CAPITAUX_PROPRES = (ctx: EngineContext, p: Period) =>
-  RULE_CAPITAL_SOCIAL(ctx, p) + RULE_RESERVES(ctx, p);
+  RULE_CAPITAL_SOCIAL(ctx, p) + RULE_RESERVES(ctx, p) +
+  aggregate(ctx, ["12", "121"], p, "credit");
 
-export const RULE_RESULTAT_PASSIF = (ctx: EngineContext, p: Period) =>
-  aggregate(ctx, ["120"], p, "credit") - aggregate(ctx, ["121"], p, "debit");
+// P0-1 (D-03) : 13 = résultat net comptabilisé (exercice déjà clôturé).
+// Sur un exercice en cours, 13 est vide : on retombe sur le résultat calculé,
+// jamais sur 0 — sinon le passif ne peut pas s'équilibrer.
+export const RULE_RESULTAT_POSTE = (ctx: EngineContext, p: Period) =>
+  aggregate(ctx, ["13"], p, "credit");
+
+export const RULE_RESULTAT_PASSIF = (ctx: EngineContext, p: Period) => {
+  const poste = RULE_RESULTAT_POSTE(ctx, p);
+  return poste !== 0 ? poste : RULE_RESULTAT_NET(ctx, p);
+};
 
 export const RULE_DETTES_FINANCIERES = (ctx: EngineContext, p: Period) =>
   aggregate(ctx, ["16", "17"], p, "credit");
@@ -66,10 +93,10 @@ export const RULE_DETTES_FOURNISSEURS = (ctx: EngineContext, p: Period) =>
   aggregate(ctx, ["401", "403", "404", "405", "408"], p, "credit");
 
 export const RULE_DETTES_FISCALES_SOCIALES = (ctx: EngineContext, p: Period) =>
-  aggregate(ctx, ["43", "44"], p, "credit");
+  aggregateExcept(ctx, ["42", "43", "44"], ["445", "4492"], p, "credit");
 
 export const RULE_AUTRES_DETTES = (ctx: EngineContext, p: Period) =>
-  aggregate(ctx, ["464", "469", "465", "48"], p, "credit");
+  aggregateExcept(ctx, ["46", "47", "48"], ["476", "477"], p, "credit");
 
 export const RULE_TRESORERIE_PASSIF = (ctx: EngineContext, p: Period) =>
   aggregate(ctx, ["513", "516", "518", "519"], p, "credit");
@@ -82,6 +109,14 @@ export const RULE_TOTAL_PASSIF = (ctx: EngineContext, p: Period) =>
   RULE_DETTES_FINANCIERES(ctx, p) + RULE_DETTES_FOURNISSEURS(ctx, p) +
   RULE_DETTES_FISCALES_SOCIALES(ctx, p) + RULE_AUTRES_DETTES(ctx, p) +
   RULE_TRESORERIE_PASSIF(ctx, p) + RULE_ECART_CONV_PASSIF(ctx, p);
+
+/** Charges hors activités ordinaires (classe 8) : 81, 83, 85, 87 et divers. */
+export const RULE_CHARGES_HAO = (ctx: EngineContext, p: Period) =>
+  aggregateExcept(ctx, ["8"], ["82", "84", "86", "88"], p, "debit");
+
+/** Produits hors activités ordinaires (classe 8) : 82, 84, 86, 88 et divers. */
+export const RULE_PRODUITS_HAO = (ctx: EngineContext, p: Period) =>
+  aggregateExcept(ctx, ["8"], ["81", "83", "85", "87"], p, "credit");
 
 /** §14 — COMPTE DE RÉSULTAT (SIG en cascade) */
 export const RULE_VENTES_MARCHANDISES = (ctx: EngineContext, p: Period) =>
@@ -125,7 +160,8 @@ export const RULE_TOTAL_PRODUITS = (ctx: EngineContext, p: Period) =>
   RULE_CHIFFRE_AFFAIRES(ctx, p) + RULE_VARIATION_STOCKS(ctx, p) +
   RULE_PRODUCTION_IMMOBILISEE(ctx, p) + RULE_SUBVENTIONS_EXPLOIT(ctx, p) +
   RULE_AUTRES_PRODUITS(ctx, p) + RULE_PRODUITS_FINANCIERS(ctx, p) +
-  RULE_REPRISES_AMORT_PROV(ctx, p) + RULE_TRANSFER_EXPLOIT(ctx, p);
+  RULE_REPRISES_AMORT_PROV(ctx, p) + RULE_TRANSFER_EXPLOIT(ctx, p) +
+  RULE_PRODUITS_HAO(ctx, p);
 
 export const RULE_ACHATS_MARCHANDISES = (ctx: EngineContext, p: Period) =>
   aggregate(ctx, ["601"], p, "debit");
@@ -142,23 +178,25 @@ export const RULE_AUTRES_ACHATS = (ctx: EngineContext, p: Period) =>
 export const RULE_TRANSPORTS = (ctx: EngineContext, p: Period) =>
   aggregate(ctx, ["61"], p, "debit");
 
+// P0-1 (D-29) : le plan embarqué donne 62 + 63 = services extérieurs A et B,
+// 64 = impôts et taxes, 66 = charges de personnel, 67 = frais financiers.
 export const RULE_SERVICES_EXTERIEURS = (ctx: EngineContext, p: Period) =>
-  aggregate(ctx, ["62"], p, "debit");
+  aggregate(ctx, ["62", "63"], p, "debit");
 
 export const RULE_IMPOTS_TAXES = (ctx: EngineContext, p: Period) =>
-  aggregate(ctx, ["63"], p, "debit");
+  aggregate(ctx, ["64"], p, "debit");
 
 export const RULE_AUTRES_CHARGES = (ctx: EngineContext, p: Period) =>
   aggregate(ctx, ["65"], p, "debit");
 
 export const RULE_CHARGES_PERSONNEL = (ctx: EngineContext, p: Period) =>
-  aggregate(ctx, ["64"], p, "debit");
-
-export const RULE_FRAIS_FINANCIERS = (ctx: EngineContext, p: Period) =>
   aggregate(ctx, ["66"], p, "debit");
 
+export const RULE_FRAIS_FINANCIERS = (ctx: EngineContext, p: Period) =>
+  aggregate(ctx, ["67"], p, "debit");
+
 export const RULE_DOTATIONS_AMORT_PROV = (ctx: EngineContext, p: Period) =>
-  aggregate(ctx, ["681", "682", "683"], p, "debit");
+  aggregate(ctx, ["68", "69"], p, "debit");
 
 export const RULE_TOTAL_CHARGES = (ctx: EngineContext, p: Period) =>
   RULE_ACHATS_MARCHANDISES(ctx, p) + RULE_VAR_STOCK_MARCHANDISES(ctx, p) +
@@ -166,7 +204,7 @@ export const RULE_TOTAL_CHARGES = (ctx: EngineContext, p: Period) =>
   RULE_TRANSPORTS(ctx, p) + RULE_SERVICES_EXTERIEURS(ctx, p) +
   RULE_IMPOTS_TAXES(ctx, p) + RULE_AUTRES_CHARGES(ctx, p) +
   RULE_CHARGES_PERSONNEL(ctx, p) + RULE_FRAIS_FINANCIERS(ctx, p) +
-  RULE_DOTATIONS_AMORT_PROV(ctx, p);
+  RULE_DOTATIONS_AMORT_PROV(ctx, p) + RULE_CHARGES_HAO(ctx, p);
 
 export const RULE_RESULTAT_NET = (ctx: EngineContext, p: Period) =>
   RULE_TOTAL_PRODUITS(ctx, p) - RULE_TOTAL_CHARGES(ctx, p);

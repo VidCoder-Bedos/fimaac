@@ -213,8 +213,8 @@ export function buildProdContext(
     balances: { n: balanceN, n1: balanceN1 },
     states: {
       bilan: {
-        N: { immoBrut: 0, amort: 0, immoNet: 0, stocks: 0, creances: 0, tresorerie: 0, totalActif: 0, capitaux: 0, resultat: 0, dettesFin: 0, dettesFourn: 0, autresDettes: 0, tresoPassif: 0, totalPassif: 0 },
-        "N-1": { immoBrut: 0, amort: 0, immoNet: 0, stocks: 0, creances: 0, tresorerie: 0, totalActif: 0, capitaux: 0, resultat: 0, dettesFin: 0, dettesFourn: 0, autresDettes: 0, tresoPassif: 0, totalPassif: 0 },
+        N: { immoBrut: 0, amort: 0, immoNet: 0, stocks: 0, creances: 0, tresorerie: 0, totalActif: 0, capitaux: 0, resultat: 0, dettesFin: 0, dettesFourn: 0, dettesFiscalesSociales: 0, autresDettes: 0, tresoPassif: 0, totalPassif: 0 },
+        "N-1": { immoBrut: 0, amort: 0, immoNet: 0, stocks: 0, creances: 0, tresorerie: 0, totalActif: 0, capitaux: 0, resultat: 0, dettesFin: 0, dettesFourn: 0, dettesFiscalesSociales: 0, autresDettes: 0, tresoPassif: 0, totalPassif: 0 },
       },
       resultat: { N: { produits: 0, charges: 0, resultat: 0 }, "N-1": { produits: 0, charges: 0, resultat: 0 } },
       tft: { N: { caf: 0, variationTresorerie: 0, soldeNet: 0 }, "N-1": { caf: 0, variationTresorerie: 0, soldeNet: 0 } },

@@ -11,14 +11,21 @@ export function buildBilan(ctx: EngineContext, period: Period): BilanResult {
     immoBrut: R.RULE_IMMO_BRUT(ctx, period),
     amort: R.RULE_AMORT(ctx, period),
     immoNet: R.RULE_IMMO_NET(ctx, period),
-    stocks: R.RULE_STOCKS(ctx, period),
-    creances: R.RULE_CREANCES_CLIENTS(ctx, period) + R.RULE_AUTRES_CREANCES(ctx, period),
-    tresorerie: R.RULE_BANQUE_CAISSE(ctx, period),
+    stocks: R.RULE_STOCKS(ctx, period) - R.RULE_DEPREC_STOCKS(ctx, period),
+    // P0-1 : les créances incluent désormais l'État (TVA récupérable, 445/4492)
+    // et sont nettes des dépréciations (49).
+    creances: R.RULE_CREANCES_CLIENTS(ctx, period) + R.RULE_CREANCES_ETAT(ctx, period) +
+      R.RULE_AUTRES_CREANCES(ctx, period) - R.RULE_DEPREC_CREANCES(ctx, period),
+    // La trésorerie regroupe titres, valeurs à encaisser, banque/caisse et
+    // écarts de conversion : c'est la composante exposée par le bilan.
+    tresorerie: R.RULE_TITRES_PLACEMENT(ctx, period) + R.RULE_VALEURS_ENCAISSER(ctx, period) +
+      R.RULE_BANQUE_CAISSE(ctx, period) + R.RULE_ECART_CONV_ACTIF(ctx, period),
     totalActif: R.RULE_TOTAL_ACTIF(ctx, period),
     capitaux: R.RULE_CAPITAUX_PROPRES(ctx, period),
     resultat: R.RULE_RESULTAT_PASSIF(ctx, period),
     dettesFin: R.RULE_DETTES_FINANCIERES(ctx, period),
     dettesFourn: R.RULE_DETTES_FOURNISSEURS(ctx, period),
+    dettesFiscalesSociales: R.RULE_DETTES_FISCALES_SOCIALES(ctx, period),
     autresDettes: R.RULE_AUTRES_DETTES(ctx, period),
     tresoPassif: R.RULE_TRESORERIE_PASSIF(ctx, period),
     totalPassif: R.RULE_TOTAL_PASSIF(ctx, period),

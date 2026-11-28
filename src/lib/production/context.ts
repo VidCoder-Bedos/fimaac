@@ -29,7 +29,7 @@ function zeroBilan() {
   return {
     immoBrut: 0, amort: 0, immoNet: 0, stocks: 0, creances: 0, tresorerie: 0,
     totalActif: 0, capitaux: 0, resultat: 0, dettesFin: 0, dettesFourn: 0,
-    autresDettes: 0, tresoPassif: 0, totalPassif: 0,
+    dettesFiscalesSociales: 0, autresDettes: 0, tresoPassif: 0, totalPassif: 0,
   };
 }
 

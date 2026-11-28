@@ -11,10 +11,7 @@ import { fcfa, formatDate } from "../lib/format";
 import { PrintLine } from "./StatementsPrint";
 import type { CoherenceCheck, LiasseStatements } from "../lib/liasse";
 import type { Tafire } from "../lib/tafire";
-<<<<<<< HEAD
 import type { NotesAnnex } from "../lib/notesAnnex";
-=======
->>>>>>> origin/main
 import type { Company } from "../lib/types";
 
 interface Props {
@@ -24,11 +21,8 @@ interface Props {
   exercise: string;
   /** TAFIRE calculé depuis les balances N-1 et N (null = non calculé). */
   tafire?: Tafire | null;
-<<<<<<< HEAD
   /** Notes annexes calculées depuis la balance (null = non calculé). */
   annex?: NotesAnnex | null;
-=======
->>>>>>> origin/main
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -45,11 +39,7 @@ function CheckBadge({ status }: { status: CoherenceCheck["status"] }) {
   return <span className="border border-black px-1.5 py-[1px] text-[9px] font-bold uppercase">{label}</span>;
 }
 
-<<<<<<< HEAD
 export default function LiassePrint({ company, stmt, checks, exercise, tafire, annex }: Props) {
-=======
-export default function LiassePrint({ company, stmt, checks, exercise, tafire }: Props) {
->>>>>>> origin/main
   const b = stmt.bilan;
   const blocking = checks.filter((c) => c.status === "blocking").length;
   const warnings = checks.filter((c) => c.status === "warning").length;
@@ -175,7 +165,6 @@ export default function LiassePrint({ company, stmt, checks, exercise, tafire }:
         </Section>
       )}
 
-<<<<<<< HEAD
       {/* ---------- Notes annexes ---------- */}
       {annex && (
         <Section title="Notes annexes">
@@ -217,8 +206,6 @@ export default function LiassePrint({ company, stmt, checks, exercise, tafire }:
         </Section>
       )}
 
-=======
->>>>>>> origin/main
       {/* ---------- Contrôles ---------- */}
       <Section title="Contrôles de cohérence">
         <table className="w-full text-[10.5px]">

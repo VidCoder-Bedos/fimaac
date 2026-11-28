@@ -5,11 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm run check:conflicts && vite build",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "npm run check:conflicts && vitest run",
     "test:watch": "vitest",
-    "check:conflicts": "bash scripts/check-conflicts.sh"
+    "check:conflicts": "bash scripts/check-conflicts.sh",
+    "verify": "npm run check:conflicts && tsc --noEmit && vitest run && vite build",
+    "prepare": "bash scripts/install-hooks.sh || true"
   },
   "dependencies": {
     "clsx": "2.1.1",

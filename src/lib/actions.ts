@@ -6,6 +6,8 @@ import type {
   DocumentItem,
 } from "./types";
 import { computeTax } from "./tax";
+import { computeTvaFiscal, fiscalBaseFromMoves } from "./fiscalite";
+import { movementsByAccount } from "./accounting";
 import { hashPassword, verifyPassword } from "./hash";
 import { TEMPLATE_BY_ID, scaleTemplate } from "./entryTemplates";
 import { extractFromDocument, OCR_FIELD_DEFS } from "./ocr";
@@ -1060,17 +1062,13 @@ export function deletePermanentDoc(id: string): void {
 }
 
 // ---------------- TVA grid ----------------
-export function tvaGrid(companyId: string, entries: JournalEntry[]): { rate: number; baseHT: number; tvaCollectee: number; tvaRecuperable: number } {
-  let collectee = 0, recuperable = 0;
-  for (const e of entries) {
-    if (e.companyId !== companyId || e.status !== "validated") continue;
-    for (const l of e.lines) {
-      if (l.accountId.startsWith("443")) collectee += l.credit - l.debit;
-      if (l.accountId.startsWith("445")) recuperable += l.debit - l.credit;
-    }
-  }
-  const rate = getDB().taxRules.find((r) => r.code === "TVA")?.rate || 18;
-  return { rate, baseHT: rate ? Math.round((collectee / rate) * 100) : 0, tvaCollectee: collectee, tvaRecuperable: recuperable };
+export function tvaGrid(companyId: string, entries: JournalEntry[]): { rate: number; baseHT: number; tvaCollectee: number; tvaRecuperable: number; creditReporte: number } {
+  // P0-2 : plus aucun calcul local — même source de vérité que la page Fiscalité.
+  const validated = entries.filter((e) => e.companyId === companyId && e.status === "validated");
+  const base = fiscalBaseFromMoves(movementsByAccount(validated));
+  const rate = getDB().taxRules.find((r) => r.code === "TVA")?.rate ?? 18;
+  const t = computeTvaFiscal(base, { rate });
+  return { rate, baseHT: t.baseHT, tvaCollectee: t.collectee, tvaRecuperable: t.deductible, creditReporte: t.creditReporte };
 }
 
 // ---------------- Tiers (plan tiers : clients / fournisseurs) ----------------

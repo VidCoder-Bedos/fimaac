@@ -18,6 +18,13 @@ export interface DeclarationFieldDef {
   sourceType: FieldSourceType;
   /** Pour DIRECT_ACCOUNT / ACCOUNT_GROUP : préfixes de comptes SYSCOHADA */
   sourceAccounts?: string[];
+  /**
+   * Préfixes explicitement exclus de ce champ, même s'ils sont couverts par
+   * `sourceAccounts`. Évite les recouvrements : TVA_DEDUCTIBLE couvre 445 mais
+   * délègue 4451/4452 à leurs propres lignes (sinon le déductible est compté
+   * deux fois dans le total de section).
+   */
+  excludeAccounts?: string[];
   /** Signe : "debit" = solde débiteur, "credit" = solde créditeur, "net" = débit - crédit */
   sign?: "debit" | "credit" | "net";
   /** Formule de calcul si sourceType = CALCULATION (référence d'autres champs) */
@@ -92,7 +99,7 @@ export const TVA_FIELDS: DeclarationFieldDef[] = [
   // TVA collectée
   { code: "TVA_COLLECTEE", label: "TVA collectée", section: "TVA_COLLECTEE", sourceType: "ACCOUNT_GROUP", sourceAccounts: ["443"], sign: "credit", order: 10, officialRef: "TVA_COL" },
   // TVA déductible
-  { code: "TVA_DEDUCTIBLE", label: "TVA récupérable déductible", section: "TVA_DEDUCTIBLE", sourceType: "ACCOUNT_GROUP", sourceAccounts: ["445"], sign: "debit", order: 20, officialRef: "TVA_DED" },
+  { code: "TVA_DEDUCTIBLE", label: "TVA récupérable déductible", section: "TVA_DEDUCTIBLE", sourceType: "ACCOUNT_GROUP", sourceAccounts: ["445"], excludeAccounts: ["4451", "4452"], sign: "debit", order: 20, officialRef: "TVA_DED" },
   { code: "TVA_IMMO", label: "TVA sur immobilisations", section: "TVA_DEDUCTIBLE", sourceType: "ACCOUNT_GROUP", sourceAccounts: ["4451"], sign: "debit", order: 21, officialRef: "TVA_IMMO" },
   { code: "TVA_ACHATS", label: "TVA sur achats biens et services", section: "TVA_DEDUCTIBLE", sourceType: "ACCOUNT_GROUP", sourceAccounts: ["4452"], sign: "debit", order: 22, officialRef: "TVA_ACH" },
   // Régularisations
@@ -158,6 +165,7 @@ export function buildTvaDeclaration(
       const sign = def.sign || "net";
       for (const [code, m] of moves) {
         if (!def.sourceAccounts?.some((p) => code === p || code.startsWith(p))) continue;
+        if (def.excludeAccounts?.some((p) => code === p || code.startsWith(p))) continue;
         const solde = sign === "debit" ? m.debit - m.credit : sign === "credit" ? m.credit - m.debit : m.debit - m.credit;
         value += solde;
         sources.push({ accountCode: code, debit: m.debit, credit: m.credit, solde });

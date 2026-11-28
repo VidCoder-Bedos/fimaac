@@ -31,7 +31,7 @@ export default function Tax() {
         <div className="grid gap-6 lg:grid-cols-2">
           <Card className="p-5">
             <div className="mb-4 flex items-center justify-between"><h3 className="flex items-center gap-2 font-bold text-slate-800"><Receipt size={17} className="text-indigo-500" /> TVA du mois</h3>{!tva.verified && <Badge tone="amber">À vérifier</Badge>}</div>
-            <div className="rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 p-5 text-white"><p className="text-xs uppercase opacity-80">TVA nette à payer</p><p className="mt-1 text-3xl font-black">{fcfa(tva.montant)}</p><p className="mt-1 text-xs opacity-80">Base (collectée) : {fcfa(tva.base)}</p></div>
+            <div className="rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 p-5 text-white"><p className="text-xs uppercase opacity-80">TVA nette à payer</p><p className="mt-1 text-3xl font-black">{fcfa(tva.montant)}</p><p className="mt-1 text-xs opacity-80">Base HT : {fcfa(tva.base)} · taux {tva.rule.rate} %</p>{tva.tva && tva.tva.creditReporte > 0 && <p className="mt-1 text-xs font-medium text-sky-100">Crédit de TVA à reporter : {fcfa(tva.tva.creditReporte)}</p>}</div>
             <div className="mt-4 space-y-1.5">{tva.breakdown.map((b, i) => <div key={i} className="flex justify-between rounded-lg bg-slate-50 px-3 py-1.5 text-sm"><span className="text-slate-500">{b.label}</span><span className="font-semibold tabular-nums text-slate-800">{fcfa(b.amount)}</span></div>)}</div>
             <Button className="mt-4 w-full" onClick={() => generateTvaDeclaration(company.id)}><FileDown size={15} /> Générer la déclaration TVA</Button>
           </Card>
@@ -87,11 +87,11 @@ export default function Tax() {
             <SectionHeading title="Grille de TVA" subtitle={`Taux paramétré : ${g.rate}% (à vérifier)`} />
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="rounded-xl border border-slate-100 p-4"><p className="text-xs text-slate-400">Base HT estimée</p><p className="text-xl font-bold text-slate-800">{fcfa(g.baseHT)}</p></div>
-              <div className="rounded-xl border border-slate-100 p-4"><p className="text-xs text-slate-400">TVA collectée (433)</p><p className="text-xl font-bold text-emerald-600">{fcfa(g.tvaCollectee)}</p></div>
-              <div className="rounded-xl border border-slate-100 p-4"><p className="text-xs text-slate-400">TVA récupérable (435)</p><p className="text-xl font-bold text-sky-600">{fcfa(g.tvaRecuperable)}</p></div>
+              <div className="rounded-xl border border-slate-100 p-4"><p className="text-xs text-slate-400">TVA collectée (443)</p><p className="text-xl font-bold text-emerald-600">{fcfa(g.tvaCollectee)}</p></div>
+              <div className="rounded-xl border border-slate-100 p-4"><p className="text-xs text-slate-400">TVA récupérable (445)</p><p className="text-xl font-bold text-sky-600">{fcfa(g.tvaRecuperable)}</p></div>
             </div>
-            <div className="mt-4 flex items-center justify-between rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 p-5 text-white"><span className="text-sm opacity-90">TVA nette à payer {net >= 0 ? "(à reverser)" : "(crédit)"}</span><span className="text-2xl font-black">{fcfa(Math.abs(net))}</span></div>
-            <div className="mt-4 flex items-start gap-2 rounded-xl bg-sky-50 px-3 py-2 text-xs text-sky-700"><Info size={14} className="mt-0.5 shrink-0" /> Calcul explicable : TVA nette = TVA collectée (compte 433) − TVA récupérable (compte 435). La base HT est déduite du taux paramétré.</div>
+            <div className="mt-4 flex items-center justify-between rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 p-5 text-white"><span className="text-sm opacity-90">TVA nette à payer {net >= 0 ? "(à reverser)" : "(crédit à reporter)"}</span><span className="text-2xl font-black">{fcfa(Math.abs(net))}</span></div>
+            <div className="mt-4 flex items-start gap-2 rounded-xl bg-sky-50 px-3 py-2 text-xs text-sky-700"><Info size={14} className="mt-0.5 shrink-0" /> Calcul explicable, identique à celui de l'onglet Calculs : TVA nette = TVA collectée (443) − TVA déductible (445) − crédit reporté. La base HT est le chiffre d'affaires comptable (comptes 70), et non la TVA collectée.</div>
             <Button className="mt-4 w-full" onClick={() => { generateTvaDeclaration(company.id); alert("Déclaration TVA pré-remplie et contrôlée générée (voir onglet Échéances & déclarations)."); }}><FileDown size={15} /> Générer la déclaration TVA pré-remplie</Button>
           </Card>
         );

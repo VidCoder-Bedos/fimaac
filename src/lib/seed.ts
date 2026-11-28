@@ -384,8 +384,8 @@ export function seedDatabase(): DBState {
       base: 1_000_000,
       amount: 90_000, // 180 000 collectée - 90 000 récupérable
       breakdown: [
-        { label: "TVA collectée (compte 433)", amount: 180_000, rule: "TVA", source: "rule-tva" },
-        { label: "TVA récupérable (compte 435)", amount: -90_000, rule: "TVA", source: "rule-tva" },
+        { label: "TVA collectée (compte 443)", amount: 180_000, rule: "TVA", source: "rule-tva" },
+        { label: "TVA récupérable (compte 445)", amount: -90_000, rule: "TVA", source: "rule-tva" },
         { label: "TVA nette à payer", amount: 90_000, rule: "TVA", source: "rule-tva" },
       ],
       status: "ready",

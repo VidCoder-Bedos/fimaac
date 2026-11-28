@@ -99,6 +99,12 @@ describe("balance de contrôle — moteur factorisé (engine)", () => {
     expect(b.totalPassif).toBe(st.bilan.passifTotal);
   });
 
+  it("le dossier de démonstration ne déclenche aucun contrôle bloquant", () => {
+    const st = buildStatements(seedRows());
+    const blocking = runChecks(st).filter((c) => c.status === "blocking");
+    expect(blocking).toEqual([]);
+  });
+
   it("le total du passif est la somme exacte de ses composantes", () => {
     const b = runEngine(CONTROLE, [], CHART_OF_ACCOUNTS as never, {}).bilan["N"];
     const somme = b.capitaux + b.resultat + b.dettesFin + b.dettesFourn +

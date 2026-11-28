@@ -133,3 +133,11 @@
 | Valeurs mesurées (seed) | 450 000 → assiette 432 000, IRPP **50 190** (au lieu de 51 210) · 350 000 → assiette 332 000, IRPP **33 190** (au lieu de 34 210) · total IRPP **83 380**, retenues totales **119 380** |
 | Test dédié | La part patronale ne modifie jamais l'assiette ; une AMU salariale plus élevée réduit l'assiette ET l'IRPP |
 | Point restant | Barème 2 %/4 % du dossier contre 5 %/5 % dans la référence communiquée : non modifié en silence, arbitrage demandé |
+
+## P1 — Bilan unifié à l'écran + document imprimable (PR #11)
+| Point | Détail |
+|---|---|
+| Symptôme | L'onglet « Bilan synthétique » utilisait `financialSummary` (créances = 411 seuls, dettes = 401 seuls, capitaux = toute la classe 1) : un second bilan, non équilibré, à côté du bilan unifié. Aucun PDF remettable au client. |
+| Correctif | `Financials.tsx` affiche `buildStatements(trialBalance(...))` — source unique P0-1 — avec toutes les composantes, l'écart et les comptes non rattachés. `PrintSheet` (portail + `window.print`) et `StatementsPrint` (document A4 : en-tête société, actif, passif, compte de résultat, contrôles, mention de validation). CSS `@page A4`. |
+| Non-régression | `financialSummary` et `computeRatios` inchangés ; aucune dépendance PDF ajoutée ; le document déclare lui-même un déséquilibre au lieu de le masquer. |
+| Vérifications | `tsc` 0 erreur · `npm run build` 13,03 s · `vitest` 65/65 |

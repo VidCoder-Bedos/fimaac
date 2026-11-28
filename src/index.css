@@ -147,3 +147,15 @@ body {
   .aurora, .glass, .no-print, aside, header { display: none !important; }
   body { background: #fff; }
 }
+
+/* ---------------- Impression / export PDF (P1) ----------------
+   Le document est monté dans #fimaac-print (portail React) uniquement au
+   moment de l'impression ; l'interface est masquée par CSS, sans démontage. */
+#fimaac-print { display: none; }
+@media print {
+  body.printing #root { display: none !important; }
+  body.printing #fimaac-print { display: block !important; }
+  #fimaac-print { background: #fff; }
+  @page { size: A4 portrait; margin: 14mm; }
+  body { background: #fff !important; }
+}

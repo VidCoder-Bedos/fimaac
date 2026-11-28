@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileBarChart, CheckCircle2, AlertTriangle, ShieldCheck, Download, BarChart3, ListChecks, Circle, XCircle, FileText, Wand2 } from "lucide-react";
+import { FileBarChart, CheckCircle2, AlertTriangle, ShieldCheck, Download, BarChart3, ListChecks, Circle, XCircle, FileText, Wand2, Printer } from "lucide-react";
 import { useDB } from "../lib/store";
 import { useCompanyScope, Page } from "../components/Layout";
 import { Card, Button, Badge, EmptyState, SectionHeading, StatCard, Donut, ProgressBar, Tabs, Field, Input, Select } from "../components/ui";
@@ -7,6 +7,9 @@ import { financialSummary, trialBalance, computeRatios } from "../lib/accounting
 import { auxiliaryLedger, agedBalance, echeancier, exportFEC, exportAgedCSV, exportEcheancierCSV } from "../lib/editions";
 import { resolveCompliance, postRegularisation } from "../lib/actions";
 import { fcfa, fcfaCompact, formatDate } from "../lib/format";
+import { buildStatements, runChecks } from "../lib/liasse";
+import PrintSheet from "../components/PrintSheet";
+import StatementsPrint from "../components/StatementsPrint";
 
 function downloadCSV(name: string, rows: (string | number)[][]) {
   const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(";")).join("\n");
@@ -21,10 +24,15 @@ export function Financials() {
   const db = useDB();
   const { id: companyId } = useCompanyScope();
   const [tab, setTab] = useState("result");
+  const [printing, setPrinting] = useState(false);
   const [reg, setReg] = useState<{ type: "CCA" | "PCA" | "CAP" | "PAR"; account: string; amount: string; label: string; date: string }>({ type: "CCA", account: "62", amount: "", label: "", date: new Date().toISOString().slice(0, 10) });
   const company = db.companies.find((c) => c.id === companyId);
   if (!company) return <Page><EmptyState icon={<FileBarChart />} title="Sélectionnez une entreprise" /></Page>;
   const sum = financialSummary(db.entries.filter((e) => e.companyId === companyId));
+  // P1 — le bilan affiché et le document imprimé sortent de la MÊME source que
+  // la page Liasse (`buildStatements`, mapping unique P0-1).
+  const stmt = buildStatements(trialBalance(db.entries.filter((e) => e.companyId === companyId), db.accounts));
+  const checks = runChecks(stmt);
   const closingSteps = [
     { label: "Contrôle des journaux", ok: true as const }, { label: "Contrôle des périodes", ok: true as const },
     { label: "Rapprochements bancaires", ok: db.bankTransactions.some((t) => t.companyId === companyId && !t.reconciled) ? "warn" as const : true as const },
@@ -36,7 +44,10 @@ export function Financials() {
   ];
   return (
     <Page>
-      <div className="mb-5"><h2 className="text-xl font-black tracking-tight text-slate-900">États financiers — {company.tradeName || company.name}</h2><p className="text-sm text-slate-500">SYSCOHADA révisé · Balance → États · traçabilité des montants</p></div>
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+        <div><h2 className="text-xl font-black tracking-tight text-slate-900">États financiers — {company.tradeName || company.name}</h2><p className="text-sm text-slate-500">SYSCOHADA révisé · Balance → États · traçabilité des montants</p></div>
+        <Button variant="outline" onClick={() => setPrinting(true)}><Printer size={15} /> Imprimer / PDF</Button>
+      </div>
       <div className="mb-6"><Tabs active={tab} onChange={setTab} tabs={[{ id: "result", label: "Compte de résultat" }, { id: "bilan", label: "Bilan synthétique" }, { id: "regul", label: "Régularisations" }, { id: "closing", label: "Assistant de clôture" }]} /></div>
       {tab === "result" && (
         <Card className="p-6"><SectionHeading title="Compte de résultat (synthèse)" subtitle={`Exercice ${new Date().getFullYear()}`} />
@@ -45,9 +56,52 @@ export function Financials() {
           <div className="mt-4"><p className="mb-2 text-xs font-bold uppercase text-slate-400">Ratios financiers (calculés)</p><div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{computeRatios(sum).map((r) => (<div key={r.key} className="rounded-xl border border-slate-100 p-3"><div className="flex items-center justify-between"><span className="text-xs text-slate-500">{r.label}</span><Badge tone={r.tone}>{r.value}</Badge></div><p className="mt-0.5 text-[10px] text-slate-400">{r.desc}</p></div>))}</div></div>
         </Card>
       )}
-      {tab === "bilan" && (<div className="grid gap-6 lg:grid-cols-2"><Card className="p-6"><h3 className="mb-4 font-bold text-slate-800">ACTIF</h3><div className="space-y-1.5"><Row label="Immobilisations (classe 2)" value={fcfa(sum.immobilisations)} tone="debit" /><Row label="Créances clients (411)" value={fcfa(sum.creances)} tone="debit" /><Row label="Trésorerie (classe 5)" value={fcfa(sum.tresorerie)} tone="debit" bold /></div></Card><Card className="p-6"><h3 className="mb-4 font-bold text-slate-800">PASSIF</h3><div className="space-y-1.5"><Row label="Capitaux (classe 1)" value={fcfa(sum.capitaux)} tone="credit" /><Row label="Dettes fournisseurs (401)" value={fcfa(sum.dettes)} tone="credit" /><Row label="Résultat" value={fcfa(sum.resultat)} tone="credit" bold /></div></Card></div>)}
+      {tab === "bilan" && (() => {
+        const b = stmt.bilan;
+        const ecart = b.actifTotal - b.passifTotal;
+        return (
+          <div className="space-y-4">
+            <div className={`flex flex-wrap items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium ${ecart === 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
+              {ecart === 0 ? <CheckCircle2 size={14} /> : <AlertTriangle size={14} />}
+              {ecart === 0
+                ? `Bilan équilibré : actif = passif = ${fcfa(b.actifTotal)}.`
+                : `Bilan déséquilibré : écart de ${fcfa(ecart)} entre actif et passif.`}
+              <span className="opacity-70">· {stmt.nonMappes.length === 0 ? "tous les comptes sont rattachés à un poste" : `${stmt.nonMappes.length} compte(s) non rattaché(s)`}</span>
+            </div>
+            <div className="grid gap-6 lg:grid-cols-2">
+              <Card className="p-6"><h3 className="mb-4 font-bold text-slate-800">ACTIF</h3><div className="space-y-1.5">
+                <Row label="Immobilisations brutes" value={fcfa(b.immoBrut)} tone="debit" />
+                <Row label="Amortissements" value={fcfa(-b.amort)} tone="credit" />
+                <Row label="Immobilisations nettes" value={fcfa(b.immoNet)} tone="debit" />
+                <Row label="Stocks nets" value={fcfa(b.stocks)} tone="debit" />
+                <Row label="Créances clients" value={fcfa(b.creancesClients)} tone="debit" />
+                <Row label="Créances sur l'État" value={fcfa(b.creancesEtat)} tone="debit" />
+                <Row label="Dépréciations des créances" value={fcfa(-b.deprecTiers)} tone="credit" />
+                <Row label="Trésorerie" value={fcfa(b.tresorerie)} tone="debit" />
+                <div className="my-2 border-t-2 border-dashed border-slate-200" />
+                <Row label="TOTAL ACTIF" value={fcfa(b.actifTotal)} tone="debit" bold />
+              </div></Card>
+              <Card className="p-6"><h3 className="mb-4 font-bold text-slate-800">PASSIF</h3><div className="space-y-1.5">
+                <Row label="Capitaux propres (hors report)" value={fcfa(b.capitauxHorsReport)} tone="credit" />
+                <Row label="Report à nouveau" value={fcfa(b.reportANouveau)} tone="credit" />
+                <Row label="Résultat de l'exercice" value={fcfa(b.resultat)} tone={b.resultat >= 0 ? "credit" : "debit"} />
+                <Row label="Dettes financières" value={fcfa(b.dettesFin)} tone="credit" />
+                <Row label="Dettes fournisseurs" value={fcfa(b.dettesFourn)} tone="credit" />
+                <Row label="Dettes fiscales et sociales" value={fcfa(b.dettesFiscalesSociales)} tone="credit" />
+                <Row label="Autres dettes" value={fcfa(b.autresDettes)} tone="credit" />
+                <Row label="Trésorerie passif" value={fcfa(b.tresoPassif)} tone="credit" />
+                <div className="my-2 border-t-2 border-dashed border-slate-200" />
+                <Row label="TOTAL PASSIF" value={fcfa(b.passifTotal)} tone="credit" bold />
+              </div></Card>
+            </div>
+          </div>
+        );
+      })()}
       {tab === "closing" && (<Card className="p-6"><SectionHeading title="Assistant de clôture" subtitle="Suivi étape par étape" /><div className="space-y-2">{closingSteps.map((s, i) => (<div key={i} className="flex items-center gap-3 rounded-xl border border-slate-100 px-4 py-3">{s.ok === true ? <Circle size={16} className="text-emerald-500" fill="currentColor" /> : s.ok === "warn" ? <AlertTriangle size={16} className="text-amber-500" /> : <XCircle size={16} className="text-rose-500" />}<span className="flex-1 text-sm font-medium text-slate-700">{i + 1}. {s.label}</span><Badge tone={s.ok === true ? "emerald" : s.ok === "warn" ? "amber" : "rose"}>{s.ok === true ? "Réussi" : s.ok === "warn" ? "Avertissement" : "Bloquant"}</Badge></div>))}</div></Card>)}
       {tab === "regul" && (<Card className="p-6"><SectionHeading title="Régularisations de fin d'exercice" subtitle="CCA / PCA / CAP / PAR — génère une écriture (brouillon)" /><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"><Field label="Type"><Select value={reg.type} onChange={(e) => { const t = e.target.value as "CCA" | "PCA" | "CAP" | "PAR"; setReg({ ...reg, type: t, account: t === "CCA" || t === "CAP" ? "62" : "706" }); }}><option value="CCA">Charges constatées d'avance (476)</option><option value="PCA">Produits constatés d'avance (477)</option><option value="CAP">Charges à payer (408)</option><option value="PAR">Produits à recevoir (418)</option></Select></Field><Field label="Compte"><Select value={reg.account} onChange={(e) => setReg({ ...reg, account: e.target.value })}>{(reg.type === "CCA" || reg.type === "CAP" ? db.accounts.filter((a) => a.postable && a.classNumber === 6) : db.accounts.filter((a) => a.postable && a.classNumber === 7)).map((a) => <option key={a.code} value={a.code}>{a.code} · {a.label}</option>)}</Select></Field><Field label="Montant (FCFA)" required><Input value={reg.amount} onChange={(e) => setReg({ ...reg, amount: e.target.value })} inputMode="numeric" /></Field><Field label="Libellé"><Input value={reg.label} onChange={(e) => setReg({ ...reg, label: e.target.value })} /></Field><Field label="Date"><Input type="date" value={reg.date} onChange={(e) => setReg({ ...reg, date: e.target.value })} /></Field></div><Button className="mt-4" onClick={() => { const r = postRegularisation(company.id, { type: reg.type, account: reg.account, amount: parseInt(reg.amount || "0", 10), label: reg.label, date: reg.date }); if (!r.ok) { alert(r.error); return; } alert("Écriture de régularisation générée (brouillon)."); setReg({ ...reg, amount: "", label: "" }); }}><Wand2 size={15} /> Générer l'écriture</Button></Card>)}
+      <PrintSheet open={printing} onClose={() => setPrinting(false)}>
+        <StatementsPrint company={company} stmt={stmt} checks={checks.filter((c) => c.status !== "ok").map((c) => ({ ok: false, label: c.title }))} />
+      </PrintSheet>
     </Page>
   );
 }

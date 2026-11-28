@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react";
 import type { DBState, JournalEntry } from "./types";
 import { seedDatabase } from "./seed";
+import { measureSerialized, type StorageUsage } from "./storage";
 
 /**
  * B1 — VERSIONNEMENT + MIGRATION du schéma persistant.
@@ -109,12 +110,40 @@ export function getDB(): DBState {
   return state;
 }
 
+/**
+ * P0-5 — l'échec d'écriture n'est plus avalé.
+ * Avant : le bloc `catch` de `persist` ne faisait rien du tout. L'application
+ * continuait d'afficher un
+ * dossier qui n'était plus sauvegardé nulle part, et l'utilisateur le perdait
+ * au rechargement sans avoir été prévenu une seule fois.
+ */
+let persistError: string | null = null;
+let lastPersistedAt: string | null = null;
+
 function persist() {
   try {
     localStorage.setItem(KEY, JSON.stringify(state));
-  } catch {
-    /* quota */
+    persistError = null;
+    lastPersistedAt = new Date().toISOString();
+  } catch (e) {
+    const err = e as { name?: string; message?: string };
+    persistError =
+      err?.name === "QuotaExceededError" || /quota/i.test(err?.message || "")
+        ? "quota de stockage du navigateur dépassé"
+        : err?.message || String(e);
   }
+}
+
+/** Clé de stockage, exposée pour la sauvegarde/restauration et les tests. */
+export const STORAGE_KEY = KEY;
+
+/** Occupation réelle du stockage + état de la dernière écriture (P0-5). */
+export function storageSnapshot(): {
+  usage: StorageUsage;
+  persistError: string | null;
+  lastPersistedAt: string | null;
+} {
+  return { usage: measureSerialized(JSON.stringify(state)), persistError, lastPersistedAt };
 }
 
 export function subscribe(cb: () => void): () => void {

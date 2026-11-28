@@ -8,6 +8,7 @@ import {
   Globe2, Database, FileBarChart, FileInput, FileSpreadsheet, CalendarClock, Coins, Megaphone, HardDrive,
 } from "lucide-react";
 import GlobalSearch from "./GlobalSearch";
+import StorageNotice from "./StorageNotice";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { companiesForUser } from "../lib/scope";
 import { useDB } from "../lib/store";
@@ -254,6 +255,9 @@ function Shell({ nav, sectioned, subtitle, title, toolbar, logoUrl }: { nav: { s
           <div className="aurora aurora-2" style={{ width: 360, height: 360, right: "4%", top: "32%", background: "radial-gradient(circle,#f0abfc,transparent 70%)", opacity: 0.2 }} />
         </div>
         <TopBar onMenu={() => setMobileOpen(true)} title={title} toolbar={toolbar} />
+        {/* P0-5 — où vivent les données, combien de place il reste, et si la
+            dernière écriture a échoué. Jamais silencieux. */}
+        <StorageNotice />
         <main className="relative z-10 flex-1 overflow-x-hidden px-4 py-6 sm:px-6 lg:px-8">
           <motion.div key={location.pathname} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
             {/* M3 — tout échec de rendu affiche un panneau de récupération au lieu d'un écran blanc */}

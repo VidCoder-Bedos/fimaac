@@ -15,6 +15,7 @@ export function buildBilan(ctx: EngineContext, period: Period): BilanResult {
     // P0-1 : les créances incluent désormais l'État (TVA récupérable, 445/4492)
     // et sont nettes des dépréciations (49).
     creances: R.RULE_CREANCES_CLIENTS(ctx, period) + R.RULE_CREANCES_ETAT(ctx, period) +
+      R.RULE_CREANCES_FISCALES_SOCIALES(ctx, period) +
       R.RULE_AUTRES_CREANCES(ctx, period) - R.RULE_DEPREC_CREANCES(ctx, period),
     // La trésorerie regroupe titres, valeurs à encaisser, banque/caisse et
     // écarts de conversion : c'est la composante exposée par le bilan.

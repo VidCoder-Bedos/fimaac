@@ -4,7 +4,7 @@
 // Les états, notes, annexes et contrôles consomment ces règles — jamais les cellules.
 // ============================================================================
 import type { EngineContext, Period } from "./types";
-import { aggregate, aggregateExcept } from "./soldes";
+import { aggregate, aggregateExcept, aggregateSigned } from "./soldes";
 
 // ---- FACTORISATION : chaque fonction accepte (ctx, period) — DRY ----
 // Une modification ici se propage automatiquement à TOUS les états qui l'utilisent.
@@ -60,6 +60,7 @@ export const RULE_TOTAL_ACTIF = (ctx: EngineContext, p: Period) =>
   RULE_IMMO_NET(ctx, p)
   + (RULE_STOCKS(ctx, p) - RULE_DEPREC_STOCKS(ctx, p))
   + (RULE_CREANCES_CLIENTS(ctx, p) + RULE_CREANCES_ETAT(ctx, p) +
+     RULE_CREANCES_FISCALES_SOCIALES(ctx, p) +
      RULE_AUTRES_CREANCES(ctx, p) - RULE_DEPREC_CREANCES(ctx, p))
   + (RULE_TITRES_PLACEMENT(ctx, p) + RULE_VALEURS_ENCAISSER(ctx, p) +
      RULE_BANQUE_CAISSE(ctx, p) + RULE_ECART_CONV_ACTIF(ctx, p));
@@ -92,8 +93,14 @@ export const RULE_DETTES_FINANCIERES = (ctx: EngineContext, p: Period) =>
 export const RULE_DETTES_FOURNISSEURS = (ctx: EngineContext, p: Period) =>
   aggregate(ctx, ["401", "403", "404", "405", "408"], p, "credit");
 
+// P15 — le sens du solde décide du côté du bilan : seuls les soldes créditeurs
+// sont des dettes ; les soldes débiteurs sont des créances (voir ci-dessous).
 export const RULE_DETTES_FISCALES_SOCIALES = (ctx: EngineContext, p: Period) =>
-  aggregateExcept(ctx, ["42", "43", "44"], ["445", "4492"], p, "credit");
+  aggregateSigned(ctx, ["42", "43", "44"], ["445", "4492"], p, "credit");
+
+/** Créances sociales et fiscales : 42/43/44 à solde débiteur. */
+export const RULE_CREANCES_FISCALES_SOCIALES = (ctx: EngineContext, p: Period) =>
+  aggregateSigned(ctx, ["42", "43", "44"], ["445", "4492"], p, "debit");
 
 export const RULE_AUTRES_DETTES = (ctx: EngineContext, p: Period) =>
   aggregateExcept(ctx, ["46", "47", "48"], ["476", "477"], p, "credit");

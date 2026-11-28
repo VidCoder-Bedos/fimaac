@@ -2,13 +2,13 @@
 
 > Registre tenu à jour à chaque lot livré. Il sert de point de reprise : tout ce
 > qui est ici est **non fait**, avec sa raison et son blocage éventuel.
-> Dernière mise à jour : 28/11/2026, après les PR #5 à #29.
+> Dernière mise à jour : 28/11/2026, après les PR #5 à #30.
 
 ## Déjà réglé (ne plus y revenir)
 
 | Lot | Objet | PR |
 |---|---|---|
-| P0-1 | Moteur d'états unique, bilan équilibré (27 440 921 = 27 440 921) | #5 |
+| P0-1 | Moteur d'états unique, bilan équilibré (27 960 921 = 27 960 921 après P15) | #5 |
 | P0-2 | Fiscalité : un seul calcul (IS 201 900, TVA 2 473 332, base 20 190 000) | #6 |
 | P0-3 | Paie : barème IRPP progressif + AMU retenue | #7 |
 | P0-3b | AMU salariale déductible de l'assiette IRPP (art. 26 CGI) | #10 |
@@ -32,6 +32,7 @@
 | P12 | Dialogues accessibles (focus, Échap, rôle) et notifications non bloquantes | #27 |
 | P13 | FEC par exercice, périmètre et nom de dépôt affichés | #28 |
 | P14 | Tiers manquants : détection, propositions, affectation tracée | #29 |
+| P15 | Sens du solde au bilan : 441 débiteur à l'actif, total 27 960 921 | #30 |
 
 ## 1. Bloqué par une décision d'infrastructure (à arbitrer par le porteur)
 
@@ -79,8 +80,11 @@ Ces points ne peuvent pas avancer sans base de données et hébergement d'API.
    affichage dans la grille. Reste : **ventilation à la ligne** (une facture
    mêlant deux taux est aujourd'hui signalée, pas éclatée) et **autoliquidation**
    sur les achats intracommunautaires.
-10. **Cas 441 débiteur** — présenté en diminution des dettes fiscales ; un
-    éclatement par sens du solde serait plus juste (sans effet sur l'équilibre).
+10. ~~**Cas 441 débiteur**~~ — **fait (PR #30)** : le sens du solde décide du
+    côté du bilan (nouveau poste « Créances sociales et fiscales »), dans le
+    moteur de liasse **et** dans le moteur factorisé. Le total du bilan passe de
+    27 440 921 à **27 960 921** des deux côtés : 520 000 FCFA d'actif qui
+    n'existaient nulle part sont désormais visibles.
 11. ~~**IS : réintégrations / déductions**~~ — **fait (PR #25)** : collection
     persistée (DB_VERSION 4), saisie tracée, calcul unique de l'IS. Reste :
     ~~**reprendre ces montants dans la déclaration IS générée**~~ — **fait

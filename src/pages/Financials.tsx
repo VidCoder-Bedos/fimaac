@@ -79,6 +79,7 @@ export function Financials() {
                 <Row label="Stocks nets" value={fcfa(b.stocks)} tone="debit" />
                 <Row label="Créances clients" value={fcfa(b.creancesClients)} tone="debit" />
                 <Row label="Créances sur l'État" value={fcfa(b.creancesEtat)} tone="debit" />
+                <Row label="Créances sociales et fiscales" value={fcfa(b.creancesFiscalesSociales)} tone="debit" />
                 <Row label="Dépréciations des créances" value={fcfa(-b.deprecTiers)} tone="credit" />
                 <Row label="Trésorerie" value={fcfa(b.tresorerie)} tone="debit" />
                 <div className="my-2 border-t-2 border-dashed border-slate-200" />

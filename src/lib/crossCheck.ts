@@ -24,6 +24,12 @@ export interface CrossCheckReport {
   criticalCount: number;
   warningCount: number;
   okCount: number;
+  /**
+   * P2 — constats informatifs (immobilisations, rapprochement…) : ils ne sont
+   * ni conformes ni en écart, mais ils doivent être comptés. Sans ce champ,
+   * okCount + warningCount + criticalCount ≠ nombre de contrôles affichés.
+   */
+  infoCount: number;
   overallStatus: CrossCheckLevel;
 }
 
@@ -158,8 +164,9 @@ export function runCrossChecks(data: {
   const criticalCount = checks.filter((c) => c.level === "critical").length;
   const warningCount = checks.filter((c) => c.level === "warning").length;
   const okCount = checks.filter((c) => c.level === "ok").length;
+  const infoCount = checks.filter((c) => c.level === "info").length;
   const totalEcart = checks.reduce((s, c) => s + Math.abs(c.ecart), 0);
   const overallStatus: CrossCheckLevel = criticalCount > 0 ? "critical" : warningCount > 0 ? "warning" : "ok";
 
-  return { checks, totalEcart, criticalCount, warningCount, okCount, overallStatus };
+  return { checks, totalEcart, criticalCount, warningCount, okCount, infoCount, overallStatus };
 }

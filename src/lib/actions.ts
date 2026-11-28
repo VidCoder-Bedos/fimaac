@@ -16,6 +16,7 @@ import { extractFromDocument, OCR_FIELD_DEFS } from "./ocr";
 import { getDocumentFile, putDocumentFile } from "./documentStore";
 import { nextEntryNumber } from "./entryNumbering";
 import { resolveAccountingDate } from "./periods";
+import { isThirdPartyAccount } from "./thirdParties";
 import { ventilateVat } from "./tvaVentilation";
 import { computeMonthlyDueDate, computeAnnualDueDate } from "./obligations";
 
@@ -1188,6 +1189,73 @@ export function addThirdParty(companyId: string, data: Partial<{ code: string; c
     s.tiers.push({ id: uid(), organizationId: orgId, companyId, code: data.code || "TIER", collective: data.collective || (data.type === "supplier" ? "4011" : "4111"), type: data.type || "customer", name: data.name || "Nouveau tiers", address: data.address, city: data.city, nif: data.nif, contact: data.contact, phone: data.phone, paymentTerms: data.paymentTerms, creditLimit: data.creditLimit, createdAt: new Date().toISOString() });
     audit(s, currentUserId() || "", orgId, "CREATE_TIER", "ThirdParty", data.name || "", `Création du tiers ${data.name}`);
   });
+}
+
+/**
+ * P14 — Rattachement d'un tiers à une ligne d'écriture.
+ *
+ * Le FEC signale les lignes de comptes 40x/41x sans auxiliaire ; encore
+ * fallait-il pouvoir les compléter. L'affectation est un acte comptable : elle
+ * est horodatée, attribuée, et **jamais silencieuse** (le tiers doit appartenir
+ * à la même société que l'écriture).
+ */
+export function assignThirdPartyToLine(entryId: string, lineIndex: number, thirdPartyId: string): { ok: boolean; error?: string } {
+  const db = getDB();
+  const entry = db.entries.find((e) => e.id === entryId);
+  if (!entry) return { ok: false, error: "Écriture introuvable." };
+  const line = entry.lines[lineIndex];
+  if (!line) return { ok: false, error: "Ligne d'écriture introuvable." };
+  if (!isThirdPartyAccount(line.accountId)) return { ok: false, error: `Le compte ${line.accountId} n'est pas un compte de tiers.` };
+  const tier = db.tiers.find((t) => t.id === thirdPartyId);
+  if (!tier) return { ok: false, error: "Tiers introuvable." };
+  if (tier.companyId !== entry.companyId) return { ok: false, error: "Ce tiers appartient à une autre société." };
+
+  mutate((s) => {
+    const target = s.entries.find((e) => e.id === entryId);
+    if (!target) return;
+    target.lines[lineIndex].thirdPartyId = thirdPartyId;
+    audit(s, currentUserId() || "", currentOrgId() || "", "AFFECT_TIER", "JournalEntry", entry.number,
+      `Tiers ${tier.code} affecté à la ligne ${lineIndex + 1} (compte ${line.accountId}, ${line.debit || line.credit} FCFA)`);
+  });
+  return { ok: true };
+}
+
+/**
+ * Affectation en masse : toutes les lignes **encore sans tiers** d'un compte.
+ * Les lignes déjà rattachées ne sont jamais écrasées — une réaffectation
+ * silencieuse changerait la balance âgée sans que personne ne l'ait demandé.
+ */
+export function assignThirdPartyToAccount(companyId: string, accountId: string, thirdPartyId: string): { ok: boolean; count: number; error?: string } {
+  const db = getDB();
+  const tier = db.tiers.find((t) => t.id === thirdPartyId);
+  if (!tier) return { ok: false, count: 0, error: "Tiers introuvable." };
+  if (tier.companyId !== companyId) return { ok: false, count: 0, error: "Ce tiers appartient à une autre société." };
+  if (!isThirdPartyAccount(accountId)) return { ok: false, count: 0, error: `Le compte ${accountId} n'est pas un compte de tiers.` };
+
+  // Le décompte est établi AVANT la mutation : `mutate` est mis en file, donc un
+  // compteur incrémenté dans son callback vaudrait 0 au retour de la fonction.
+  const targets: { entryId: string; lineIndex: number }[] = [];
+  for (const entry of db.entries) {
+    if (entry.companyId !== companyId) continue;
+    entry.lines.forEach((line, lineIndex) => {
+      if (line.accountId !== accountId || line.thirdPartyId) return;
+      if (!line.debit && !line.credit) return;
+      targets.push({ entryId: entry.id, lineIndex });
+    });
+  }
+  const count = targets.length;
+
+  mutate((s) => {
+    for (const t of targets) {
+      const target = s.entries.find((e) => e.id === t.entryId);
+      if (target?.lines[t.lineIndex]) target.lines[t.lineIndex].thirdPartyId = thirdPartyId;
+    }
+    audit(s, currentUserId() || "", currentOrgId() || "", "AFFECT_TIER_MASSE", "Account", accountId,
+      count > 0
+        ? `${count} ligne(s) du compte ${accountId} rattachées à ${tier.code} — ${tier.name}`
+        : `Aucune ligne à rattacher sur le compte ${accountId}`);
+  });
+  return { ok: true, count };
 }
 
 export function updateThirdParty(id: string, patch: Partial<{ code: string; collective: string; type: "customer" | "supplier"; name: string; address: string; city: string; nif: string; contact: string; phone: string; paymentTerms: string; creditLimit: number }>): void { mutate((s) => { const t = s.tiers.find((x) => x.id === id); if (t) Object.assign(t, patch); }); }

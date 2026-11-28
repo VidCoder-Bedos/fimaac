@@ -5,10 +5,11 @@ import { useDB } from "../lib/store";
 import { useCompanyScope, Page } from "../components/Layout";
 import { Card, Button, Badge, StatusBadge, Tabs, Modal, Field, Input, Select, EmptyState, SectionHeading, ProgressBar } from "../components/ui";
 import { entryTotals, trialBalance, ledgerForAccount, classTotals, accountSituation } from "../lib/accounting";
-import { addJournal, setEntryStatus, counterEntry, letterLines, unletterLines, autoLetter, addThirdParty, updateThirdParty, deleteThirdParty, guidedSettlement, closePeriod, reopenPeriod } from "../lib/actions";
+import { addJournal, setEntryStatus, counterEntry, letterLines, unletterLines, autoLetter, addThirdParty, updateThirdParty, deleteThirdParty, guidedSettlement, closePeriod, reopenPeriod, assignThirdPartyToAccount, assignThirdPartyToLine } from "../lib/actions";
 import { fcfa, formatDate, parseFcfa } from "../lib/format";
 import { CLASS_LABELS } from "../lib/chartOfAccounts";
 import { JOURNAL_TYPE_LABELS } from "../lib/journals";
+import { missingThirdPartyLines, groupMissingTiers, tiersForAccount, describeAssignment } from "../lib/thirdParties";
 import type { Account, Journal, JournalEntry, JournalEntryLine, ThirdParty, AccountingPeriod, DBState } from "../lib/types";
 import { auditNumbering } from "../lib/entryNumbering";
 import { auditFiscalYearPlacement } from "../lib/periods";
@@ -495,6 +496,8 @@ function TiersView({ companyId, tiers, entries, journals, onOpen }: { companyId:
   const openEdit = (t: ThirdParty) => { setEditId(t.id); setForm({ code: t.code, collective: t.collective, type: t.type, name: t.name, city: t.city || "", nif: t.nif || "", contact: t.contact || "", phone: t.phone || "", paymentTerms: t.paymentTerms || "", creditLimit: t.creditLimit ? String(t.creditLimit) : "" }); setOpen(true); };
   const save = () => { const payload = { ...form, creditLimit: parseInt(form.creditLimit || "0", 10) }; if (editId) updateThirdParty(editId, payload); else addThirdParty(companyId, payload); setOpen(false); };
   return (
+    <div className="space-y-6">
+    <MissingTiersView companyId={companyId} entries={entries} tiers={tiers} />
     <Card className="p-5">
       <SectionHeading title="Plan des tiers" subtitle="Clients (411) et fournisseurs (401) — fiches auxiliaires rattachées aux comptes collectifs" action={<Button size="sm" onClick={openNew}><Plus size={15} /> Nouveau tiers</Button>} />
       <div className="mb-4 max-w-xs"><div className="relative"><Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><Input className="pl-9" placeholder="Rechercher un tiers…" value={q} onChange={(e) => setQ(e.target.value)} /></div></div>
@@ -530,6 +533,7 @@ function TiersView({ companyId, tiers, entries, journals, onOpen }: { companyId:
         <div className="mt-5 flex justify-end gap-2"><Button variant="outline" onClick={() => setOpen(false)}>Annuler</Button><Button onClick={save}>{editId ? "Enregistrer" : "Créer"}</Button></div>
       </Modal>
     </Card>
+    </div>
   );
 }
 
@@ -591,5 +595,118 @@ function BalanceView({ entries, accounts, onOpen }: { entries: JournalEntry[]; a
         <div className="mt-3"><p className="mb-1 text-xs font-medium text-slate-400">Contrôle d'équilibre</p><ProgressBar value={tDebit && tCredit ? (1 - Math.abs(tDebit - tCredit) / Math.max(tDebit, tCredit)) * 100 : 0} tone="emerald" /></div>
       </Card>
     </div>
+  );
+}
+
+
+/**
+ * P14 — Lignes de comptes 40x/41x sans tiers.
+ *
+ * Le contrôle du FEC les comptait déjà ; l'écran ne permettait pas de les
+ * corriger. Ici, chaque compte se règle en une affectation — et les lignes déjà
+ * rattachées ne sont jamais écrasées.
+ */
+function MissingTiersView({ companyId, entries, tiers }: { companyId: string; entries: JournalEntry[]; tiers: ThirdParty[] }) {
+  const missing = missingThirdPartyLines(entries, companyId);
+  const groups = groupMissingTiers(missing);
+  const [choice, setChoice] = useState<Record<string, string>>({});
+  const [detail, setDetail] = useState<string | null>(null);
+
+  if (groups.length === 0) {
+    return (
+      <Card className="p-5">
+        <SectionHeading title="Tiers manquants" subtitle="Chaque ligne de compte client ou fournisseur porte un tiers" />
+        <div className="flex items-start gap-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          <Check size={16} className="mt-0.5 shrink-0" />
+          Aucune ligne à compléter : la balance âgée et le FEC peuvent expliquer chaque mouvement de tiers.
+        </div>
+      </Card>
+    );
+  }
+
+  const apply = (accountId: string) => {
+    const tierId = choice[accountId];
+    if (!tierId) { toast("Choisissez d'abord un tiers pour ce compte.", undefined, "warning"); return; }
+    const r = assignThirdPartyToAccount(companyId, accountId, tierId);
+    if (!r.ok) { toast(r.error); return; }
+    const tier = tiers.find((t) => t.id === tierId)!;
+    toast(
+      r.count > 0 ? `${r.count} ligne(s) rattachée(s) à ${tier.code} — ${tier.name}.` : "Aucune ligne à rattacher sur ce compte.",
+      "Le journal d'audit conserve l'affectation.",
+      r.count > 0 ? "success" : "info",
+    );
+  };
+
+  return (
+    <Card className="p-5">
+      <SectionHeading
+        title="Tiers manquants"
+        subtitle={`${missing.length} ligne(s) de compte client ou fournisseur sans auxiliaire — la balance âgée et le FEC ne peuvent pas les expliquer`}
+        action={<Badge tone="amber">{groups.length} compte(s)</Badge>}
+      />
+      <div className="space-y-3">
+        {groups.map((g) => {
+          const candidates = tiersForAccount(tiers, g.accountId, companyId);
+          const selected = choice[g.accountId] || "";
+          const selectedTier = candidates.find((t) => t.id === selected);
+          return (
+            <div key={g.accountId} className="rounded-xl border border-slate-100 p-3">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-semibold text-slate-800">
+                    Compte <span className="font-mono">{g.accountId}</span>
+                    <span className="ml-2 text-xs font-medium text-slate-500">
+                      {g.lines.length} ligne(s) · {fcfa(g.totalAmount)} · attendu : {g.expectedType === "customer" ? "client" : "fournisseur"}
+                    </span>
+                  </p>
+                  <button onClick={() => setDetail(detail === g.accountId ? null : g.accountId)} className="mt-1 text-xs font-semibold text-indigo-600 hover:underline">
+                    {detail === g.accountId ? "Masquer le détail" : "Voir les lignes concernées"}
+                  </button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Select className="w-56" aria-label={`Tiers du compte ${g.accountId}`} value={selected} onChange={(e) => setChoice({ ...choice, [g.accountId]: e.target.value })}>
+                    <option value="">Choisir un tiers…</option>
+                    {candidates.map((t) => <option key={t.id} value={t.id}>{t.code} — {t.name}</option>)}
+                  </Select>
+                  <Button size="sm" disabled={!selectedTier} onClick={() => apply(g.accountId)}>Affecter</Button>
+                </div>
+              </div>
+              {selectedTier && <p className="mt-2 text-xs text-slate-500">{describeAssignment(g, selectedTier)} Les lignes déjà rattachées ne seront pas modifiées.</p>}
+              {detail === g.accountId && (
+                <div className="mt-3 overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead><tr className="border-b border-slate-100 text-left uppercase text-slate-400"><th className="px-2 py-2">Pièce</th><th className="px-2 py-2">Date</th><th className="px-2 py-2">Libellé</th><th className="px-2 py-2 text-right">Montant</th><th className="px-2 py-2 text-right">Rattacher</th></tr></thead>
+                    <tbody>
+                      {g.lines.map((l) => (
+                        <tr key={`${l.entryId}-${l.lineIndex}`} className="border-b border-slate-50">
+                          <td className="px-2 py-2 font-mono text-slate-600">{l.entryNumber}</td>
+                          <td className="px-2 py-2 text-slate-500">{formatDate(l.date)}</td>
+                          <td className="px-2 py-2 text-slate-700">{l.label}</td>
+                          <td className="px-2 py-2 text-right tabular-nums">{fcfa(Math.abs(l.amount))}</td>
+                          <td className="px-2 py-2 text-right">
+                            <Select
+                              className="h-8 w-44 text-xs"
+                              aria-label={`Tiers de la pièce ${l.entryNumber}`}
+                              value=""
+                              onChange={(e) => {
+                                const r = assignThirdPartyToLine(l.entryId, l.lineIndex, e.target.value);
+                                toast(r.ok ? `Tiers rattaché à la pièce ${l.entryNumber}.` : r.error, undefined, r.ok ? "success" : "danger");
+                              }}
+                            >
+                              <option value="">Choisir…</option>
+                              {candidates.map((t) => <option key={t.id} value={t.id}>{t.code} — {t.name}</option>)}
+                            </Select>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </Card>
   );
 }

@@ -111,6 +111,8 @@ export interface TFTResult {
 
 /** Résultat fiscal et liquidations. */
 export interface FiscaliteResult {
+  /** TVA de la période (même calcul que la page Fiscalité — P0-2). */
+  tva?: import("../fiscalite").TvaComputation;
   resultatComptable: number;
   reintegrations: number;
   deductions: number;

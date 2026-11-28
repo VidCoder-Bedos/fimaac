@@ -4,12 +4,32 @@
 // ============================================================================
 import type { EngineContext, FiscaliteResult, LiquidationISResult } from "./types";
 import * as R from "./agregateurs";
+import {
+  computeIsFiscal,
+  computeTvaFiscal,
+  fiscalBaseFromMoves,
+  roundDown,
+  IS_PARAMS_DEFAUT,
+  type FiscalBase,
+  type IsParams,
+  type TvaComputation,
+} from "../fiscalite";
 
-/** ROUNDDOWN Excel : tronque vers zéro au multiple 10^digits. */
-function roundDown(value: number, digits: number): number {
-  if (digits >= 0) return Math.trunc(value * Math.pow(10, digits)) / Math.pow(10, digits);
-  const f = Math.pow(10, -digits);
-  return Math.trunc(value / f) * f;
+/**
+ * Base fiscale calculée depuis la balance N du contexte.
+ * P0-2 : le moteur ne calcule plus l'IS ni la TVA lui-même — il alimente
+ * `lib/fiscalite.ts`, partagé avec la page Fiscalité et les déclarations.
+ */
+export function fiscalBaseFromCtx(ctx: EngineContext, p: "N" | "N-1" = "N"): FiscalBase {
+  const rows = p === "N" ? ctx.balanceN : ctx.balanceN1;
+  const moves = new Map<string, { debit: number; credit: number }>();
+  for (const r of rows) {
+    const cur = moves.get(r.code) || { debit: 0, credit: 0 };
+    cur.debit += r.debit;
+    cur.credit += r.credit;
+    moves.set(r.code, cur);
+  }
+  return fiscalBaseFromMoves(moves);
 }
 
 /** §18 — Résultat fiscal = résultat net + réintégrations − déductions. */
@@ -33,25 +53,26 @@ export function computeResultatFiscal(
   return { resultatFiscal: rfNet, resultatFiscalArrondi: rfArrondi };
 }
 
-/** §19 — Liquidation IS_IR_MP (DOCUMENT 4, feuille Liquidation IS_IR_MP, 16 formules). */
+/**
+ * §19 — Liquidation IS_IR_MP.
+ * Formules du classeur (H12 = minimum de perception, H14 = IS au taux,
+ * H15 = MAX(H12; H14)) désormais portées par `lib/fiscalite.ts` : une seule
+ * implémentation pour l'écran, le moteur et les déclarations.
+ */
 export function computeLiquidationIS(
   ctx: EngineContext,
   resultatFiscalArrondi: number,
   _acomptes: number = 0,
+  params: IsParams = IS_PARAMS_DEFAUT,
 ): LiquidationISResult {
-  // H9 = CA du CR ; H11 = H9 (+ H10 = ajustement manuel, défaut 0)
-  const chiffreAffaires = R.RULE_CHIFFRE_AFFAIRES(ctx, "N");
-
-  // H12 = ROUNDDOWN(IF(H11 <= 2 000 000; 20 000; H11/100); -1)
-  const minimumPerception = roundDown(chiffreAffaires <= 2_000_000 ? 20_000 : chiffreAffaires / 100, -1);
-
-  // H14 = IF(H13 > 0; ROUNDDOWN(H13 * 0.27; -1); 0)
-  const impotCalcule = resultatFiscalArrondi > 0 ? roundDown(resultatFiscalArrondi * 0.27, -1) : 0;
-
-  // H15 = MAX(H12; H14)
-  const impotDu = Math.max(minimumPerception, impotCalcule);
-
-  return { chiffreAffaires, minimumPerception, impotCalcule, impotDu };
+  const base = fiscalBaseFromCtx(ctx, "N");
+  const is = computeIsFiscal(resultatFiscalArrondi, base, params);
+  return {
+    chiffreAffaires: base.chiffreAffaires,
+    minimumPerception: is.minimumPerception,
+    impotCalcule: is.impotCalcule,
+    impotDu: is.impotDu,
+  };
 }
 
 /** §18-19 — Pipeline fiscal complet. */
@@ -62,6 +83,9 @@ export function buildFiscalite(
   const rf = computeResultatFiscal(ctx, opts);
   const is = computeLiquidationIS(ctx, rf.resultatFiscalArrondi);
   const resultatComptable = R.RULE_RESULTAT_NET(ctx, "N");
+  const base = fiscalBaseFromCtx(ctx, "N");
+  // TVA de la période — même calcul que la page Fiscalité (P0-2).
+  const tva: TvaComputation = computeTvaFiscal(base, { rate: 18 });
 
   return {
     resultatComptable,
@@ -70,5 +94,6 @@ export function buildFiscalite(
     resultatFiscal: rf.resultatFiscal,
     resultatFiscalArrondi: rf.resultatFiscalArrondi,
     is,
+    tva,
   };
 }

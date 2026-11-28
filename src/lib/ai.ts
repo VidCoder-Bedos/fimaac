@@ -100,10 +100,10 @@ export function aiRespond(agent: string, message: string, ctx: AIContext): AIRes
     return {
       agent,
       verified: tva?.verified ?? false,
-      sources: ["Mouvements comptes 433 / 435", tva?.source || "OTR"],
+      sources: ["Mouvements comptes 443 / 445", tva?.source || "OTR"],
       content:
         `Calcul de la TVA pour ${ctx.companyName} :\n\n` +
-        `TVA nette = TVA collectée (compte 433) − TVA récupérable (compte 435).\n\n` +
+        `TVA nette = TVA collectée (compte 443) − TVA récupérable (compte 445).\n\n` +
         `Chaque calcul répond : montant ? base ? règle ? version ? source ? période ? conditions ?\n\n` +
         `⚠️ Les taux sont paramétrables et doivent être vérifiés dans le Regulatory Engine avant tout dépôt officiel (procédure GUDEF/OTR).`,
     };

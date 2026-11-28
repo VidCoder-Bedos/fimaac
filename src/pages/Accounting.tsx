@@ -9,8 +9,9 @@ import { addJournal, setEntryStatus, counterEntry, letterLines, unletterLines, a
 import { fcfa, formatDate, parseFcfa } from "../lib/format";
 import { CLASS_LABELS } from "../lib/chartOfAccounts";
 import { JOURNAL_TYPE_LABELS } from "../lib/journals";
-import type { Account, Journal, JournalEntry, JournalEntryLine, ThirdParty, AccountingPeriod } from "../lib/types";
+import type { Account, Journal, JournalEntry, JournalEntryLine, ThirdParty, AccountingPeriod, DBState } from "../lib/types";
 import { auditNumbering } from "../lib/entryNumbering";
+import { auditFiscalYearPlacement } from "../lib/periods";
 import AccountInquiry from "../components/AccountInquiry";
 import { EntryEditor } from "../components/EntryEditor";
 import { Can } from "../components/Can";
@@ -72,6 +73,7 @@ export default function Accounting() {
       {tab === "entries" && (
         <div className="space-y-4">
         <NumberingCard entries={entries} journals={journals} />
+        <PlacementCard entries={entries} fiscalYears={db.fiscalYears} periods={db.periods} />
         <EntriesView
           entries={entries}
           accounts={db.accounts}
@@ -104,6 +106,33 @@ export default function Accounting() {
 }
 
 /* ---------------- Chart of accounts ---------------- */
+function PlacementCard({ entries, fiscalYears, periods }: { entries: JournalEntry[]; fiscalYears: DBState["fiscalYears"]; periods: DBState["periods"] }) {
+  const audit = useMemo(() => auditFiscalYearPlacement(entries, fiscalYears, periods), [entries, fiscalYears, periods]);
+  if (audit.checked === 0) return null;
+  return (
+    <Card className="p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          {audit.ok ? <Check size={16} className="text-emerald-500" /> : <AlertTriangle size={16} className="text-rose-500" />}
+          <p className="text-sm font-bold text-slate-800">Rattachement à l'exercice</p>
+          <Badge tone={audit.ok ? "emerald" : "rose"}>{audit.ok ? "Toutes les écritures sont dans leur exercice" : `${audit.anomalies.length} anomalie(s)`}</Badge>
+        </div>
+        <p className="text-xs text-slate-500">
+          {audit.wrongFiscalYear} hors exercice · {audit.wrongPeriod} hors période · {audit.unassigned} non rattachée(s)
+        </p>
+      </div>
+      <p className="mt-2 text-[11px] text-slate-400">
+        Une écriture doit être rattachée à l'exercice et à la période qui contiennent sa date. Les écarts sont listés, jamais déplacés d'office : déplacer une écriture est un acte comptable.
+      </p>
+      {!audit.ok && (
+        <div className="mt-2 space-y-1 text-xs text-rose-600">
+          {audit.anomalies.slice(0, 5).map((a) => <p key={a.entryId}>{a.number} du {a.date} — {a.reason}</p>)}
+        </div>
+      )}
+    </Card>
+  );
+}
+
 function NumberingCard({ entries, journals }: { entries: JournalEntry[]; journals: Journal[] }) {
   const audit = useMemo(() => auditNumbering(entries, journals), [entries, journals]);
   const gapCount = audit.gaps.reduce((n, g) => n + g.missing.length, 0);

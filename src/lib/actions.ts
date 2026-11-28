@@ -3,7 +3,7 @@ import { uid } from "./format";
 import type {
   JournalType, TaxRegime, DeclarationStatus, DBState, DocFolder, DocStatus,
   ClientRequestStatus, PayrollConfig, DocumentRequest, EntryTemplate, JournalEntry, Payslip,
-  DocumentItem,
+  DocumentItem, AccountingPeriod,
 } from "./types";
 import { computeTax } from "./tax";
 import { computeTvaFiscal, fiscalBaseFromMoves } from "./fiscalite";
@@ -15,6 +15,7 @@ import { TEMPLATE_BY_ID, scaleTemplate } from "./entryTemplates";
 import { extractFromDocument, OCR_FIELD_DEFS } from "./ocr";
 import { getDocumentFile, putDocumentFile } from "./documentStore";
 import { nextEntryNumber } from "./entryNumbering";
+import { resolveAccountingDate } from "./periods";
 
 function audit(s: DBState, userId: string, orgId: string, action: string, entity: string, entityId: string, after: string) {
   // P2 — chaque trace est scellée à la suite de la précédente : une altération
@@ -153,15 +154,16 @@ export function addJournal(companyId: string, code: string, name: string, type: 
 // ---------------- Entries ----------------
 export function addEntry(companyId: string, data: { date: string; journalId: string; reference: string; label: string; lines: { accountId: string; label: string; debit: number; credit: number; tierId?: string | null }[]; status: "draft" | "validated"; attachmentDocIds?: string[] }): string {
   const db = getDB();
-  const fy = db.fiscalYears.find((f) => f.companyId === companyId);
-  const month = new Date(data.date).getMonth() + 1;
-  const year = new Date(data.date).getFullYear();
-  const period = db.periods.find((p) => p.companyId === companyId && p.month === month && p.year === year) || db.periods.find((p) => p.companyId === companyId);
-  // Contrôle de période fermée (workflow Sage : clôture bloque la saisie)
-  if (period && period.status === "closed") {
-    notify(currentOrgId() || "", "Saisie bloquée", "Période clôturée — réouvrez la période ou changez la date.", "danger");
+  // P9 : l'exercice et la période sont ceux qui CONTIENNENT la date. L'ancienne
+  // version prenait le premier exercice et, à défaut de période, la première du
+  // dossier : une écriture hors exercice atterrissait silencieusement ailleurs.
+  const placement = resolveAccountingDate(data.date, db.fiscalYears, db.periods, { companyId });
+  if (!placement.ok) {
+    notify(currentOrgId() || "", "Saisie refusée", placement.message, "danger");
     return "";
   }
+  const fy = placement.fiscalYear;
+  const period = placement.period;
   const id = uid();
   const journal = db.journals.find((j) => j.id === data.journalId);
   const prefix = journal?.code || "OD";
@@ -169,12 +171,34 @@ export function addEntry(companyId: string, data: { date: string; journalId: str
   // « nombre d'écritures + 1 », qui recyclait les numéros après suppression).
   const existingNumbers = db.entries.filter((e) => e.companyId === companyId).map((e) => e.number);
   const nextNumber = nextEntryNumber(existingNumbers, prefix);
+  const resolvedPeriodId = period?.id || "";
   mutate((s) => {
+    // P9 : période mensuelle absente dans un exercice ouvert → on la crée
+    // (tracée), au lieu de rattacher l'écriture à une autre période.
+    let periodId = resolvedPeriodId;
+    if (!periodId && fy) {
+      const month = Number(data.date.slice(5, 7));
+      const year = Number(data.date.slice(0, 4));
+      const created: AccountingPeriod = {
+        id: uid(),
+        fiscalYearId: fy.id,
+        companyId,
+        label: new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(new Date(year, month - 1, 1)),
+        month,
+        year,
+        startDate: `${year}-${String(month).padStart(2, "0")}-01`,
+        endDate: `${year}-${String(month).padStart(2, "0")}-${new Date(year, month, 0).getDate()}`,
+        status: "open",
+      };
+      s.periods.push(created);
+      periodId = created.id;
+      audit(s, currentUserId() || "", currentOrgId() || "", "CREATE_PERIOD", "AccountingPeriod", created.id, `Période ${created.label} créée à la saisie`);
+    }
     s.entries.push({
       id,
       companyId,
       fiscalYearId: fy?.id || "",
-      periodId: period?.id || "",
+      periodId,
       journalId: data.journalId,
       number: nextNumber,
       date: data.date,
@@ -254,12 +278,11 @@ export function updateEntry(
   const e = db.entries.find((x) => x.id === entryId);
   if (!e) return { ok: false, error: "Écriture introuvable." };
 
-  // Contrôle de période fermée (la date peut changer)
-  const period = db.periods.find(
-    (p) => p.companyId === e.companyId && p.month === new Date(data.date).getMonth() + 1 && p.year === new Date(data.date).getFullYear(),
-  );
-  if (period && period.status === "closed") {
-    return { ok: false, error: "Période clôturée — la modification est bloquée pour ce mois." };
+  // P9 : même résolution qu'à la création — exercice ET période qui contiennent
+  // la date ; un exercice clos ne peut pas recevoir d'écriture, même en édition.
+  const placement = resolveAccountingDate(data.date, db.fiscalYears, db.periods, { companyId: e.companyId });
+  if (!placement.ok) {
+    return { ok: false, error: placement.message };
   }
 
   // Équilibre

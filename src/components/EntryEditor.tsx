@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Plus, Scale, Trash2 } from "lucide-react";
 import { Modal, Button, Badge, Field, Input, Select } from "./ui";
 import { addEntry, updateEntry } from "../lib/actions";
+import { resolveAccountingDate, describeFiscalYears } from "../lib/periods";
+import { useDB } from "../lib/store";
 import { isEntryValidatable } from "../lib/accounting";
 import { fcfa, parseFcfa } from "../lib/format";
 import type { Account, Journal, JournalEntry, ThirdParty } from "../lib/types";
@@ -33,6 +35,7 @@ export function EntryEditor({
   entry?: JournalEntry | null;
 }) {
   const editing = Boolean(entry);
+  const db = useDB();
   const today = new Date().toISOString().slice(0, 10);
   const [date, setDate] = useState(today);
   const [journalId, setJournalId] = useState("");
@@ -121,6 +124,9 @@ export function EntryEditor({
 
   const save = () => {
     setError(null);
+    // P9 : refus explicite plutôt que rattachement silencieux à un autre exercice.
+    const placement = resolveAccountingDate(date, db.fiscalYears, db.periods, { companyId });
+    if (!placement.ok) { setError(placement.message); return; }
     // Validation stricte si l'écriture est validée (mêmes règles que le backend)
     if (status === "validated") {
       const v = validate();
@@ -141,7 +147,10 @@ export function EntryEditor({
     } else {
       // En création, une écriture non équilibrée ne peut être enregistrée qu'en brouillon
       const effective = balanced ? status : "draft";
-      addEntry(companyId, { ...payload, status: effective as "draft" | "validated", attachmentDocIds: [] });
+      const created = addEntry(companyId, { ...payload, status: effective as "draft" | "validated", attachmentDocIds: [] });
+      // addEntry refuse (date hors exercice, période clôturée…) : on garde la
+      // saisie ouverte et on affiche le motif, au lieu de fermer en silence.
+      if (!created) { setError("Écriture non enregistrée — voir le motif ci-dessous."); return; }
     }
     onClose();
   };
@@ -164,7 +173,12 @@ export function EntryEditor({
           </div>
         )}
         <div className="grid gap-3 sm:grid-cols-4">
-          <Field label="Date"><Input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></Field>
+          <Field label="Date">
+            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <p className="mt-1 text-[11px] text-slate-400">
+              Exercices du dossier : {describeFiscalYears(db.fiscalYears.filter((f) => f.companyId === companyId))}
+            </p>
+          </Field>
           <Field label="Journal">
             <Select value={journalId} onChange={(e) => setJournalId(e.target.value)}>
               <option value="">—</option>

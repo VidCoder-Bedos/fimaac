@@ -3,11 +3,12 @@ import { CreditCard, Check, AlertTriangle, Download, Upload, RotateCcw, CheckCir
 import { useDB, resetDB, exportDB, importDB } from "../lib/store";
 import { useAuth } from "../lib/auth";
 import { Page } from "../components/Layout";
-import { Card, Button, Badge, StatusBadge, SectionHeading, Tabs, Avatar, Field, Input } from "../components/ui";
+import { Card, Button, Badge, StatusBadge, SectionHeading, Tabs, Avatar, Field, Input, Modal } from "../components/ui";
 import { Can } from "../components/Can";
 import { changePlan, payInvoice, changeOwnPassword, changeOwnEmail } from "../lib/actions";
 import { ROLE_LABELS } from "../lib/permissions";
 import { fcfa, formatDate } from "../lib/format";
+import { toast } from "../lib/toast";
 
 const PLANS = [
   { id: "trial", name: "Essai", price: 0, features: ["1 cabinet", "3 utilisateurs", "Tous les modules"] },
@@ -20,9 +21,12 @@ export function Settings() {
   const db = useDB();
   const { user } = useAuth();
   const [tab, setTab] = useState("profile");
+  // P12 — une réinitialisation ne se demande pas dans un `confirm()` natif, qui
+  // ne dit ni ce qui est effacé ni ce qui est conservé.
+  const [confirmReset, setConfirmReset] = useState(false);
   const org = db.organizations.find((o) => o.id === user?.organizationId);
   if (!user) return null;
-  const doImport = () => { const v = prompt("Collez le JSON exporté :"); if (v && importDB(v)) alert("Import réussi."); };
+  const doImport = () => { const v = prompt("Collez le JSON exporté :"); if (v && importDB(v)) toast("Import réussi."); };
   return (
     <Page>
       <div className="mb-5"><h2 className="text-xl font-black tracking-tight text-slate-900">Paramètres</h2><p className="text-sm text-slate-500">Compte, organisation & données</p></div>
@@ -48,10 +52,26 @@ export function Settings() {
               <Button variant="outline" onClick={doImport}><Upload size={15} /> Importer</Button>
               {/* M2 — la réinitialisation du dossier n'est pas offerte à tous les rôles */}
               <Can permission="settings.manage">
-                <Button variant="danger" onClick={() => { if (confirm("Réinitialiser toutes les données de démonstration ?")) resetDB(); }}><RotateCcw size={15} /> Réinitialiser</Button>
+                <Button variant="danger" onClick={() => setConfirmReset(true)}><RotateCcw size={15} /> Réinitialiser</Button>
               </Can>
             </div>
           </Card>
+          <Modal open={confirmReset} onClose={() => setConfirmReset(false)} title="Réinitialiser les données de démonstration ?" size="sm">
+            <p className="text-sm text-slate-600">
+              Toutes les écritures, déclarations et pièces du dossier de démonstration seront
+              remplacées par le jeu de données d'origine. Ce qui a été saisi depuis l'installation
+              sera <strong>définitivement perdu</strong>.
+            </p>
+            <p className="mt-3 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-700">
+              Astuce : exportez d'abord une sauvegarde JSON — elle pourra être réimportée.
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setConfirmReset(false)}>Annuler</Button>
+              <Button variant="danger" onClick={() => { resetDB(); setConfirmReset(false); toast("Données de démonstration restaurées.", undefined, "success"); }}>
+                <RotateCcw size={15} /> Effacer et restaurer
+              </Button>
+            </div>
+          </Modal>
           <Card className="p-6"><div className="flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-700"><AlertTriangle size={14} className="mt-0.5 shrink-0" /> Application de démonstration V0.1. L'authentification et le stockage sont côté navigateur. En production, FIMAAC utilise NestJS + PostgreSQL avec hachage serveur et isolation multi-tenant.</div></Card>
         </div>
       )}

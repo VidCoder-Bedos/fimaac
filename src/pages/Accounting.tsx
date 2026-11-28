@@ -17,6 +17,7 @@ import { EntryEditor } from "../components/EntryEditor";
 import { Can } from "../components/Can";
 import { EntryAttachments, AttachmentCount, DocumentViewer } from "../components/DocumentViewer";
 import type { DocumentItem } from "../lib/types";
+import { toast } from "../lib/toast";
 
 export default function Accounting() {
   const db = useDB();
@@ -385,7 +386,7 @@ function GuidedSettlement({ open, onClose, companyId, journals, tiers }: { open:
   const tierList = tiers.filter((t) => (kind === "receipt" ? t.type === "customer" : t.type === "supplier"));
   const submit = () => {
     const res = guidedSettlement(companyId, { kind, tierId: form.tierId, amount: parseFcfa(form.amount), date: form.date, journalId: form.journalId, reference: form.reference });
-    if (!res.ok) { alert(res.error); return; }
+    if (!res.ok) { toast(res.error); return; }
     onClose();
   };
   return (
@@ -433,7 +434,7 @@ function LettrageView({ entries, companyId }: { entries: JournalEntry[]; company
   const solde = unlettered.reduce((s, r) => s + r.line.debit - r.line.credit, 0);
   return (
     <Card className="p-5">
-      <SectionHeading title="Lettrage des comptes de tiers" subtitle="Apparier débit et crédit (clients 411 / fournisseurs 401) — l'écart de lettrage doit être nul." action={<Button size="sm" variant="outline" onClick={() => { const r = autoLetter(companyId, acc); alert(r.lettered ? `${r.lettered} ligne(s) lettrée(s) automatiquement.` : "Aucun appariement trouvé."); }}><Wand2 size={14} /> Lettrage auto</Button>} />
+      <SectionHeading title="Lettrage des comptes de tiers" subtitle="Apparier débit et crédit (clients 411 / fournisseurs 401) — l'écart de lettrage doit être nul." action={<Button size="sm" variant="outline" onClick={() => { const r = autoLetter(companyId, acc); toast(r.lettered ? `${r.lettered} ligne(s) lettrée(s) automatiquement.` : "Aucun appariement trouvé."); }}><Wand2 size={14} /> Lettrage auto</Button>} />
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <Field label="Compte de tiers"><Select value={acc} onChange={(e) => { setAcc(e.target.value); setSel(new Set()); }} className="w-56"><option value="4111">4111 — Clients</option><option value="4011">4011 — Fournisseurs</option></Select></Field>
         <div className="rounded-xl bg-slate-50 px-4 py-2 text-sm"><span className="text-slate-400">Solde non lettré : </span><span className={`font-bold tabular-nums ${solde === 0 ? "text-emerald-600" : "text-rose-600"}`}>{fcfa(solde)}</span></div>

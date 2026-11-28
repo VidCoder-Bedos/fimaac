@@ -10,6 +10,7 @@ import {
 } from "../lib/actions";
 import { accountSituation } from "../lib/accounting";
 import { fcfa, formatDate } from "../lib/format";
+import { toast } from "../lib/toast";
 
 /* ============ BANQUE (rapprochement pro) ============ */
 export function Bank() {
@@ -27,7 +28,7 @@ export function Bank() {
   if (!company) return <Page><EmptyState icon={<Landmark />} title="Sélectionnez une entreprise" /></Page>;
   const unreconciled = txs.filter((t) => !t.reconciled).length;
   const balance = accounts.reduce((s, a) => s + a.openingBalance, 0) + txs.reduce((s, t) => s + t.amount, 0);
-  const doAuto = () => { const r = autoReconcile(company.id); if (r.matched) alert(`${r.matched} transaction(s) rapprochée(s) automatiquement.`); else alert("Aucune correspondance automatique trouvée."); };
+  const doAuto = () => { const r = autoReconcile(company.id); if (r.matched) toast(`${r.matched} transaction(s) rapprochée(s) automatiquement.`); else toast("Aucune correspondance automatique trouvée."); };
   const c521 = accountSituation(db.entries.filter((e) => e.companyId === company.id), "5211", db.journals);
   const soldeCompta = c521.solde;
   const opening = accounts.reduce((s, a) => s + a.openingBalance, 0);
@@ -39,7 +40,7 @@ export function Bank() {
   const ecart = soldeRapproche - soldeReleve;
   return (
     <Page>
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-xl font-black tracking-tight text-slate-900">Banque & rapprochement</h2><p className="text-sm text-slate-500">{company.tradeName || company.name}</p></div><div className="flex gap-2"><Button size="sm" variant="outline" onClick={() => setRuleOpen(true)}><Wand2 size={15} /> Règles</Button><Button size="sm" variant="outline" onClick={() => { const n = pointAll(company.id); alert(n ? `${n} transaction(s) pointée(s) par lot.` : "Rien à pointer."); }}>Pointer par lot</Button><Button size="sm" variant="outline" onClick={doAuto}>Rapprochement auto</Button><Button size="sm" onClick={() => setOpen(true)}><Plus size={15} /> Transaction</Button></div></div>
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-xl font-black tracking-tight text-slate-900">Banque & rapprochement</h2><p className="text-sm text-slate-500">{company.tradeName || company.name}</p></div><div className="flex gap-2"><Button size="sm" variant="outline" onClick={() => setRuleOpen(true)}><Wand2 size={15} /> Règles</Button><Button size="sm" variant="outline" onClick={() => { const n = pointAll(company.id); toast(n ? `${n} transaction(s) pointée(s) par lot.` : "Rien à pointer."); }}>Pointer par lot</Button><Button size="sm" variant="outline" onClick={doAuto}>Rapprochement auto</Button><Button size="sm" onClick={() => setOpen(true)}><Plus size={15} /> Transaction</Button></div></div>
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
         <StatCard title="Solde calculé" value={fcfa(balance)} icon={<Landmark size={18} />} tone="indigo" />
         <StatCard title="Transactions" value={String(txs.length)} icon={<Calculator size={18} />} tone="sky" />
@@ -228,7 +229,7 @@ export function Payroll() {
             const base = r.entryCreated
               ? `Paie ${period} : ${r.slips} bulletin(s) + écriture de paie en brouillon.`
               : `Paie ${period} : ${r.slips} bulletin(s) générés. ⚠️ Créez un journal « Paie » pour générer l'écriture comptable.`;
-            alert(r.alertes?.length ? `${base}\n\n⚠️ ${r.alertes.join("\n⚠️ ")}` : base);
+            toast(r.alertes?.length ? `${base}\n\n⚠️ ${r.alertes.join("\n⚠️ ")}` : base);
           }}><Calculator size={15} /> Calculer & générer</Button>
         </div>
       </Card>

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { cn } from "../utils/cn";
+import { FOCUSABLE_SELECTOR, nextFocusIndex, shouldTrapKey, isEscapeKey, dialogLabel } from "../lib/focusTrap";
 
 /* ---------------- Button ---------------- */
 type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "outline" | "success";
@@ -143,13 +144,23 @@ export function StatusBadge({ status }: { status: string }) {
 
 /* ---------------- Form ---------------- */
 export function Field({ label, children, hint, required }: { label: string; children: React.ReactNode; hint?: string; required?: boolean }) {
+  // Le libellé est déjà associé implicitement (le contrôle est enfant du
+  // `<label>`) ; on ajoute la description pour que l'indication « Montant en
+  // FCFA » soit annoncée avec le champ, et non comme un texte voisin.
+  const hintId = React.useId();
+  const control = React.isValidElement(children)
+    ? React.cloneElement(children as React.ReactElement<Record<string, unknown>>, {
+        "aria-describedby": hint ? hintId : undefined,
+        "aria-required": required || undefined,
+      })
+    : children;
   return (
     <label className="block">
       <span className="mb-1.5 block text-sm font-medium text-slate-700">
-        {label} {required && <span className="text-rose-500">*</span>}
+        {label} {required && <span className="text-rose-500" aria-hidden="true">*</span>}
       </span>
-      {children}
-      {hint && <span className="mt-1 block text-xs text-slate-400">{hint}</span>}
+      {control}
+      {hint && <span id={hintId} className="mt-1 block text-xs text-slate-400">{hint}</span>}
     </label>
   );
 }
@@ -186,12 +197,60 @@ export function Select({ className, children, ...props }: React.SelectHTMLAttrib
 /* ---------------- Modal ---------------- */
 export function Modal({ open, onClose, title, children, size = "md" }: { open: boolean; onClose: () => void; title?: string; children: React.ReactNode; size?: "sm" | "md" | "lg" | "xl" }) {
   const widths = { sm: "max-w-md", md: "max-w-xl", lg: "max-w-3xl", xl: "max-w-5xl" };
+  const boxRef = useRef<HTMLDivElement>(null);
+  const restoreRef = useRef<HTMLElement | null>(null);
+  const titleId = React.useId();
+  const label = dialogLabel(title);
+
+  useEffect(() => {
+    if (!open) return;
+    // Restitution du focus : sans cela, fermer une modale renvoie le clavier en
+    // haut de page et l'utilisateur perd sa position dans un tableau de 400 lignes.
+    restoreRef.current = document.activeElement as HTMLElement | null;
+    const box = boxRef.current;
+    const first = box?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+    (first || box)?.focus();
+
+    // Le défilement de la page en arrière-plan est figé, sinon la molette
+    // déplace un contenu que l'on ne peut ni voir ni atteindre.
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (isEscapeKey(e.key)) {
+        e.stopPropagation();
+        onClose();
+        return;
+      }
+      if (!shouldTrapKey(box ? box.querySelectorAll(FOCUSABLE_SELECTOR).length : 0, e.key)) return;
+      const items = Array.from(box!.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
+      const current = items.indexOf(document.activeElement as HTMLElement);
+      const next = nextFocusIndex(items.length, current, e.shiftKey);
+      if (next >= 0) {
+        e.preventDefault();
+        items[next].focus();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown, true);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown, true);
+      document.body.style.overflow = previousOverflow;
+      restoreRef.current?.focus?.();
+    };
+  }, [open, onClose]);
+
   return (
     <AnimatePresence>
       {open && (
         <motion.div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-4 backdrop-blur-sm sm:p-8" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
           <motion.div
-            className={cn("relative w-full rounded-2xl bg-white shadow-2xl", widths[size])}
+            ref={boxRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={title ? titleId : undefined}
+            aria-label={title ? undefined : label}
+            tabIndex={-1}
+            className={cn("relative w-full rounded-2xl bg-white shadow-2xl outline-none", widths[size])}
             initial={{ opacity: 0, scale: 0.96, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 20 }}
@@ -200,8 +259,8 @@ export function Modal({ open, onClose, title, children, size = "md" }: { open: b
           >
             {title && (
               <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                <h3 className="text-lg font-bold text-slate-900">{title}</h3>
-                <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+                <h3 id={titleId} className="text-lg font-bold text-slate-900">{title}</h3>
+                <button type="button" onClick={onClose} aria-label="Fermer le dialogue" className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
                   <X size={18} />
                 </button>
               </div>

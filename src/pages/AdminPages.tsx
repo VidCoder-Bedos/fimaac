@@ -7,6 +7,7 @@ import { ROLE_LABELS } from "../lib/permissions";
 import { fcfa, fcfaCompact, formatDateTime, formatDate } from "../lib/format";
 import { toggleCabinetSuspension, setPlatformLogo, setCabinetLogo, publishAnnouncement, updatePlanPrice, DEFAULT_PLANS, type PlatformPlan } from "../lib/actions";
 import { Building2, Users, Database, CreditCard, Globe2, TrendingUp, ShieldAlert, Activity, Ban, Play, Image, Megaphone, FileText, ClipboardList, Receipt, HardDrive, Download, Search, ArrowUpDown, Mail, Phone, MapPin, Check, Layers, BarChart3, ShieldCheck, CheckCircle2, AlertTriangle, Info } from "lucide-react";
+import { toast } from "../lib/toast";
 
 // ============================================================================
 // HELPERS PARTAGÉS
@@ -31,7 +32,7 @@ function LogoPicker({ orgId, current, onDone }: { orgId: string; current?: strin
   const [preview, setPreview] = useState<string | null>(current || null);
   const pick = (f: File | null) => {
     if (!f) return;
-    if (f.size > 500_000) { alert("Logo trop volumineux (max 500 Ko). Utilisez un PNG ou SVG compressé."); return; }
+    if (f.size > 500_000) { toast("Logo trop volumineux (max 500 Ko). Utilisez un PNG ou SVG compressé."); return; }
     const reader = new FileReader();
     reader.onload = () => {
       const url = reader.result as string;
@@ -179,7 +180,7 @@ function CabinetDetail({ cabinetId, onBack }: { cabinetId: string; onBack: () =>
             <p className="text-sm text-slate-500">{org.legalForm || "—"} · {org.city || "—"} · {org.email}</p>
           </div>
         </div>
-        <Button variant={suspended ? "success" : "danger"} size="sm" onClick={() => { const r = toggleCabinetSuspension(cabinetId); if (r.ok) alert(r.suspended ? "Cabinet suspendu." : "Cabinet réactivé."); }}>
+        <Button variant={suspended ? "success" : "danger"} size="sm" onClick={() => { const r = toggleCabinetSuspension(cabinetId); if (r.ok) toast(r.suspended ? "Cabinet suspendu." : "Cabinet réactivé."); }}>
           {suspended ? <><Play size={14} /> Réactiver</> : <><Ban size={14} /> Suspendre</>}
         </Button>
       </div>

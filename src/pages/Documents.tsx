@@ -10,6 +10,7 @@ import { OCR_FIELD_DEFS, type OcrFieldStatus } from "../lib/ocr";
 import { DocumentViewer } from "../components/DocumentViewer";
 import type { DocFolder, DocStatus, DocumentItem } from "../lib/types";
 import type { BadgeTone } from "../components/ui";
+import { toast } from "../lib/toast";
 
 const FOLDERS: { id: DocFolder; label: string; icon: string }[] = [
   { id: "achat", label: "Factures d'achat", icon: "🧾" },
@@ -201,7 +202,7 @@ export default function Documents() {
                   {!ex && <Button size="sm" onClick={() => doExtract(d)}><Wand2 size={13} /> Lire</Button>}
                   {ex && <Button size="sm" onClick={() => setEditDoc(d)}><Pencil size={13} /> Données</Button>}
                   {d.docStatus === "non_classe" && <Button size="sm" variant="outline" onClick={() => setReclassify(d.id)}><RefreshCw size={13} /> Classer</Button>}
-                  {d.extraction && d.docStatus !== "comptabilise" && d.folder === "achat" && <Button size="sm" variant="outline" onClick={() => { const e = postFromDocument(d.id, companyId!); if (e) alert("Écriture générée et liée."); }}><CheckCircle2 size={13} /> Comptabiliser</Button>}
+                  {d.extraction && d.docStatus !== "comptabilise" && d.folder === "achat" && <Button size="sm" variant="outline" onClick={() => { const e = postFromDocument(d.id, companyId!); if (e) toast("Écriture générée et liée."); }}><CheckCircle2 size={13} /> Comptabiliser</Button>}
                 </div>
               </Card>
             ); })}</div>

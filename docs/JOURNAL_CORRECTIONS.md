@@ -272,3 +272,11 @@
 | Livré | `src/lib/toast.ts` (magasin pur : fusion des doublons avec compteur, pile plafonnée à 4, expiration vérifiée au rendu, ton déduit du message, repli « Action impossible ») ; `Toaster` global avec région `aria-live` et `role="alert"` pour les refus ; `focusTrap.ts` + `Modal` (rôle, nom, Échap, focus initial, cycle Tab/Maj+Tab, restitution du focus, défilement figé) ; `Field` (description liée, `aria-required`) ; réinitialisation passée en dialogue explicite. |
 | Mesures | 205 tests (18 nouveaux) · `aria-*` : 1 → **15** · `role=` : 0 → **2** · `alert()`/`confirm()` : **0** |
 | Vérifications | `tsc` 0 erreur · `vitest` **205/205** · build 11,53 s |
+
+## P13 — FEC par exercice (PR #28)
+| Point | Détail |
+|---|---|
+| Symptôme | `buildFec` exportait **toutes** les écritures validées, sans exercice, et le nom du fichier ne portait que la date du jour. Un dossier à deux exercices produisait un fichier mêlant N et N-1 : inrattachable à une liasse, refusé au contrôle, et l'écran ne disait rien du périmètre. |
+| Livré | `FecScope` + `entriesInScope` (bornes incluses) + `fecScopeFromFiscalYear` ; `buildFec` expose `scope` et **`excludedCount`** ; nom de dépôt `FEC_AAAAMMJJ_raisonSociale_exercice.txt` (sans espace ni « & ») ; sélecteur d'exercice et 4ᵉ indicateur « hors exercice » dans l'onglet FEC. |
+| Mesures | 2026 : 102 écritures, 281 lignes, Σ 80 951 571 / 80 951 571, 0 exclue · 2025 : 0 ligne, **102 exclues** · sans périmètre : comportement inchangé |
+| Vérifications | `tsc` 0 erreur · `vitest` **211/211** (6 nouveaux) |

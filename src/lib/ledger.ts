@@ -1,7 +1,7 @@
 import type { JournalEntry, Account, ThirdParty } from "./types";
 import { accountSituation } from "./accounting";
 import { daysUntil } from "./format";
-import { buildFec, fecFileName } from "./fec";
+import { buildFec, fecFileName, type FecScope } from "./fec";
 
 function dl(name: string, content: string, type: string) {
   const blob = new Blob([content], { type });
@@ -89,9 +89,10 @@ export function exportFEC(
   accounts: Account[],
   companyName: string,
   tiers: ThirdParty[] = [],
+  scope: FecScope | null = null,
 ) {
-  const report = buildFec(entries, journals, accounts, tiers);
-  dl(fecFileName(companyName), report.content, "text/plain;charset=utf-8");
+  const report = buildFec(entries, journals, accounts, tiers, scope);
+  dl(fecFileName(companyName, new Date(), scope?.label), report.content, "text/plain;charset=utf-8");
   return report;
 }
 

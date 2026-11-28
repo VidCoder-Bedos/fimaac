@@ -2,7 +2,7 @@
 
 > Registre tenu à jour à chaque lot livré. Il sert de point de reprise : tout ce
 > qui est ici est **non fait**, avec sa raison et son blocage éventuel.
-> Dernière mise à jour : 28/11/2026, après les PR #5 à #14.
+> Dernière mise à jour : 28/11/2026, après les PR #5 à #16.
 
 ## Déjà réglé (ne plus y revenir)
 
@@ -18,6 +18,7 @@
 | P1a | Bilan unifié à l'écran + document imprimable (PDF navigateur) | #11 |
 | P2a | Contrôles croisés branchés dans le Centre de conformité | #13 |
 | P2b | Journal d'audit chaîné (détection d'altération locale) | #14 |
+| P1b | Liasse fiscale imprimable (modèle GUDEF) | #16 |
 
 ## 1. Bloqué par une décision d'infrastructure (à arbitrer par le porteur)
 
@@ -36,8 +37,8 @@ Ces points ne peuvent pas avancer sans base de données et hébergement d'API.
 
 ## 2. Faisable sans infrastructure (ordre recommandé)
 
-5. **Liasse GUDEF imprimable** — le XLSX fonctionne ; l'équivalent PDF/A4
-   manque (le bilan est déjà imprimable depuis la PR #11).
+5. ~~**Liasse GUDEF imprimable**~~ — **fait (PR #16)**. Reste à y brancher la
+   **TAFIRE** et les **notes annexes** (`notes.ts` existe, non connecté).
 6. ~~**Journal d'audit chaîné localement**~~ — **fait (PR #14)**. Reste la
    version serveur : ancrage hors du poste, acteur et IP réels (point 4).
 7. **Export FEC conforme** — 15 colonnes seulement, `DateRglt` toujours vide,

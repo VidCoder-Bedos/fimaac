@@ -365,3 +365,12 @@
 | Livré | `onboarding.ts` (6 étapes, indice chiffré, première manquante = courante) ; `OnboardingCard` (repliable, `aria-expanded`, barre de progression, disparaît à 6/6) ; montage dans le tableau de bord ; 7 tests. |
 | Mesures | dossier vide → **0/6**, étape cabinet · écriture déséquilibrée de 100 → étape contrôles courante, indice « Écart de 100 » · dossier de démonstration → **6/6**, « Parcours complet » · dossier inconnu → jamais complet |
 | Vérifications | `tsc` 0 erreur · `vitest` **310/310** (7 nouveaux) |
+
+## P24 — Les écrans vides nomment ce qui manque (PR #39)
+| Point | Détail |
+|---|---|
+| Symptôme | Les écrans vides disaient « Aucune écriture », « Aucune déclaration », « Importez une balance » — ce que l'utilisateur voit déjà. Aucun ne disait pourquoi il n'y a rien ni ce qu'il faut faire avant ; la liasse d'un dossier sans exercice réclamait une balance. |
+| Décision | Les prérequis d'un écran sont **les six étapes du parcours**, pas une liste parallèle : une seule vérité, donc aucun risque de divergence. On nomme **une** chose à faire. |
+| Livré | `emptyStates.ts` (`SCREEN_PREREQUISITES`, `explainMissing`, `missingFor`) ; `EmptyState.next` (encart ambre + bouton) ; branchement dans Écritures, Fiscalité et Liasse ; 7 tests. |
+| Mesures | dossier vide → « il manque d'abord : l'entreprise », lien `/app/entreprises` · dossier avec NIF sans exercice → l'**exercice** est nommé · écriture déséquilibrée de 250 → la liasse nomme les **contrôles** et cite 250 · dossier complet → **aucun** conseil |
+| Vérifications | `tsc` 0 erreur · `vitest` **317/317** (7 nouveaux) |

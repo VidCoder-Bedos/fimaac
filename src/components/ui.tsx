@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import { cn } from "../utils/cn";
 import { FOCUSABLE_SELECTOR, nextFocusIndex, shouldTrapKey, isEscapeKey, dialogLabel } from "../lib/focusTrap";
 
@@ -337,12 +338,26 @@ export function Avatar({ name, color, size = 36 }: { name: string; color?: strin
   );
 }
 
-export function EmptyState({ icon, title, description, action }: { icon?: React.ReactNode; title: string; description?: string; action?: React.ReactNode }) {
+/**
+ * P24 — `next` nomme le prérequis manquant : un écran vide dit rarement *pourquoi*
+ * il est vide. Le lien évite de renvoyer l'utilisateur à la recherche de l'écran.
+ */
+export function EmptyState({ icon, title, description, action, next }: { icon?: React.ReactNode; title: string; description?: string; action?: React.ReactNode; next?: { message: string; href: string; cta: string } }) {
   return (
     <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 px-6 py-14 text-center">
       {icon && <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-400 shadow-sm">{icon}</div>}
       <p className="font-semibold text-slate-700">{title}</p>
       {description && <p className="mt-1 max-w-sm text-sm text-slate-400">{description}</p>}
+      {next && (
+        <div className="mt-3 max-w-md rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-800">{next.message}</div>
+      )}
+      {next ? (
+        <div className="mt-3">
+          <Link to={next.href} className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700">
+            {next.cta} <ArrowRight size={13} />
+          </Link>
+        </div>
+      ) : null}
       {action && <div className="mt-4">{action}</div>}
     </div>
   );

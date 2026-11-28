@@ -329,3 +329,12 @@
 | Livré | `commands.ts` (normalisation sans accents, score exact/préfixe/début de mot/inclusion/sous-séquence, ET multi-mots, plafond par section, 14 navigations + 4 actions) ; `GlobalSearch` réécrit en palette : ⌘K / Ctrl+K, « / » conservé, ↑ ↓ + Entrée avec ligne active visible, `dialog` + `combobox` + `aria-activedescendant` + `listbox`/`option`, données cherchées à partir de 2 caractères dans le périmètre de l'utilisateur. |
 | Mesures | « lia » → **Liasse fiscale** en tête · « liasse paie » → 0 · « liasse notes » → Liasse · « cnss » → Paie · 20 lignes « Écriture » → 3 avec plafond 3 · requête vide → commandes, « qqqqzzz » → vide |
 | Vérifications | `tsc` 0 erreur · `vitest` **270/270** (11 nouveaux) |
+
+## P20 — Réintégrations proposées depuis la balance (PR #35)
+| Point | Détail |
+|---|---|
+| Symptôme | Les réintégrations étaient saisissables mais **à saisir de mémoire** : savoir que 647 et 6582/6583 ne sont pas déductibles, retrouver les montants dans la balance, recopier le total — trois occasions de se tromper, et aucune trace de l'origine. |
+| Décision | Le logiciel **signale**, il ne décide pas : chaque proposition affiche son montant, ses comptes et sa raison ; la déductibilité dépend des pièces et du texte applicable. |
+| Livré | `taxSuggestions.ts` (catalogue 647 / 6582-6583-835 / 6581, somme des soldes débiteurs, silence sur les montants nuls) ; `TaxAdjustment.suggestionId` ; bloc « Réintégrations proposées » dans Fiscalité avec reprise en un clic ; audit « proposition … reprise ». |
+| Mesures | 6471 150 000 + 6473 50 000 + 6582 200 000 → **2** propositions (200 000 chacune) · compte soldé → **0** proposition · après reprise, `alreadyRecorded` vrai pour 2026, faux pour 2025 · saisie libre sans `suggestionId` |
+| Vérifications | `tsc` 0 erreur · `vitest` **279/279** (9 nouveaux) |

@@ -1471,7 +1471,7 @@ export function postRegularisation(companyId: string, data: { type: "CCA" | "PCA
  */
 export function addTaxAdjustment(
   companyId: string,
-  data: { exercise: string; type: "reintegration" | "deduction"; label: string; amount: number; reference?: string },
+  data: { exercise: string; type: "reintegration" | "deduction"; label: string; amount: number; reference?: string; suggestionId?: string },
 ): { ok: boolean; error?: string; id?: string } {
   const label = (data.label || "").trim();
   if (!label) return { ok: false, error: "Libellé obligatoire : un retraitement doit pouvoir être justifié." };
@@ -1487,11 +1487,13 @@ export function addTaxAdjustment(
       label,
       amount: Math.round(data.amount),
       reference: data.reference?.trim() || undefined,
+      suggestionId: data.suggestionId,
       authorId: currentUserId() || "system",
       createdAt: new Date().toISOString(),
     });
     audit(s, currentUserId() || "", currentOrgId() || "", "TAX_ADJUSTMENT_CREATE", "TaxAdjustment", id,
-      `${data.type === "reintegration" ? "Réintégration" : "Déduction"} ${data.exercise} — ${label} : ${Math.round(data.amount)}`);
+      `${data.type === "reintegration" ? "Réintégration" : "Déduction"} ${data.exercise} — ${label} : ${Math.round(data.amount)}`
+      + (data.suggestionId ? ` (proposition ${data.suggestionId} reprise)` : ""));
   });
   return { ok: true, id };
 }

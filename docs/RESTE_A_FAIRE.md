@@ -2,7 +2,7 @@
 
 > Registre tenu à jour à chaque lot livré. Il sert de point de reprise : tout ce
 > qui est ici est **non fait**, avec sa raison et son blocage éventuel.
-> Dernière mise à jour : 28/11/2026, après les PR #5 à #34.
+> Dernière mise à jour : 28/11/2026, après les PR #5 à #35.
 
 ## Déjà réglé (ne plus y revenir)
 
@@ -37,6 +37,7 @@
 | P17 | Saisie des notes manuelles persistée, datée et auditée | #32 |
 | P18 | Jours fériés exceptionnels déclarés : les échéances se décalent | #33 |
 | P19 | Palette de commandes ⌘K : navigation, actions, données | #34 |
+| P20 | Réintégrations proposées depuis les comptes non déductibles | #35 |
 
 ## 1. Bloqué par une décision d'infrastructure (à arbitrer par le porteur)
 
@@ -101,8 +102,10 @@ Ces points ne peuvent pas avancer sans base de données et hébergement d'API.
     ~~**reprendre ces montants dans la déclaration IS générée**~~ — **fait
     (PR #26)** : `generateIsDeclaration` produit l'IS de l'exercice (résultat
     fiscal, IS au taux, minimum de perception, impôt dû, échéance 31/03 reportée).
-    Reste : des **réintégrations types** proposées en un clic (amendes 658, dons,
-    charges non justifiées) et le **crédit d'impôt reporté**.
+    ~~Réintégrations types~~ — **fait (PR #35)** : les comptes 647, 6582/6583/835
+    et 6581 sont proposés avec leur montant et leur raison ; la reprise est
+    tracée (`suggestionId`) et n'est jamais automatique. Reste : le **crédit
+    d'impôt reporté** et les **charges non justifiées** (aucun compte dédié).
 
 ## 3. Qualité produit (audit §D)
 

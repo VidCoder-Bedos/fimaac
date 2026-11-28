@@ -799,6 +799,12 @@ export interface TaxAdjustment {
   amount: number;
   /** Référence justificative (pièce, article du CGI, note). */
   reference?: string;
+  /**
+   * P20 — Origine proposée (`penalites/2026`, `dons/2026`…). Renseigné quand le
+   * retraitement a été repris d'une proposition : il évite de le proposer deux
+   * fois et permet de retrouver d'où vient le montant.
+   */
+  suggestionId?: string;
   authorId: ID;
   createdAt: string;
 }

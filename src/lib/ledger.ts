@@ -1,16 +1,7 @@
 import type { JournalEntry, Account, ThirdParty } from "./types";
 import { accountSituation } from "./accounting";
 import { daysUntil } from "./format";
-
-// Libellés FEC des types de journaux (alignés sur journals.ts — 18 types).
-const JLIB: Record<string, string> = {
-  sales: "Ventes", purchases: "Achats", bank: "Banque", cash: "Caisse",
-  misc: "Opérations diverses", wages: "Salaires", fixed_assets: "Immobilisations",
-  opening: "À nouveau", closing: "Clôture", cost: "Cessions",
-  stock: "Stocks", tax: "Fiscalité", social: "Social",
-  capital: "Capital", loans: "Emprunts", provisions: "Provisions",
-  expenses: "Transferts de charges", accruals: "Régularisations",
-};
+import { buildFec, fecFileName } from "./fec";
 
 function dl(name: string, content: string, type: string) {
   const blob = new Blob([content], { type });
@@ -21,7 +12,6 @@ function dl(name: string, content: string, type: string) {
 }
 
 const fc = (n: number) => new Intl.NumberFormat("fr-FR").format(n || 0);
-const fmtD = (iso: string) => (iso ? new Date(iso).toISOString().slice(0, 10).replace(/-/g, "") : "");
 
 function parseDays(terms?: string): number {
   if (!terms) return 30;
@@ -88,26 +78,21 @@ export function echeancier(entries: JournalEntry[], tiers: ThirdParty[]): Echean
   return out.sort((a, b) => +new Date(a.due) - +new Date(b.due));
 }
 
-/** Export FEC-like (Fichier des Écritures Comptables) — format pipe, .txt. */
-export function exportFEC(entries: JournalEntry[], journals: { id: string; code: string; type: string }[], accounts: Account[], companyName: string) {
-  const header = ["JournalCode", "JournalLib", "EcritureNum", "EcritureDate", "CompteNum", "CompteLib", "CompAuxNum", "PieceRef", "EcritureLib", "Debit", "Credit", "EcritureLet", "DateRglt", "ValidDate", "Montantdevise"].join("|");
-  const rows = [header];
-  const sorted = entries.filter((e) => e.status === "validated").sort((a, b) => +new Date(a.date) - +new Date(b.date) || a.number.localeCompare(b.number));
-  for (const e of sorted) {
-    const j = journals.find((x) => x.id === e.journalId);
-    for (const l of e.lines) {
-      const acc = accounts.find((a) => a.code === l.accountId);
-      const clean = (s: string) => (s || "").replace(/\|/g, " ").trim();
-      rows.push([
-        j?.code || "ODV", JLIB[j?.type || "misc"] || "ODV", e.number, fmtD(e.date),
-        l.accountId, clean(acc?.label || ""), "", clean(e.reference), clean(l.label),
-        (l.debit || 0).toFixed(2).replace(".", ","), (l.credit || 0).toFixed(2).replace(".", ","),
-        l.letter || "", "", fmtD(e.date), "",
-      ].join("|"));
-    }
-  }
-  const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-  dl(`FEC_${today}_${companyName.replace(/\s+/g, "_")}.txt`, rows.join("\n"), "text/plain;charset=utf-8");
+/**
+ * Export FEC — délègue entièrement à `lib/fec.ts` (18 colonnes, point décimal,
+ * devise renseignée, contrôles associés). Conservé comme point d'entrée pour
+ * ne pas casser les appelants existants.
+ */
+export function exportFEC(
+  entries: JournalEntry[],
+  journals: { id: string; code: string; type: string }[],
+  accounts: Account[],
+  companyName: string,
+  tiers: ThirdParty[] = [],
+) {
+  const report = buildFec(entries, journals, accounts, tiers);
+  dl(fecFileName(companyName), report.content, "text/plain;charset=utf-8");
+  return report;
 }
 
 export function exportAgedCSV(rows: AgedRow[], name: string) {

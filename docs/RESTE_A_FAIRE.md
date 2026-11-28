@@ -2,7 +2,7 @@
 
 > Registre tenu à jour à chaque lot livré. Il sert de point de reprise : tout ce
 > qui est ici est **non fait**, avec sa raison et son blocage éventuel.
-> Dernière mise à jour : 28/11/2026, après les PR #5 à #16.
+> Dernière mise à jour : 28/11/2026, après les PR #5 à #17.
 
 ## Déjà réglé (ne plus y revenir)
 
@@ -19,6 +19,7 @@
 | P2a | Contrôles croisés branchés dans le Centre de conformité | #13 |
 | P2b | Journal d'audit chaîné (détection d'altération locale) | #14 |
 | P1b | Liasse fiscale imprimable (modèle GUDEF) | #16 |
+| P3 | Export FEC conforme (18 colonnes, point décimal, contrôles) | #17 |
 
 ## 1. Bloqué par une décision d'infrastructure (à arbitrer par le porteur)
 
@@ -41,8 +42,12 @@ Ces points ne peuvent pas avancer sans base de données et hébergement d'API.
    **TAFIRE** et les **notes annexes** (`notes.ts` existe, non connecté).
 6. ~~**Journal d'audit chaîné localement**~~ — **fait (PR #14)**. Reste la
    version serveur : ancrage hors du poste, acteur et IP réels (point 4).
-7. **Export FEC conforme** — 15 colonnes seulement, `DateRglt` toujours vide,
-   pas de colonne devise : utilisable en interne, pas pour un contrôle.
+7. ~~**Export FEC conforme**~~ — **fait (PR #17)** : 18 colonnes, point décimal,
+   `CompAuxNum` alimenté, numérotation continue par journal, contrôles statués.
+   Reste : filtrer par **exercice** (l'export couvre aujourd'hui tout l'historique
+   validé), historiser une **date de validation** et une **date de lettrage**
+   réelles, et **renseigner les tiers** sur les lignes 40x/41x du seed
+   (5 lignes sur 67 aujourd'hui).
 8. **Obligations : règles de report** — jour férié, week-end, prorogation,
    périodicité trimestrielle réelle, régimes réel / forfait. La génération
    actuelle produit 50 instances « en retard » parce qu'elle est rétroactive.

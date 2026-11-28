@@ -17,6 +17,8 @@ import { getDocumentFile, putDocumentFile } from "./documentStore";
 import { nextEntryNumber } from "./entryNumbering";
 import { resolveAccountingDate } from "./periods";
 import { isThirdPartyAccount } from "./thirdParties";
+import { MANUAL_NOTE_CODES } from "./notes";
+import { normalizeRows, filledRowCount } from "./manualNotes";
 import { ventilateVat } from "./tvaVentilation";
 import { computeMonthlyDueDate, computeAnnualDueDate } from "./obligations";
 
@@ -1199,6 +1201,61 @@ export function addThirdParty(companyId: string, data: Partial<{ code: string; c
  * est horodatée, attribuée, et **jamais silencieuse** (le tiers doit appartenir
  * à la même société que l'écriture).
  */
+/**
+ * P17 — Enregistre la saisie d'une note annexe manuelle.
+ *
+ * Ce n'est pas un calcul : la valeur est fournie par un humain, et la trace dit
+ * qui, quand. Une ligne laissée vide reste vide (`null`) — la compléter par 0
+ * serait une affirmation que personne n'a faite.
+ */
+export function saveManualNote(
+  companyId: string,
+  exercise: string,
+  code: string,
+  rows: { label: string; n: string | number | null; n1: string | number | null }[],
+): { ok: boolean; error?: string; filled?: number } {
+  const db = getDB();
+  if (!/^\d{4}$/.test(exercise)) return { ok: false, error: "Exercice attendu au format AAAA." };
+  if (!MANUAL_NOTE_CODES.has(code)) return { ok: false, error: `${code} n'est pas une note à saisie manuelle.` };
+  if (!db.companies.some((c) => c.id === companyId)) return { ok: false, error: "Société introuvable." };
+
+  const normalized = normalizeRows(rows);
+  if (normalized.length === 0) return { ok: false, error: "Aucune ligne à enregistrer." };
+  const filled = filledRowCount(normalized);
+  if (filled === 0) return { ok: false, error: "Saisissez au moins une valeur : une note vide ne s'enregistre pas." };
+
+  const now = new Date().toISOString();
+  mutate((s) => {
+    const existing = s.manualNotes.find((n) => n.companyId === companyId && n.exercise === exercise && n.code === code);
+    if (existing) {
+      existing.rows = normalized;
+      existing.updatedAt = now;
+    } else {
+      s.manualNotes.push({
+        id: uid(), companyId, exercise, code, rows: normalized,
+        authorId: currentUserId() || "", createdAt: now, updatedAt: now,
+      });
+    }
+    audit(s, currentUserId() || "", currentOrgId() || "", "SAISIE_NOTE", "ManualNote", `${code}/${exercise}`,
+      `Note ${code} (exercice ${exercise}) : ${filled} ligne(s) renseignée(s), ${normalized.length - filled} laissée(s) vide(s)`);
+  });
+  return { ok: true, filled };
+}
+
+/** Supprime une saisie : la note redevient « à compléter », sans valeur inventée. */
+export function clearManualNote(companyId: string, exercise: string, code: string): { ok: boolean } {
+  const db = getDB();
+  if (!db.manualNotes.some((n) => n.companyId === companyId && n.exercise === exercise && n.code === code)) {
+    return { ok: false };
+  }
+  mutate((s) => {
+    s.manualNotes = s.manualNotes.filter((n) => !(n.companyId === companyId && n.exercise === exercise && n.code === code));
+    audit(s, currentUserId() || "", currentOrgId() || "", "SUPPR_NOTE", "ManualNote", `${code}/${exercise}`,
+      `Saisie de la note ${code} (exercice ${exercise}) supprimée`);
+  });
+  return { ok: true };
+}
+
 export function assignThirdPartyToLine(entryId: string, lineIndex: number, thirdPartyId: string): { ok: boolean; error?: string } {
   const db = getDB();
   const entry = db.entries.find((e) => e.id === entryId);

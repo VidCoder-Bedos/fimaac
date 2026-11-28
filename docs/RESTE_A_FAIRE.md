@@ -2,7 +2,7 @@
 
 > Registre tenu à jour à chaque lot livré. Il sert de point de reprise : tout ce
 > qui est ici est **non fait**, avec sa raison et son blocage éventuel.
-> Dernière mise à jour : 28/11/2026, après les PR #5 à #31.
+> Dernière mise à jour : 28/11/2026, après les PR #5 à #32.
 
 ## Déjà réglé (ne plus y revenir)
 
@@ -34,6 +34,7 @@
 | P14 | Tiers manquants : détection, propositions, affectation tracée | #29 |
 | P15 | Sens du solde au bilan : 441 débiteur à l'actif, total 27 960 921 | #30 |
 | P16 | Notes 04 et 16A éclatées par compte (détail vérifiable) | #31 |
+| P17 | Saisie des notes manuelles persistée, datée et auditée | #32 |
 
 ## 1. Bloqué par une décision d'infrastructure (à arbitrer par le porteur)
 
@@ -58,6 +59,11 @@ Ces points ne peuvent pas avancer sans base de données et hébergement d'API.
    manuelles** (engagements hors bilan, effectifs, ventilation du CA, cessions)
    et ~~éclatement ligne à ligne~~ — **fait (PR #31)** pour NOTE_04 et NOTE_16A :
    chaque ligne porte ses comptes, la somme des détails valant la ligne.
+   ~~Saisie des 15 notes manuelles~~ — **mécanisme livré (PR #32)** : les notes
+   sont saisissables, persistées par société × exercice × note, datées et
+   auditées ; une ligne non saisie reste vide. Reste : **les saisir sur le dossier
+   de démonstration**, ce qui demande les pièces du client (statuts, bail,
+   registre du personnel) — données qu'on n'invente pas.
 6. ~~**Journal d'audit chaîné localement**~~ — **fait (PR #14)**. Reste la
    version serveur : ancrage hors du poste, acteur et IP réels (point 4).
 7. ~~**Export FEC conforme**~~ — **fait (PR #17)** : 18 colonnes, point décimal,

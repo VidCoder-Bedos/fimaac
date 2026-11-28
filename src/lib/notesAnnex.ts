@@ -13,7 +13,8 @@ import { computeAllNotes, NOTE_MODULES, MANUAL_NOTE_CODES } from "./notes";
 import { createProdContext } from "./production/context";
 import type { NoteResult } from "./production/types";
 import type { BalanceRow } from "./liasse";
-import type { Account } from "./types";
+import type { Account, ManualNoteRow } from "./types";
+import { isNoteComplete, mergeWithExpected, totalOf } from "./manualNotes";
 
 export interface AnnexNote {
   code: string;
@@ -34,6 +35,12 @@ export interface AnnexNote {
   missingInfo: string[];
   /** Note dont le calcul est possible mais incomplet (saisie requise). */
   manual: boolean;
+  /** P17 — note renseignée par une saisie humaine (jamais confondue avec un calcul). */
+  entered?: boolean;
+  /** P17 — toutes les lignes attendues portent une valeur. */
+  complete?: boolean;
+  /** P17 — horodatage de la dernière saisie. */
+  enteredAt?: string;
 }
 
 export interface AnnexControl {
@@ -74,6 +81,8 @@ export function buildNotesAnnex(input: {
   accounts?: Account[];
   companyName?: string;
   exercise?: string;
+  /** P17 — valeurs saisies à la main, par code de note. */
+  manualValues?: Map<string, { rows: ManualNoteRow[]; updatedAt: string }>;
 }): NotesAnnex {
   const hasN1 = Boolean(input.n1 && input.n1.length > 0);
   const ctx = createProdContext({
@@ -106,6 +115,26 @@ export function buildNotesAnnex(input: {
     }))
     .sort((a, b) => ORDER(a.code) - ORDER(b.code));
 
+  // P17 — une note manuelle saisie porte des valeurs réelles : ses lignes et son
+  // total sont recalculés, et l'écran dit qui l'a saisie et quand. Rien n'est
+  // mélangé avec un calcul de balance : `entered` le distingue explicitement.
+  for (const note of all) {
+    const saved = input.manualValues?.get(note.code);
+    if (!saved) continue;
+    const rows = mergeWithExpected(note.rows.map((r) => r.label), saved.rows);
+    note.rows = rows.map((r) => ({
+      label: r.label,
+      n: r.n,
+      n1: r.n1,
+      variation: r.n !== null && r.n1 !== null ? r.n - r.n1 : null,
+    }));
+    note.totalN = totalOf(rows, "n");
+    note.totalN1 = totalOf(rows, "n1");
+    note.entered = true;
+    note.complete = isNoteComplete(rows);
+    note.enteredAt = saved.updatedAt;
+  }
+
   const notes = all.filter((n) => !n.manual);
   const manualNotes = all.filter((n) => n.manual);
   const undeterminedCells = all.reduce(
@@ -126,7 +155,8 @@ export function buildNotesAnnex(input: {
       level: manualNotes.length === 0 ? "ok" : "warning",
       detail: manualNotes.length === 0
         ? "Aucune note en attente."
-        : `${manualNotes.length} note(s) ne peuvent pas être déduites d'une balance : ${manualNotes.map((n) => n.code).join(", ")}. Elles ne sont pas remplies de zéros.`,
+        : `${manualNotes.length} note(s) ne peuvent pas être déduites d'une balance : ${manualNotes.map((n) => n.code).join(", ")}. `
+          + `${manualNotes.filter((n) => n.entered).length} déjà saisie(s), ${manualNotes.filter((n) => !n.entered).length} en attente — aucune n'est remplie de zéros.`,
     },
     {
       id: "indetermine",

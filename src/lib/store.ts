@@ -9,7 +9,7 @@ import { measureSerialized, type StorageUsage } from "./storage";
  * DB_VERSION et être traitée dans migrate(). Sinon, le visiteur récurrent charge
  * un état partiel et l'UI crashe (TypeError sur champ manquant).
  */
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 const KEY = "fimaac_db_v1";
 
 /** Lot 1 — DB_VERSION 3 : liaison cabinet ↔ entreprise.
@@ -26,7 +26,7 @@ const COLLECTION_KEYS = [
   "entryTemplates", "stockItems", "payslips", "reconRules", "permanentDocs",
   "tiers", "fsSessions", "regulatoryVersions", "taxRulesV2", "taxBrackets",
   "socialRules", "declarationTemplates", "payrollComponents", "declarationWorkflows",
-  "taxAdjustments",
+  "taxAdjustments", "manualNotes",
 ] as const;
 
 /**

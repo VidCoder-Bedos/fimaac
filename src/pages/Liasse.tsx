@@ -3,7 +3,8 @@ import { FileSpreadsheet, Upload, FileDown, AlertTriangle, CheckCircle2, XCircle
 import { useDB } from "../lib/store";
 import { useCompanyScope, Page } from "../components/Layout";
 import { Card, Button, Badge, EmptyState, SectionHeading, Tabs, Spinner, Input } from "../components/ui";
-import { parseBalance, buildStatements, runChecks, exportLiasseXlsx, fillTemplate, downloadWorkbook } from "../lib/liasse";
+import { parseBalanceReport, buildStatements, runChecks, exportLiasseXlsx, fillTemplate, downloadWorkbook } from "../lib/liasse";
+import type { BalanceImportResult } from "../lib/balanceImport";
 import { parseBalance6, runCoherenceChecks, fillStateTemplate, mappingCoverage, type Balance6, type CoherenceReport } from "../lib/liasseEngine";
 import { auditNormativeCoherence } from "../lib/normative";
 import { CHART_OF_ACCOUNTS } from "../lib/chartOfAccounts";
@@ -23,6 +24,8 @@ export default function Liasse() {
   const [bal6, setBal6] = useState<Balance6 | null>(null);
   const [report, setReport] = useState<CoherenceReport | null>(null);
   const [stateFilled, setStateFilled] = useState<{ filled: number; unmatched: string[]; report: string[] } | null>(null);
+  /** P0-4 — dernier rapport d'import : jamais d'échec muet. */
+  const [importReport, setImportReport] = useState<{ which: string; report: BalanceImportResult } | null>(null);
   const company = db.companies.find((c) => c.id === companyId);
   const stmt = useMemo(() => (cur ? buildStatements(cur) : null), [cur]);
   const checks = useMemo(() => (stmt ? runChecks(stmt) : []), [stmt]);
@@ -31,10 +34,21 @@ export default function Liasse() {
     if (!file || !company) return;
     setLoading(which);
     try {
-      const rows = await parseBalance(file);
-      if (which === "prev") setPrev(rows); else setCur(rows);
-    } catch {
-      alert("Impossible de lire le fichier. Format attendu : Excel (.xlsx) ou CSV avec colonnes Compte / Libellé / Débit / Crédit.");
+      const report = await parseBalanceReport(file);
+      setImportReport({ which, report });
+      if (report.ok) {
+        if (which === "prev") setPrev(report.rows); else setCur(report.rows);
+      }
+    } catch (e) {
+      setImportReport({
+        which,
+        report: {
+          ok: false, rows: [], headerRow: null,
+          mapping: { code: -1, label: -1, debit: -1, credit: -1, solde: -1, soldeDebit: -1, soldeCredit: -1 },
+          signals: [], warnings: [], errors: [(e as Error)?.message || String(e)],
+          totals: { debit: 0, credit: 0, ecart: 0 }, rejected: [],
+        },
+      });
     }
     setLoading("");
   };
@@ -114,6 +128,49 @@ export default function Liasse() {
             <UploadZone label="Balance N-1 (Excel / CSV)" hint={prev ? `${prev.length} comptes · Σ ${fcfaCompact(prev.reduce((s, r) => s + r.debit, 0))}` : "Aucun fichier"} loading={loading === "prev"} onFile={(f) => onFile("prev", f)} />
             <UploadZone label="Balance N (Excel / CSV)" hint={cur ? `${cur.length} comptes · Σ ${fcfaCompact(cur.reduce((s, r) => s + r.debit, 0))}` : "Aucun fichier"} loading={loading === "cur"} onFile={(f) => onFile("cur", f)} />
           </div>
+          {importReport && (
+            <Card className="p-5">
+              <SectionHeading
+                title={`Rapport d'import — ${importReport.which === "prev" ? "Balance N-1" : "Balance N"}`}
+                subtitle={importReport.report.ok ? `${importReport.report.rows.length} compte(s) lus · Σ débit ${fcfa(importReport.report.totals.debit)} · Σ crédit ${fcfa(importReport.report.totals.credit)}` : "Import refusé — aucun compte exploitable"}
+              />
+              {importReport.report.ok ? (
+                <div className={`mb-3 flex items-start gap-2 rounded-xl px-3 py-2 text-xs ${importReport.report.totals.ecart === 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
+                  {importReport.report.totals.ecart === 0 ? <CheckCircle2 size={14} className="mt-0.5 shrink-0" /> : <AlertTriangle size={14} className="mt-0.5 shrink-0" />}
+                  {importReport.report.totals.ecart === 0
+                    ? "Balance équilibrée : Σ débit = Σ crédit."
+                    : `Balance déséquilibrée : écart de ${fcfa(importReport.report.totals.ecart)} entre débits et crédits.`}
+                </div>
+              ) : (
+                <div className="mb-3 flex items-start gap-2 rounded-xl bg-rose-50 px-3 py-2 text-xs text-rose-700">
+                  <XCircle size={14} className="mt-0.5 shrink-0" />
+                  <span>{importReport.report.errors.join(" ")}</span>
+                </div>
+              )}
+              {importReport.report.signals.length > 0 && (
+                <ul className="mb-2 space-y-1 text-xs text-slate-500">
+                  {importReport.report.signals.slice(0, 8).map((x, i) => <li key={i} className="flex gap-1.5"><Info size={12} className="mt-0.5 shrink-0" />{x}</li>)}
+                </ul>
+              )}
+              {importReport.report.warnings.length > 0 && (
+                <ul className="mb-2 space-y-1 text-xs text-amber-700">
+                  {importReport.report.warnings.slice(0, 8).map((x, i) => <li key={i} className="flex gap-1.5"><AlertTriangle size={12} className="mt-0.5 shrink-0" />{x}</li>)}
+                </ul>
+              )}
+              {importReport.report.rejected.length > 0 && (
+                <details className="mt-2 text-xs text-slate-500">
+                  <summary className="cursor-pointer font-medium text-slate-600">
+                    {importReport.report.rejected.length} ligne(s) écartée(s) — voir le détail
+                  </summary>
+                  <ul className="mt-2 space-y-1">
+                    {importReport.report.rejected.slice(0, 10).map((r, i) => (
+                      <li key={i}>Ligne {r.row} : {r.reason} — <span className="font-mono">{r.values.join(" | ")}</span></li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+            </Card>
+          )}
           {stmt && (
             <>
               <div className="grid gap-6 lg:grid-cols-2">

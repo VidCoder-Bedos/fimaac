@@ -116,3 +116,11 @@
 | Correctif | `src/lib/balanceImport.ts` : délimiteur et guillemets détectés, en-têtes normalisés (sans accents), montants français (`1 234 567,89`, `(1 000)`, `12 000 FCFA`), détection par contenu de la colonne des comptes **retirée** des candidates aux montants, rapport complet (`signals` / `warnings` / `errors` / `rejected` / totaux). Refus explicite si aucun compte. |
 | Interface | `Liasse.tsx` affiche un **rapport d'import** : comptes lus, Σ débit, Σ crédit, écart, hypothèses, avertissements, lignes écartées consultables |
 | Vérifications | `tsc` 0 erreur · `vitest` 50/50 · aller-retour CSV 14 comptes → actif = passif = 13 200 000 |
+
+## P0-5 — Garde-fou de stockage et signal de démonstration (PR #9)
+| Point | Détail |
+|---|---|
+| Symptôme | Aucune indication que les données vivent dans le navigateur ; `persist()` avalait l'erreur de quota → écritures affichées mais non sauvegardées, perdues au rechargement sans un mot |
+| Cause | `try { localStorage.setItem } catch {}` vide dans `store.ts` ; pas de mesure d'occupation ; pas de signal de démonstration dans le shell |
+| Correctif | `persistError` capturé et exposé · `storageSnapshot()` (octets réels + dernière écriture réussie) · `src/lib/storage.ts` (`measureUsage`, `humanBytes`, `backupFileName`, `storageMessage`, budget 5 Mio, seuils 80 %/95 %) · `StorageNotice.tsx` : bandeau avec jauge et export JSON en un clic, non refermable en cas d'incident |
+| Vérifications | `tsc` 0 erreur · `npm run build` 12,55 s · `vitest` 63/63 · seed : occupation < budget, niveau `ok`, export relu à l'identique |

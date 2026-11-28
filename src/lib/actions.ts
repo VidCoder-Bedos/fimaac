@@ -15,7 +15,7 @@ import { TEMPLATE_BY_ID, scaleTemplate } from "./entryTemplates";
 import { extractFromDocument, OCR_FIELD_DEFS } from "./ocr";
 import { getDocumentFile, putDocumentFile } from "./documentStore";
 import { nextEntryNumber } from "./entryNumbering";
-import { resolveAccountingDate } from "./periods";
+import { resolveAccountingDate, isValidIsoDate } from "./periods";
 import { isThirdPartyAccount } from "./thirdParties";
 import { MANUAL_NOTE_CODES } from "./notes";
 import { normalizeRows, filledRowCount } from "./manualNotes";
@@ -628,7 +628,7 @@ export function generateTvaDeclaration(companyId: string): { ok: boolean; error?
   ]);
 
   const now = new Date();
-  const due = computeMonthlyDueDate(now.getFullYear(), now.getMonth());
+  const due = computeMonthlyDueDate(now.getFullYear(), now.getMonth(), holidayMonthMap());
   const label = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(now);
   const breakdown = [
     ...ventilation,
@@ -672,7 +672,7 @@ export function generateIsDeclaration(companyId: string, exercise: string): { ok
 
   const year = Number.parseInt(exercise, 10);
   if (!Number.isFinite(year)) return { ok: false, error: "Exercice attendu au format AAAA." };
-  const due = computeAnnualDueDate("IMPOT_BENEFICE", year);
+  const due = computeAnnualDueDate("IMPOT_BENEFICE", year, holidayMonthMap());
   const is = res.is;
 
   mutate((s) => {
@@ -1208,6 +1208,53 @@ export function addThirdParty(companyId: string, data: Partial<{ code: string; c
  * qui, quand. Une ligne laissée vide reste vide (`null`) — la compléter par 0
  * serait une affirmation que personne n'a faite.
  */
+/**
+ * P18 — Déclare un jour férié exceptionnel (fête musulmane, prorogation).
+ *
+ * La date n'est pas calculée : elle est annoncée par l'administration puis
+ * saisie ici. Une fois déclarée, elle décale toutes les échéances qui tombent
+ * ce jour-là — et le motif du report est affiché, jamais silencieux.
+ */
+export function addHoliday(date: string, label: string, reference?: string): { ok: boolean; error?: string } {
+  const iso = String(date || "").slice(0, 10);
+  if (!isValidIsoDate(iso)) return { ok: false, error: "Date attendue au format AAAA-MM-JJ." };
+  const name = String(label || "").trim();
+  if (!name) return { ok: false, error: "Indiquez le libellé du jour férié." };
+  const db = getDB();
+  if (db.holidays.some((h) => h.date === iso && h.label.toLowerCase() === name.toLowerCase())) {
+    return { ok: false, error: "Ce jour férié est déjà déclaré." };
+  }
+  mutate((s) => {
+    s.holidays.push({
+      id: uid(), date: iso, label: name, reference: reference?.trim() || undefined,
+      country: "TG", authorId: currentUserId() || "", createdAt: new Date().toISOString(),
+    });
+    s.holidays.sort((a, b) => a.date.localeCompare(b.date));
+    audit(s, currentUserId() || "", currentOrgId() || "", "ADD_HOLIDAY", "Holiday", iso,
+      `Jour férié déclaré : ${name} (${iso})${reference ? ` — ${reference}` : ""} ; les échéances de ce jour sont reportées`);
+  });
+  return { ok: true };
+}
+
+/** Retire un jour férié déclaré : les échéances reprennent leur date légale. */
+export function removeHoliday(id: string): { ok: boolean } {
+  if (!getDB().holidays.some((h) => h.id === id)) return { ok: false };
+  mutate((s) => {
+    const target = s.holidays.find((h) => h.id === id);
+    s.holidays = s.holidays.filter((h) => h.id !== id);
+    audit(s, currentUserId() || "", currentOrgId() || "", "REMOVE_HOLIDAY", "Holiday", target?.date || id,
+      `Jour férié retiré : ${target?.label || id}`);
+  });
+  return { ok: true };
+}
+
+/** Carte date → libellé, telle que l'attendent les moteurs d'échéances. */
+export function holidayMonthMap(): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const h of getDB().holidays) out[h.date] = h.label;
+  return out;
+}
+
 export function saveManualNote(
   companyId: string,
   exercise: string,

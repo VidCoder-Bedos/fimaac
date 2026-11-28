@@ -831,6 +831,25 @@ export interface ManualNote {
   updatedAt: string;
 }
 
+/**
+ * P18 — Jour férié exceptionnel ou prorogation décidée par l'administration.
+ *
+ * Les fêtes musulmanes (Aïd el-Fitr, Aïd el-Adha) et les prorogations ne se
+ * calculent pas : leur date est annoncée puis **saisie**. Elle décale les
+ * échéances légales exactement comme un jour férié fixe.
+ */
+export interface Holiday {
+  id: ID;
+  /** Date ISO (AAAA-MM-JJ). */
+  date: string;
+  label: string;
+  /** Référence de l'annonce (communiqué OTR, arrêté…). */
+  reference?: string;
+  country: string;
+  authorId: ID;
+  createdAt: string;
+}
+
 export interface DBState {
   version: number;
   accounts: Account[];
@@ -871,6 +890,7 @@ export interface DBState {
   fsSessions: FSSession[];
   taxAdjustments: TaxAdjustment[];
   manualNotes: ManualNote[];
+  holidays: Holiday[];
   regulatoryVersions: RegulatoryVersion[];
   taxRulesV2: TaxRuleV2[];
   taxBrackets: TaxBracket[];

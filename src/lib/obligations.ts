@@ -331,12 +331,28 @@ export function togoHolidays(year: number): Record<string, string> {
   return out;
 }
 
-/** Vrai si la date (ISO) est un samedi, un dimanche ou un jour férié togolais. */
-export function isNonWorkingDay(iso: string): boolean {
+/**
+ * P18 — Jours fériés exceptionnels : le calendrier légal togolais est complété
+ * par les fêtes musulmanes et les prorogations décidées par l'administration,
+ * dont la date est **saisie** par le cabinet (aucune date religieuse n'est
+ * devinée : la conversion du calendrier hégirien dépend de l'observation).
+ * La carte est indexée par date ISO.
+ */
+export function holidaysWithExtras(year: number, extras: Record<string, string> = {}): Record<string, string> {
+  const out = { ...togoHolidays(year) };
+  for (const [iso, label] of Object.entries(extras)) {
+    if (iso.slice(0, 4) !== String(year)) continue;
+    out[iso] = label;
+  }
+  return out;
+}
+
+/** Vrai si la date (ISO) est un samedi, un dimanche, un jour férié ou exceptionnel. */
+export function isNonWorkingDay(iso: string, extras: Record<string, string> = {}): boolean {
   const d = new Date(`${iso}T00:00:00Z`);
   const day = d.getUTCDay();
   if (day === 0 || day === 6) return true;
-  return Boolean(togoHolidays(d.getUTCFullYear())[iso]);
+  return Boolean(holidaysWithExtras(d.getUTCFullYear(), extras)[iso]);
 }
 
 /**
@@ -344,7 +360,7 @@ export function isNonWorkingDay(iso: string): boolean {
  * un samedi, un dimanche ou un jour férié est repoussée au premier jour ouvré.
  * Le motif est renvoyé pour être affiché, jamais silencieux.
  */
-export function nextBusinessDay(iso: string): { date: string; reason: string | null } {
+export function nextBusinessDay(iso: string, extras: Record<string, string> = {}): { date: string; reason: string | null } {
   let current = iso;
   let reason: string | null = null;
   for (let guard = 0; guard < 15; guard++) {
@@ -352,8 +368,8 @@ export function nextBusinessDay(iso: string): { date: string; reason: string | n
     const day = d.getUTCDay();
     if (day === 6) reason = reason ?? "samedi";
     else if (day === 0) reason = reason ?? "dimanche";
-    const holiday = togoHolidays(d.getUTCFullYear())[current];
-    if (!isNonWorkingDay(current)) return { date: current, reason };
+    const holiday = holidaysWithExtras(d.getUTCFullYear(), extras)[current];
+    if (!isNonWorkingDay(current, extras)) return { date: current, reason };
     if (holiday && !reason) reason = holiday;
     if (holiday && reason && reason !== holiday && reason !== "samedi" && reason !== "dimanche") {
       reason = `${reason}, ${holiday}`;
@@ -371,26 +387,26 @@ const isoDate = (year: number, month1: number, day: number): string => {
 };
 
 /** Échéance mensuelle légale : le 15 du mois suivant, reportée si non ouvré. */
-export function computeMonthlyDueDate(year: number, month: number): string {
-  return nextBusinessDay(isoDate(year, month + 2, 15)).date;
+export function computeMonthlyDueDate(year: number, month: number, extras: Record<string, string> = {}): string {
+  return nextBusinessDay(isoDate(year, month + 2, 15), extras).date;
 }
 
 /** Échéance trimestrielle légale : le 15 du mois suivant la fin du trimestre. */
-export function computeQuarterlyDueDate(year: number, quarter: number): string {
-  return nextBusinessDay(isoDate(year, quarter * 3 + 1, 15)).date;
+export function computeQuarterlyDueDate(year: number, quarter: number, extras: Record<string, string> = {}): string {
+  return nextBusinessDay(isoDate(year, quarter * 3 + 1, 15), extras).date;
 }
 
 /** Échéance annuelle : règle par code, puis report au jour ouvré. */
-export function computeAnnualDueDate(code: string, year: number): string {
-  if (code === "DAS_ANNUELLE") return nextBusinessDay(`${year + 1}-01-31`).date;
-  if (code === "TPU" || code === "TVM") return nextBusinessDay(`${year}-03-31`).date;
-  return nextBusinessDay(`${year + 1}-03-31`).date;
+export function computeAnnualDueDate(code: string, year: number, extras: Record<string, string> = {}): string {
+  if (code === "DAS_ANNUELLE") return nextBusinessDay(`${year + 1}-01-31`, extras).date;
+  if (code === "TPU" || code === "TVM") return nextBusinessDay(`${year}-03-31`, extras).date;
+  return nextBusinessDay(`${year + 1}-03-31`, extras).date;
 }
 
 /** Motif de report d'une échéance légale, ou null si déjà ouvrée. */
-export function prorogationReason(rawDate: string, finalDate: string): string | null {
+export function prorogationReason(rawDate: string, finalDate: string, extras: Record<string, string> = {}): string | null {
   if (rawDate === finalDate) return null;
-  return nextBusinessDay(rawDate).reason;
+  return nextBusinessDay(rawDate, extras).reason;
 }
 
 export interface GenerationOptions {
@@ -398,6 +414,8 @@ export interface GenerationOptions {
   from?: string;
   /** Dernier jour couvert (ISO). Par défaut : 12 mois après `from`. */
   until?: string;
+  /** P18 — jours fériés exceptionnels (date ISO → libellé), saisis par le cabinet. */
+  holidays?: Record<string, string>;
   /** Date de référence pour statuer « en retard ». */
   today?: string;
 }
@@ -420,6 +438,7 @@ export function generateObligationInstances(
   const opts: GenerationOptions = typeof options === "number" ? { from: `${options}-01-01`, until: `${options}-12-31` } : options;
   const now = new Date().toISOString();
   const todayIso = opts.today ?? now.slice(0, 10);
+  const extras = opts.holidays ?? {};
 
   const start = opts.from ? new Date(`${opts.from}T00:00:00Z`) : (() => {
     const d = new Date(`${todayIso}T00:00:00Z`);
@@ -441,7 +460,7 @@ export function generateObligationInstances(
     due: string,
     createdAt = now,
   ): ObligationInstance => {
-    const reason = prorogationReason(rawDue, due);
+    const reason = prorogationReason(rawDue, due, extras);
     return {
       id: `${id}_${companyId}`,
       obligationCode: obl.code,
@@ -473,7 +492,7 @@ export function generateObligationInstances(
       for (let guard = 0; guard < 36; guard++) {
         const y = cursor.getUTCFullYear();
         const m = cursor.getUTCMonth();
-        const due = computeMonthlyDueDate(y, m);
+        const due = computeMonthlyDueDate(y, m, extras);
         if (due > isoOf(end)) break;
         if (inWindow(due)) {
           const label = new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(Date.UTC(y, m, 1)));
@@ -485,7 +504,7 @@ export function generateObligationInstances(
       const firstYear = start.getUTCFullYear() - 1;
       for (let year = firstYear; year <= end.getUTCFullYear(); year++) {
         for (let q = 1; q <= 4; q++) {
-          const due = computeQuarterlyDueDate(year, q);
+          const due = computeQuarterlyDueDate(year, q, extras);
           if (due > isoOf(end)) continue;
           if (!inWindow(due)) continue;
           const rawMonth = q * 3 + 1;
@@ -495,7 +514,7 @@ export function generateObligationInstances(
       }
     } else if (obl.periodicity === "annual") {
       for (let year = start.getUTCFullYear() - 1; year <= end.getUTCFullYear(); year++) {
-        const due = computeAnnualDueDate(obl.code, year);
+        const due = computeAnnualDueDate(obl.code, year, extras);
         if (due > isoOf(end)) continue;
         if (!inWindow(due)) continue;
         const raw = obl.code === "DAS_ANNUELLE" ? `${year + 1}-01-31`

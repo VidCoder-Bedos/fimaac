@@ -312,3 +312,12 @@
 | Livré | Collection `manualNotes` (DB_VERSION 5, migrée à vide), une entrée par société × exercice × note ; `manualNotes.ts` (normalisation « 1 250 000,4 » → 1 250 000, fusion avec les lignes attendues, complétude, totaux rendant `null` plutôt que 0) ; `buildNotesAnnex({ manualValues })` avec `entered` / `complete` / `enteredAt` ; actions `saveManualNote` / `clearManualNote` scellées (`SAISIE_NOTE`, `SUPPR_NOTE`) ; modale de saisie dans la liasse, avec effacement. |
 | Mesures | NOTE_18 saisie (5 000 000 + 1 000 000) → total **6 000 000**, N-1 4 000 000, 2 lignes attendues laissées vides (pas à zéro) · deux saisies successives = **une** entrée · notes calculées inchangées (NOTE_04 15 167 298, 13 calculées) · exercices et sociétés étanches |
 | Vérifications | `tsc` 0 erreur · `vitest` **249/249** (14 nouveaux) |
+
+## P18 — Jours fériés exceptionnels et prorogations (PR #33)
+| Point | Détail |
+|---|---|
+| Symptôme | Le moteur d'échéances ignorait les **fêtes musulmanes** et les **prorogations** administratives : une échéance tombant un de ces jours n'était pas reportée. Le registre portait « à paramétrer chaque année » sans aucun moyen de le faire. |
+| Décision | Une date religieuse ne se calcule pas (observation du calendrier hégirien) et une prorogation est un acte administratif : le logiciel ne les devine pas, il les **déclare**. |
+| Livré | Collection `holidays` (DB_VERSION 6, migrée à vide, seed vide) ; `holidaysWithExtras` + paramètre `extras` sur `isNonWorkingDay`, `nextBusinessDay`, `computeMonthly/Quarterly/AnnualDueDate`, `prorogationReason`, et `GenerationOptions.holidays` ; actions `addHoliday` / `removeHoliday` / `holidayMonthMap` (`ADD_HOLIDAY`, `REMOVE_HOLIDAY`) ; carte de déclaration dans le Calendrier légal ; déclarations TVA et IS générées sur le même calendrier. |
+| Mesures | Aïd el-Fitr déclaré au 15/04/2026 → échéance **16/04** ; trois jours déclarés 15-17/04 → **20/04** (week-end) ; 31/03/2027 férié → IS au **01/04/2027** ; déclaration un samedi : aucun décalage supplémentaire ; doublon, date non ISO et libellé vide refusés |
+| Vérifications | `tsc` 0 erreur · `vitest` **259/259** (10 nouveaux) |

@@ -229,3 +229,11 @@
 | Mesures (seed) | **13 notes calculées** · **15 à compléter** · 38 au référentiel · 78 valeurs indéterminées · 0 bloquant. |
 | Règle affichée | Une note manquante est une information, pas une erreur ; un total de note est la somme de ses lignes, pas un poste du bilan ; un vide s'imprime « — ». |
 | Vérifications | `tsc` 0 erreur · `npm run build` 13,19 s · `vitest` **157/157** (7 nouveaux) |
+
+## HOTFIX — marqueurs de conflit fusionnés dans `main` (PR #23)
+| Point | Détail |
+|---|---|
+| Faute | En fusionnant `origin/main` pour la PR #22, trois fichiers (`Liasse.tsx`, `LiassePrint.tsx`, `liasse.ts`) ont été résolus puis commités **avec leurs marqueurs** ; le contrôle `check:conflicts` n'avait été lancé qu'**avant** la fusion. La PR a été fusionnée : `main` ne compilait plus. |
+| Correctif | Fichiers restaurés depuis le commit de travail propre (contenu complet : TAFIRE + notes annexes). `tsc` 0, `vitest` 157/157, build vert. |
+| Garde-fou | `npm run build` et `npm test` lancent désormais `check:conflicts` **en premier** : un marqueur fait échouer la CI Vercel au lieu de déployer. Hook `pre-commit` installé par `scripts/install-hooks.sh` (déclenché par `npm install`). |
+| Règle | Le contrôle se lance **après chaque fusion**, jamais seulement avant. |

@@ -2,7 +2,7 @@
 
 > Registre tenu à jour à chaque lot livré. Il sert de point de reprise : tout ce
 > qui est ici est **non fait**, avec sa raison et son blocage éventuel.
-> Dernière mise à jour : 28/11/2026, après les PR #5 à #22.
+> Dernière mise à jour : 28/11/2026, après les PR #5 à #23.
 
 ## Déjà réglé (ne plus y revenir)
 

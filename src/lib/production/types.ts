@@ -101,12 +101,22 @@ export interface SmartQuestion {
 }
 
 /** Ligne d'une note annexe. */
+/** P16 — Détail par compte d'une ligne de note (jamais agrégé en silence). */
+export interface NoteDetail {
+  code: string;
+  label: string;
+  n: number | null;
+  n1: number | null;
+}
+
 export interface NoteRow {
   label: string;
   ref?: string;
   n: number | null;
   n1: number | null;
   variation?: number | null;
+  /** Comptes qui composent la ligne : la somme des détails vaut la ligne. */
+  details?: NoteDetail[];
 }
 
 /** Résultat du calcul d'une note (§8, §9). */

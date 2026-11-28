@@ -3,7 +3,7 @@
 // Chaque module calcule ses lignes à partir des balances N et N-1.
 // RÈGLE ABSOLUE : une valeur non déterminée = null, jamais 0.
 // ============================================================================
-import type { NoteModule, NoteResult, NoteRow, ProdContext } from "./production/types";
+import type { NoteDetail, NoteModule, NoteResult, NoteRow, ProdContext } from "./production/types";
 import type { BalanceRow } from "./liasse";
 
 /** Agrège les soldes d'une balance pour une liste de préfixes. */
@@ -17,9 +17,35 @@ function agg(rows: BalanceRow[], prefixes: string[], sign: "debit" | "credit" | 
 }
 
 /** Construit une ligne de note. */
-function row(label: string, ref: string, n: number | null, n1: number | null): NoteRow {
+function row(label: string, ref: string, n: number | null, n1: number | null, details?: NoteDetail[]): NoteRow {
   const variation = n !== null && n1 !== null ? n - n1 : null;
-  return { label, ref, n, n1, variation };
+  return details && details.length > 0 ? { label, ref, n, n1, variation, details } : { label, ref, n, n1, variation };
+}
+
+/**
+ * P16 — Détail par compte d'une ligne de note.
+ *
+ * Une note qui affiche « Clients 15 167 298 » sans dire *quels comptes* la
+ * composent oblige le réviseur à refaire la balance à la main. Le détail est
+ * produit ici, du même agrégat que la ligne : sa somme vaut la ligne, par
+ * construction. Les comptes à solde nul ne sont pas listés — on n'invente pas
+ * une ligne à zéro.
+ */
+function detailOf(ctx: ProdContext, prefixes: string[], sign: "debit" | "credit"): NoteDetail[] {
+  const labelOf = (code: string) => ctx.accounts.find((a) => a.code === code)?.label || `Compte ${code}`;
+  const collect = (rows: BalanceRow[]) => {
+    const out: NoteDetail[] = [];
+    for (const r of rows) {
+      if (!prefixes.some((p) => r.code === p || r.code.startsWith(p))) continue;
+      const v = Math.round(sign === "debit" ? r.debit - r.credit : r.credit - r.debit);
+      if (v === 0) continue;
+      out.push({ code: r.code, label: labelOf(r.code), n: v, n1: null });
+    }
+    return out.sort((a, b) => a.code.localeCompare(b.code));
+  };
+  const nDetails = collect(ctx.balances.n);
+  const n1Details = new Map(collect(ctx.balances.n1).map((d) => [d.code, d.n]));
+  return nDetails.map((d) => ({ ...d, n1: n1Details.get(d.code) ?? null }));
 }
 
 /** Retourne null si la valeur est 0 (règle : ne rien inventer). */
@@ -190,7 +216,7 @@ const NOTE_04: NoteModule = {
       const vN = nz(agg(n, it.prefixes, it.sign));
       const vN1 = nz(agg(n1, it.prefixes, it.sign));
       if (vN === null && vN1 === null) continue;
-      rows.push(row(it.label, it.ref, vN, vN1));
+      rows.push(row(it.label, it.ref, vN, vN1, detailOf(ctx, it.prefixes, it.sign)));
     }
     const brutN = agg(n, ["411", "412", "414", "416", "418"], "debit");
     const deprN = agg(n, ["491"], "credit");
@@ -567,7 +593,7 @@ const NOTE_16A: NoteModule = {
       const vN = nz(agg(n, it.prefixes, it.sign));
       const vN1 = nz(agg(n1, it.prefixes, it.sign));
       if (vN === null && vN1 === null) continue;
-      rows.push(row(it.label, it.ref, vN, vN1));
+      rows.push(row(it.label, it.ref, vN, vN1, detailOf(ctx, it.prefixes, it.sign)));
     }
     const { totalN, totalN1 } = totals(rows);
     return make("NOTE_16A", true, rows, totalN, totalN1);

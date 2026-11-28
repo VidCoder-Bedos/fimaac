@@ -296,3 +296,11 @@
 | Livré | Poste d'actif `creancesFiscalesSociales` (42/43/44 hors 445/4492, solde débiteur) ; `dettesFiscalesSociales` restreint aux soldes créditeurs ; `actifTotal` intègre le poste ; côté moteur factorisé, `aggregateSigned` + `RULE_CREANCES_FISCALES_SOCIALES` et mise à jour de `RULE_TOTAL_ACTIF` ; ligne « Créances sociales et fiscales » à l'écran, à l'impression d'états et dans la liasse. |
 | Mesures | Seed : dettes fiscales et sociales **16 889 734**, créances sociales et fiscales **520 000**, **actif = passif = 27 960 921** (27 440 921 auparavant) · `engine` ↔ `liasse` d'accord sur l'actif, le passif et les dettes · cas synthétique : 300 000 / 170 000 / total 300 000 des deux côtés |
 | Vérifications | `tsc` 0 erreur · `vitest` **228/228** (5 nouveaux) |
+
+## P16 — Notes 04 et 16A éclatées par compte (PR #31)
+| Point | Détail |
+|---|---|
+| Symptôme | NOTE_04 affichait « Clients 15 167 298 » et NOTE_16A « Dettes fiscales et sociales 18 570 602 » sans indiquer **quels comptes** les composaient : le réviseur devait refaire la balance à la main pour vérifier une ligne, sans garantie qu'elle corresponde encore à la balance. |
+| Livré | `NoteDetail` + `NoteRow.details` ; `detailOf` calcule le détail avec **les mêmes préfixes et le même sens** que la ligne (la somme des détails vaut la ligne) ; étiquetage par le plan comptable, repli « Compte {code} » ; sous-lignes indentées dans la liasse ; N-1 repris quand il existe. |
+| Mesures | NOTE_04 **15 167 298**, NOTE_16A **18 570 602** (inchangés) · somme des détails = ligne · aucun détail à zéro · aucune duplication de compte · seules 04 et 16A éclatées · référentiel stable (13 / 15 / 38) |
+| Vérifications | `tsc` 0 erreur · `vitest` **235/235** (7 nouveaux) |

@@ -383,3 +383,12 @@
 | Livré | `src/lib/archive/` (4 modules déplacés, imports réécrits, en-tête `ARCHIVÉ`) ; `README.md` (module → lignes → remplaçant) ; `archive.test.ts` (5 tests : balayage réel de `src/`, liste blanche, en-têtes, résolution des imports, cohérence du registre) ; point 20 du registre clos. |
 | Mesures | imports de modules archivés depuis `src/` : **0** · archive : exactement **4** modules · imports relatifs des archivés : tous résolus **hors** archive · `tsc` : les archivés restent compilés |
 | Vérifications | `tsc` 0 erreur · `vitest` **322/322** (5 nouveaux) |
+
+## P26 — Exports sans usage, et le rôle réel du moteur factorisé (PR #41)
+| Point | Détail |
+|---|---|
+| Symptôme | Le registre annonçait « 4 945 lignes jamais exécutées » sans outil ni décision. Mesure : **386 exports sur 932** sans usage applicatif. Surtout, `src/lib/engine` (970 l.) se présentait comme **co-source de vérité** avec `lib/fiscalite.ts` — deux en-têtes l'affirmaient — alors qu'il n'est importé que par les tests. |
+| Décision | Ni suppression en bloc, ni branchement de complaisance : trois verdicts nommés (archivé, oracle, conservé-documenté) et une liste « à trancher un par un ». Le moteur factorisé devient explicitement un **oracle de contre-vérification** : il reste, il protège contre les régressions, il n'entre pas en production sans décision écrite. |
+| Livré | `scripts/dead-exports.mjs` + `npm run audit:dead` ; `docs/AUDIT_EXPORTS_MORTS.md` ; en-têtes corrigés (`engine/index.ts`, `tax.ts`) ; `engineOracle.test.ts` (6 tests : import hors tests interdit, en-tête, accord des deux moteurs, fraîcheur documentaire). |
+| Mesures | 386 / 932 exports · imports de `lib/engine` hors `__tests__` : **0** · `runEngine.totalActif` = `buildStatements.actifTotal` = **1 000 000** · document : 3 verdicts + rôle d'oracle |
+| Vérifications | `tsc` 0 erreur · `vitest` **328/328** (6 nouveaux) |

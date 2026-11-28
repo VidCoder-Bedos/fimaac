@@ -2,7 +2,7 @@
 
 > Registre tenu à jour à chaque lot livré. Il sert de point de reprise : tout ce
 > qui est ici est **non fait**, avec sa raison et son blocage éventuel.
-> Dernière mise à jour : 28/11/2026, après les PR #5 à #40.
+> Dernière mise à jour : 28/11/2026, après les PR #5 à #41.
 
 ## Déjà réglé (ne plus y revenir)
 
@@ -43,6 +43,7 @@
 | P23 | Parcours d'amorçage en 6 étapes, déduit de l'état réel | #38 |
 | P24 | Écrans vides : nommer le prérequis manquant | #39 |
 | P25 | Moteurs dormants : quatre modules archivés, garde-fou de test | #40 |
+| P26 | Exports sans usage : mesure, politique, moteur factorisé requalifié en oracle | #41 |
 
 ## 1. Bloqué par une décision d'infrastructure (à arbitrer par le porteur)
 
@@ -166,8 +167,14 @@ Ces points ne peuvent pas avancer sans base de données et hébergement d'API.
     (244 l.) — et sont désormais **archivés** dans `src/lib/archive/` avec leur
     en-tête, la notice des remplaçants, et un test qui échoue si l'un d'eux
     revient dans le chemin d'exécution. Reste : `modules morts` (point 21).
-21. **Modules morts à supprimer** — 4 945 lignes (23,5 % du code) jamais
-    exécutées ; à trancher un par un, jamais en bloc.
+21. **Modules morts** — **en cours (PR #41)** : mesure rejouable
+    (`npm run audit:dead`) → **386 exports sur 932** sans usage applicatif, dont
+    52 appelés uniquement par des tests. Politique écrite dans
+    `docs/AUDIT_EXPORTS_MORTS.md` (archivé / oracle / conservé-documenté / à
+    trancher). Le moteur factorisé (970 l.), présenté comme co-source de vérité,
+    n'était importé que par les tests : il devient **oracle de
+    contre-vérification**, protégé par test. Reste : trancher **une par une** les
+    21 actions non branchées, puis `analytics`, `production`, `etatsMapping`.
 22. ~~**Balance 6 colonnes**~~ — **fait (PR #37)** : `parseBalance6` passe par
     `balance6.ts`, entrée = grille de texte (testable sans fichier). Les **soldes**
     sont préférés aux mouvements (une balance « Débit · Crédit · SD · SC » était

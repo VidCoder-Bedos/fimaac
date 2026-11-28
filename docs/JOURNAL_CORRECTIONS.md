@@ -124,3 +124,12 @@
 | Cause | `try { localStorage.setItem } catch {}` vide dans `store.ts` ; pas de mesure d'occupation ; pas de signal de démonstration dans le shell |
 | Correctif | `persistError` capturé et exposé · `storageSnapshot()` (octets réels + dernière écriture réussie) · `src/lib/storage.ts` (`measureUsage`, `humanBytes`, `backupFileName`, `storageMessage`, budget 5 Mio, seuils 80 %/95 %) · `StorageNotice.tsx` : bandeau avec jauge et export JSON en un clic, non refermable en cas d'incident |
 | Vérifications | `tsc` 0 erreur · `npm run build` 12,55 s · `vitest` 63/63 · seed : occupation < budget, niveau `ok`, export relu à l'identique |
+
+## P0-3b — Arbitrage AMU : déduction de l'assiette IRPP (art. 26 CGI)
+| Point | Détail |
+|---|---|
+| Décision | Le porteur tranche : la cotisation salariale AMU est déductible de l'assiette IRPP sur traitements et salaires — **article 26 du CGI togolais** (retenues pour pensions d'un régime obligatoire ; cotisations salariales aux assurances sociales et assurances maladies obligatoires). Seule la part salariale ; la part patronale reste une charge de l'employeur. |
+| Correctif | `paie.ts` : `assiette IRPP = brut − CNSS salariale − AMU salariale`. Commentaire de code portant la base juridique et la portée (part salariale uniquement). |
+| Valeurs mesurées (seed) | 450 000 → assiette 432 000, IRPP **50 190** (au lieu de 51 210) · 350 000 → assiette 332 000, IRPP **33 190** (au lieu de 34 210) · total IRPP **83 380**, retenues totales **119 380** |
+| Test dédié | La part patronale ne modifie jamais l'assiette ; une AMU salariale plus élevée réduit l'assiette ET l'IRPP |
+| Point restant | Barème 2 %/4 % du dossier contre 5 %/5 % dans la référence communiquée : non modifié en silence, arbitrage demandé |

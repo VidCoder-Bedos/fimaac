@@ -4,11 +4,13 @@
  * Tous les attendus sont calculables à la main :
  *   brut 450 000 · CNSS 4 % plafonnée à 300 000 = 12 000
  *                 AMU  2 % plafonnée à 300 000 =  6 000
- *   assiette IRPP = 450 000 − 12 000 = 438 000 → 5 256 000 / an
+ *   assiette IRPP = 450 000 − 12 000 (CNSS) − 6 000 (AMU) = 432 000 → 5 184 000 / an
+ *     (art. 26 CGI : cotisations salariales d'assurances sociales et d'assurance
+ *      maladie obligatoire déductibles du revenu brut imposable)
  *     tranches : 0 % jusqu'à 900 000 · 11 % de 900 000 à 3 000 000
  *                17 % de 3 000 000 à 6 000 000
- *     IRPP annuel = 2 100 000 × 11 % + 2 256 000 × 17 % = 231 000 + 383 520
- *                 = 614 520 → mensuel 51 210
+ *     IRPP annuel = 2 100 000 × 11 % + 2 184 000 × 17 % = 231 000 + 371 280
+ *                 = 602 280 → mensuel 50 190
  */
 import { describe, it, expect } from "vitest";
 import { calculerBulletin, paieParamsFromConfig, totaliserBulletins, ecrituresPaie, type PaieParams } from "../paie";
@@ -56,14 +58,27 @@ describe("paie > IRPP progressif", () => {
   it("barème à 8 tranches : 51 210 pour 450 000 de brut", () => {
     const b = calculerBulletin(450_000, PARAMS);
     expect(b.modeIRPP).toBe("bareme");
-    expect(b.assietteIRPP).toBe(438_000);
-    expect(b.irpp).toBe(51_210);
-    expect(b.net).toBe(450_000 - 12_000 - 6_000 - 51_210);
+    expect(b.assietteIRPP).toBe(432_000); // brut − CNSS − AMU salariale
+    expect(b.irpp).toBe(50_190);
+    expect(b.net).toBe(450_000 - 12_000 - 6_000 - 50_190);
   });
 
   it("barème à 8 tranches : 34 210 pour 350 000 de brut", () => {
     const b = calculerBulletin(350_000, PARAMS);
-    expect(b.irpp).toBe(34_210);
+    expect(b.irpp).toBe(33_190);
+  });
+
+  it("l'AMU salariale réduit l'assiette IRPP (art. 26 CGI), jamais la part patronale", () => {
+    const b = calculerBulletin(450_000, PARAMS);
+    // assiette = brut − CNSS salariale − AMU salariale
+    expect(b.assietteIRPP).toBe(b.gross - b.cnssEmployee - b.amuEmployee);
+    // la part patronale ne touche pas l'assiette du salarié
+    const sansPatronal = calculerBulletin(450_000, { ...PARAMS, amu: { ...PARAMS.amu, employerRate: 0 } });
+    expect(sansPatronal.assietteIRPP).toBe(b.assietteIRPP);
+    // une AMU salariale plus élevée réduit l'IRPP retenu
+    const amuDouble = calculerBulletin(450_000, { ...PARAMS, amu: { ...PARAMS.amu, employeeRate: 4 } });
+    expect(amuDouble.assietteIRPP).toBeLessThan(b.assietteIRPP);
+    expect(amuDouble.irpp).toBeLessThan(b.irpp);
   });
 
   it("le barème est plus progressif qu'un forfait de 5 %", () => {
@@ -75,7 +90,7 @@ describe("paie > IRPP progressif", () => {
     const b = calculerBulletin(450_000, PARAMS);
     expect(b.tranches.length).toBe(4);
     expect(b.tranches[1]).toMatchObject({ min: 900_000, rate: 11, base: 2_100_000, impot: 231_000 });
-    expect(b.tranches[2]).toMatchObject({ min: 3_000_000, rate: 17, base: 2_256_000, impot: 383_520 });
+    expect(b.tranches[2]).toMatchObject({ min: 3_000_000, rate: 17, base: 2_184_000, impot: 371_280 });
   });
 
   it("sans barème : repli forfaitaire explicite et signalé, jamais silencieux", () => {
@@ -117,10 +132,10 @@ describe("paie > le dossier de démonstration est réellement payé", () => {
     const employes = db.employees.filter((e) => e.companyId === companyId);
     expect(employes.map((e) => e.grossSalary).sort((a, b) => b - a)).toEqual([450_000, 350_000]);
     const total = totaliserBulletins(employes.map((e) => calculerBulletin(e.grossSalary, paieParamsFromConfig(db.payrollConfig, db.taxBrackets))));
-    expect(total.irpp).toBe(51_210 + 34_210);
+    expect(total.irpp).toBe(50_190 + 33_190);
     expect(total.amuEmployee).toBe(12_000);
     expect(total.cnssEmployee).toBe(24_000);
-    expect(total.retenues).toBe(51_210 + 34_210 + 12_000 + 24_000);
+    expect(total.retenues).toBe(50_190 + 33_190 + 12_000 + 24_000);
 
     const ecriture = ecrituresPaie(total);
     expect(ecriture.totalDebit).toBe(ecriture.totalCredit);

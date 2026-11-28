@@ -1,6 +1,7 @@
 import { mutate, getDB, useDB } from "./store";
 import { verifyPassword, hashPassword } from "./hash";
 import { uid } from "./format";
+import { clearStoredCompanyId } from "./companyScope";
 import type { User, DBState } from "./types";
 
 export interface AuthResult {
@@ -56,9 +57,9 @@ export function logout(): void {
     }
     st.session.userId = null;
   });
-  try {
-    localStorage.removeItem("fimaac_company");
-  } catch { /* ignore */ }
+  // P27 — une seule définition de la clé : le dossier actif ne survit pas à une
+  // déconnexion (il pouvait sinon réapparaître chez l'utilisateur suivant).
+  clearStoredCompanyId();
 }
 
 export interface CabinetRegisterInput {

@@ -116,6 +116,8 @@ export interface Company {
   website?: string;
   capital: number;
   taxRegime: TaxRegime;
+  /** P21 — Catégorie d'entreprise déclarée : support des taux différenciés. */
+  taxCategory?: string;
   vatPayer: boolean;
   currency: "XOF";
   fiscalYearStartMonth: number;
@@ -502,6 +504,14 @@ export interface TaxRuleRef {
   version: string;
   verified: boolean; // false => "information non vérifiée"
   note?: string;
+  /**
+   * P21 — Portée de la règle. Absente = règle générique, annoncée comme telle ;
+   * à défaut de règle propre au régime déclaré, le moteur le dit au lieu de
+   * présenter le calcul d'un autre régime comme le sien.
+   */
+  regimes?: TaxRegime[];
+  /** Catégories d'entreprise visées (taux différenciés). */
+  categories?: string[];
 }
 
 export type DeclarationStatus =

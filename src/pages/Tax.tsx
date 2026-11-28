@@ -10,6 +10,9 @@ import { ventilateVat } from "../lib/tvaVentilation";
 import { totalAdjustments } from "../lib/fiscalite";
 import { trialBalance } from "../lib/accounting";
 import { suggestAdjustments, describeSuggestions } from "../lib/taxSuggestions";
+import { resolveTaxRule, profileOfCompany, describeProfile, TAX_REGIME_CODES, TAX_REGIME_LABELS } from "../lib/taxRegime";
+import { setCompanyTaxProfile } from "../lib/actions";
+import type { TaxRegime } from "../lib/types";
 import type { TaxRuleRef, DeclarationStatus } from "../lib/types";
 import { toast } from "../lib/toast";
 
@@ -31,6 +34,10 @@ export default function Tax() {
   const deadlines = db.taxDeadlines.filter((d) => d.companyId === companyId);
   const declarations = db.taxDeclarations.filter((d) => d.companyId === companyId);
   const vat = useMemo(() => ventilateVat(entries, db.accounts), [entries, db.accounts]);
+  // P21 — le régime déclaré et la catégorie décident de la règle applicable.
+  const profile = profileOfCompany(company!);
+  const scopeIS = resolveTaxRule(db.taxRules, "IS", profile);
+  const scopeTVA = resolveTaxRule(db.taxRules, "TVA", profile);
   // P20 — comptes de nature non déductible : on propose, le fiscaliste décide.
   const suggestions = useMemo(
     () => suggestAdjustments(
@@ -48,18 +55,46 @@ export default function Tax() {
         <div className="flex items-center gap-2 rounded-xl bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700"><AlertTriangle size={14} /> Taux paramétrables — à vérifier dans le Regulatory Engine</div>
         <div className="flex items-center gap-2 rounded-xl bg-sky-50 px-3 py-2 text-xs font-medium text-sky-700"><Info size={14} /> Dépôt GUDEF/OTR : mode préparation (aucune API officielle connectée)</div>
       </div>
+      <Card className="mb-5 p-4">
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Profil fiscal déclaré</p>
+            <p className="mt-0.5 text-sm font-semibold text-slate-800">{describeProfile(profile)}</p>
+          </div>
+          <Field label="Régime">
+            <Select className="h-9 w-40" value={profile.regime} onChange={(e) => {
+              const r = setCompanyTaxProfile(company!.id, { taxRegime: e.target.value, taxCategory: profile.category });
+              if (!r.ok) toast(r.error);
+            }}>
+              {TAX_REGIME_CODES.map((code) => <option key={code} value={code}>{TAX_REGIME_LABELS[code]}</option>)}
+            </Select>
+          </Field>
+          <Field label="Catégorie d'entreprise">
+            <CategoryInput companyId={company!.id} regime={profile.regime} value={company!.taxCategory || ""} />
+          </Field>
+        </div>
+        {!scopeIS.shouldCompute || !scopeTVA.shouldCompute || scopeIS.indicativeOnly || scopeTVA.indicativeOnly ? (
+          <div className={`mt-3 space-y-1.5`}>
+            {[scopeTVA, scopeIS].filter((s) => s.status !== "ok").map((s, i) => (
+              <div key={i} className={`flex items-start gap-2 rounded-xl px-3 py-2 text-xs ${s.shouldCompute ? "bg-amber-50 text-amber-800" : "bg-rose-50 text-rose-700"}`}>
+                <ShieldAlert size={14} className="mt-0.5 shrink-0" /> <span>{s.message}</span>
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </Card>
       <div className="mb-6"><Tabs active={tab} onChange={setTab} tabs={[{ id: "calc", label: "Calculs", icon: <Receipt size={15} /> }, { id: "tva", label: "Grille TVA", icon: <Receipt size={15} /> }, { id: "rules", label: "Moteur réglementaire", icon: <ShieldAlert size={15} /> }, { id: "deadlines", label: "Échéances & déclarations", icon: <CalendarClock size={15} /> }]} /></div>
       {tab === "calc" && (
         <div className="grid gap-6 lg:grid-cols-2">
           <Card className="p-5">
             <div className="mb-4 flex items-center justify-between"><h3 className="flex items-center gap-2 font-bold text-slate-800"><Receipt size={17} className="text-indigo-500" /> TVA du mois</h3>{!tva.verified && <Badge tone="amber">À vérifier</Badge>}</div>
-            <div className="rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 p-5 text-white"><p className="text-xs uppercase opacity-80">TVA nette à payer</p><p className="mt-1 text-3xl font-black">{fcfa(tva.montant)}</p><p className="mt-1 text-xs opacity-80">Base HT : {fcfa(tva.base)} · taux {tva.rule.rate} %</p>{tva.tva && tva.tva.creditReporte > 0 && <p className="mt-1 text-xs font-medium text-sky-100">Crédit de TVA à reporter : {fcfa(tva.tva.creditReporte)}</p>}</div>
+            <div className="rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 p-5 text-white"><p className="text-xs uppercase opacity-80">TVA nette à payer</p><p className="mt-1 text-3xl font-black">{scopeTVA.shouldCompute ? fcfa(tva.montant) : "—"}</p><p className="mt-1 text-xs opacity-80">{scopeTVA.shouldCompute ? `Base HT : ${fcfa(tva.base)} · taux ${tva.rule.rate} %` : "Non calculée : régime exonéré déclaré"}</p>{tva.tva && tva.tva.creditReporte > 0 && <p className="mt-1 text-xs font-medium text-sky-100">Crédit de TVA à reporter : {fcfa(tva.tva.creditReporte)}</p>}</div>
             <div className="mt-4 space-y-1.5">{tva.breakdown.map((b, i) => <div key={i} className="flex justify-between rounded-lg bg-slate-50 px-3 py-1.5 text-sm"><span className="text-slate-500">{b.label}</span><span className="font-semibold tabular-nums text-slate-800">{fcfa(b.amount)}</span></div>)}</div>
             <Button className="mt-4 w-full" onClick={() => { const r = generateTvaDeclaration(company.id); if (!r.ok) toast(r.error); }}><FileDown size={15} /> Générer la déclaration TVA</Button>
           </Card>
           <Card className="p-5">
             <div className="mb-4 flex items-center justify-between"><h3 className="font-bold text-slate-800">Impôt sur les bénéfices (IS)</h3>{!is.verified && <Badge tone="amber">À vérifier</Badge>}</div>
-            <div className="rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-5 text-white"><p className="text-xs uppercase opacity-80">Impôt estimé</p><p className="mt-1 text-3xl font-black">{fcfa(is.montant)}</p><p className="mt-1 text-xs opacity-80">Base (résultat) : {fcfa(is.base)} · taux {is.rule.rate}%</p></div>
+            <div className="rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-5 text-white"><p className="text-xs uppercase opacity-80">Impôt estimé</p><p className="mt-1 text-3xl font-black">{scopeIS.shouldCompute ? fcfa(is.montant) : "—"}</p><p className="mt-1 text-xs opacity-80">{scopeIS.shouldCompute ? `Base (résultat) : ${fcfa(is.base)} · taux ${is.rule.rate}%` : "Non calculé : régime exonéré déclaré"}</p></div>
             <div className="mt-4 space-y-1.5">{is.breakdown.map((b, i) => <div key={i} className="flex justify-between rounded-lg bg-slate-50 px-3 py-1.5 text-sm"><span className="text-slate-500">{b.label}</span><span className="font-semibold tabular-nums text-slate-800">{fcfa(b.amount)}</span></div>)}</div>
             <Button className="mt-4 w-full" variant="outline" onClick={() => { const r = generateIsDeclaration(company.id, exercise); if (!r.ok) toast(r.error); }}><FileDown size={15} /> Générer la déclaration IS {exercise}</Button>
           </Card>
@@ -283,5 +318,30 @@ function RuleRow({ rule }: { rule: TaxRuleRef }) {
       </div>
       {rule.note && <p className="mt-2 text-xs text-slate-400">{rule.note}</p>}
     </div>
+  );
+}
+
+/**
+ * P21 — La catégorie d'entreprise alimente les taux différenciés. Elle se saisit
+ * (et s'audite) ; une saisie vide signifie « aucune catégorie déclarée », ce qui
+ * est un état explicite et non un oubli silencieux.
+ */
+function CategoryInput({ companyId, regime, value }: { companyId: string; regime: TaxRegime; value: string }) {
+  const [draft, setDraft] = useState(value);
+  const commit = () => {
+    if (draft.trim() === (value || "")) return;
+    const res = setCompanyTaxProfile(companyId, { taxRegime: regime, taxCategory: draft });
+    if (!res.ok) { toast(res.error); return; }
+    toast("Catégorie déclarée.", "Les règles portant cette catégorie s'appliquent désormais.", "success");
+  };
+  return (
+    <Input
+      className="h-9 w-52"
+      value={draft}
+      placeholder="PME, grande entreprise…"
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => { if (e.key === "Enter") { e.currentTarget.blur(); } }}
+    />
   );
 }

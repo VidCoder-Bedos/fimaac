@@ -2,7 +2,7 @@
 
 > Registre tenu à jour à chaque lot livré. Il sert de point de reprise : tout ce
 > qui est ici est **non fait**, avec sa raison et son blocage éventuel.
-> Dernière mise à jour : 28/11/2026, après les PR #5 à #35.
+> Dernière mise à jour : 28/11/2026, après les PR #5 à #36.
 
 ## Déjà réglé (ne plus y revenir)
 
@@ -38,6 +38,7 @@
 | P18 | Jours fériés exceptionnels déclarés : les échéances se décalent | #33 |
 | P19 | Palette de commandes ⌘K : navigation, actions, données | #34 |
 | P20 | Réintégrations proposées depuis les comptes non déductibles | #35 |
+| P21 | Régime déclaré (réel/forfait/exonéré) et taux par catégorie | #36 |
 
 ## 1. Bloqué par une décision d'infrastructure (à arbitrer par le porteur)
 
@@ -86,7 +87,12 @@ Ces points ne peuvent pas avancer sans base de données et hébergement d'API.
    les jours fériés exceptionnels et prorogations se **déclarent** (date, libellé,
    référence), décalent réellement les échéances et sont audités ; le seed n'en
    invente aucun. Reste : **régimes réel / forfait** (assujettissement) et
-   **taux différenciés** selon la catégorie d'entreprise.
+   ~~Régimes réel/forfait et taux différenciés~~ — **fait (PR #36)** : la règle
+   porte désormais sa portée (`regimes`, `categories`) ; un régime exonéré ne
+   calcule plus rien et ses déclarations sont refusées, un régime sans règle
+   propre n'emprunte plus celle d'un autre, et la catégorie d'entreprise se
+   déclare (auditée). Reste : **versionner les règles réelles** par régime dans
+   le Regulatory Engine (c'est une source OTR, pas une donnée à inventer).
 9. ~~**TVA à taux multiples**~~ — **fait (PR #19)** : ventilation par taux avec
    résolution code taxe → taux effectif → exonération constatée, contrôles et
    affichage dans la grille. Reste : **ventilation à la ligne** (une facture

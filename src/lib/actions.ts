@@ -21,6 +21,7 @@ import { MANUAL_NOTE_CODES } from "./notes";
 import { normalizeRows, filledRowCount } from "./manualNotes";
 import { ventilateVat } from "./tvaVentilation";
 import { computeMonthlyDueDate, computeAnnualDueDate } from "./obligations";
+import { resolveTaxRule, profileOfCompany, validateCategory } from "./taxRegime";
 
 function audit(s: DBState, userId: string, orgId: string, action: string, entity: string, entityId: string, after: string) {
   // P2 — chaque trace est scellée à la suite de la précédente : une altération
@@ -616,6 +617,12 @@ export function generateTvaDeclaration(companyId: string): { ok: boolean; error?
   const entries = db.entries.filter((e) => e.companyId === companyId);
   const rule = db.taxRules.find((r) => r.code === "TVA");
   if (!rule) return { ok: false, error: "Aucune règle TVA paramétrée : déclaration impossible." };
+  // P21 : le régime déclaré décide. On ne dépose pas la déclaration d'un autre
+  // contribuable, et on n'en dépose pas du tout si le dossier est exonéré.
+  const company = db.companies.find((c) => c.id === companyId);
+  if (!company) return { ok: false, error: "Dossier introuvable." };
+  const scope = resolveTaxRule(db.taxRules, "TVA", profileOfCompany(company));
+  if (!scope.shouldCompute) return { ok: false, error: scope.message };
   const res = computeTax("TVA", entries, db.taxRules);
   if (!res) return { ok: false, error: "TVA non calculable sur ce dossier." };
 
@@ -665,6 +672,10 @@ export function generateIsDeclaration(companyId: string, exercise: string): { ok
   const entries = db.entries.filter((e) => e.companyId === companyId);
   const rule = db.taxRules.find((r) => r.code === "IS");
   if (!rule) return { ok: false, error: "Aucune règle IS paramétrée : déclaration impossible." };
+  const company = db.companies.find((c) => c.id === companyId);
+  if (!company) return { ok: false, error: "Dossier introuvable." };
+  const scope = resolveTaxRule(db.taxRules, "IS", profileOfCompany(company));
+  if (!scope.shouldCompute) return { ok: false, error: scope.message };
 
   const adjustments = fiscalAdjustmentsFor(companyId, exercise);
   const res = computeTax("IS", entries, db.taxRules, { adjustments });
@@ -1469,6 +1480,35 @@ export function postRegularisation(companyId: string, data: { type: "CCA" | "PCA
  * Chaque ligne est attribuée, datée et scellée dans le journal d'audit : un
  * retraitement fiscal sans trace écrite est indéfendable en vérification.
  */
+/**
+ * P21 — Déclaration du régime et de la catégorie d'entreprise.
+ * Le régime est un fait du dossier : il se saisit et s'audite, il ne se devine pas.
+ */
+export function setCompanyTaxProfile(
+  companyId: string,
+  input: { taxRegime?: string; taxCategory?: string },
+): { ok: boolean; error?: string } {
+  const db = getDB();
+  const company = db.companies.find((c) => c.id === companyId);
+  if (!company) return { ok: false, error: "Dossier introuvable." };
+  const regime = (input.taxRegime ?? company.taxRegime ?? "").trim();
+  if (!["ri", "rs", "rsmi", "rnc", "exempt"].includes(regime)) return { ok: false, error: "Régime inconnu." };
+  const cat = validateCategory(input.taxCategory ?? company.taxCategory ?? "");
+  if (!cat.ok) return { ok: false, error: cat.error };
+  if (regime === company.taxRegime && (cat.value || undefined) === (company.taxCategory || undefined)) {
+    return { ok: true };
+  }
+  mutate((s) => {
+    const target = s.companies.find((c) => c.id === companyId)!;
+    const before = `${target.taxRegime}/${target.taxCategory || "—"}`;
+    target.taxRegime = regime as typeof target.taxRegime;
+    target.taxCategory = cat.value;
+    audit(s, currentUserId() || "", currentOrgId() || "", "COMPANY_TAX_PROFILE_UPDATE", "Company", companyId,
+      `Profil fiscal ${before} → ${regime}/${cat.value || "—"}`);
+  });
+  return { ok: true };
+}
+
 export function addTaxAdjustment(
   companyId: string,
   data: { exercise: string; type: "reintegration" | "deduction"; label: string; amount: number; reference?: string; suggestionId?: string },

@@ -330,13 +330,24 @@ export default function Liasse() {
                             <table className="w-full text-xs">
                               <thead className="bg-slate-50 text-slate-400"><tr><th className="px-4 py-2 text-left">Réf.</th><th className="px-4 py-2 text-left">Libellé</th><th className="px-4 py-2 text-right">N</th><th className="px-4 py-2 text-right">N-1</th><th className="px-4 py-2 text-right">Variation</th></tr></thead>
                               <tbody>{note.rows.map((r, i) => (
-                                <tr key={i} className="border-t border-slate-50">
-                                  <td className="px-4 py-1.5 font-mono text-slate-500">{r.ref || "—"}</td>
-                                  <td className="px-4 py-1.5 text-slate-700">{r.label}</td>
-                                  <td className="px-4 py-1.5 text-right tabular-nums">{r.n === null ? "—" : fcfa(r.n)}</td>
-                                  <td className="px-4 py-1.5 text-right tabular-nums text-slate-500">{r.n1 === null ? "—" : fcfa(r.n1)}</td>
-                                  <td className="px-4 py-1.5 text-right tabular-nums text-slate-500">{r.variation === null ? "—" : fcfa(r.variation)}</td>
-                                </tr>
+                                <Fragment key={i}>
+                                  <tr className="border-t border-slate-50">
+                                    <td className="px-4 py-1.5 font-mono text-slate-500">{r.ref || "—"}</td>
+                                    <td className="px-4 py-1.5 text-slate-700">{r.label}</td>
+                                    <td className="px-4 py-1.5 text-right tabular-nums">{r.n === null ? "—" : fcfa(r.n)}</td>
+                                    <td className="px-4 py-1.5 text-right tabular-nums text-slate-500">{r.n1 === null ? "—" : fcfa(r.n1)}</td>
+                                    <td className="px-4 py-1.5 text-right tabular-nums text-slate-500">{r.variation === null ? "—" : fcfa(r.variation)}</td>
+                                  </tr>
+                                  {r.details?.map((d) => (
+                                    <tr key={`${r.ref}-${d.code}`} className="bg-slate-50/40 text-[11px]">
+                                      <td className="px-4 py-1 pl-7 font-mono text-slate-400">{d.code}</td>
+                                      <td className="px-4 py-1 text-slate-500">{d.label}</td>
+                                      <td className="px-4 py-1 text-right tabular-nums text-slate-600">{d.n === null ? "—" : fcfa(d.n)}</td>
+                                      <td className="px-4 py-1 text-right tabular-nums text-slate-400">{d.n1 === null ? "—" : fcfa(d.n1)}</td>
+                                      <td className="px-4 py-1" />
+                                    </tr>
+                                  ))}
+                                </Fragment>
                               ))}</tbody>
                             </table>
                           </div>

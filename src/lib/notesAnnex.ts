@@ -22,7 +22,15 @@ export interface AnnexNote {
   totalN: number | null;
   totalN1: number | null;
   variation: number | null;
-  rows: { label: string; ref?: string; n: number | null; n1: number | null; variation: number | null }[];
+  rows: {
+    label: string;
+    ref?: string;
+    n: number | null;
+    n1: number | null;
+    variation: number | null;
+    /** P16 — comptes composant la ligne (somme = valeur de la ligne). */
+    details?: { code: string; label: string; n: number | null; n1: number | null }[];
+  }[];
   missingInfo: string[];
   /** Note dont le calcul est possible mais incomplet (saisie requise). */
   manual: boolean;
@@ -91,6 +99,7 @@ export function buildNotesAnnex(input: {
         n: row.n,
         n1: row.n1,
         variation: row.variation ?? (row.n !== null && row.n1 !== null ? row.n - row.n1 : null),
+        details: row.details,
       })),
       missingInfo: r.missingInfo,
       manual: r.status === "to_confirm" || MANUAL_NOTE_CODES.has(r.code),

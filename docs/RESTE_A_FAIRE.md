@@ -2,7 +2,7 @@
 
 > Registre tenu à jour à chaque lot livré. Il sert de point de reprise : tout ce
 > qui est ici est **non fait**, avec sa raison et son blocage éventuel.
-> Dernière mise à jour : 28/11/2026, après les PR #5 à #30.
+> Dernière mise à jour : 28/11/2026, après les PR #5 à #31.
 
 ## Déjà réglé (ne plus y revenir)
 
@@ -33,6 +33,7 @@
 | P13 | FEC par exercice, périmètre et nom de dépôt affichés | #28 |
 | P14 | Tiers manquants : détection, propositions, affectation tracée | #29 |
 | P15 | Sens du solde au bilan : 441 débiteur à l'actif, total 27 960 921 | #30 |
+| P16 | Notes 04 et 16A éclatées par compte (détail vérifiable) | #31 |
 
 ## 1. Bloqué par une décision d'infrastructure (à arbitrer par le porteur)
 
@@ -55,8 +56,8 @@ Ces points ne peuvent pas avancer sans base de données et hébergement d'API.
    ~~**TAFIRE**~~ — **fait (PR #21)** ;
    ~~**notes annexes**~~ — **fait (PR #22)**. Reste : **saisie des 15 notes
    manuelles** (engagements hors bilan, effectifs, ventilation du CA, cessions)
-   et **éclatement ligne à ligne** des notes calculées (NOTE_04 et NOTE_16A
-   agrègent aujourd'hui leurs lignes sans détail par compte).
+   et ~~éclatement ligne à ligne~~ — **fait (PR #31)** pour NOTE_04 et NOTE_16A :
+   chaque ligne porte ses comptes, la somme des détails valant la ligne.
 6. ~~**Journal d'audit chaîné localement**~~ — **fait (PR #14)**. Reste la
    version serveur : ancrage hors du poste, acteur et IP réels (point 4).
 7. ~~**Export FEC conforme**~~ — **fait (PR #17)** : 18 colonnes, point décimal,

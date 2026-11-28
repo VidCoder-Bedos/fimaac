@@ -220,3 +220,12 @@
 | Refus explicite | Sans balance N-1 : `available: false` + motif, trésorerie de clôture affichée, **aucun zéro inventé**. Un flux manquant de 100 000 → écart −100 000 et contrôle bloquant. |
 | Limite affichée | Cessions non isolées (aucun prix de cession dans une balance) : investissements présentés nets des cessions. |
 | Vérifications | `tsc` 0 erreur · `npm run build` 12,48 s · `vitest` **150/150** (11 nouveaux) |
+
+## P8 — Notes annexes (PR #22)
+| Point | Détail |
+|---|---|
+| Manque | 38 modules de notes SYSCOHADA (règle « null, jamais 0 ») écrits mais **appelés par aucun écran** : la liasse remise au client n'avait aucune note annexe. |
+| Livré | `src/lib/notesAnnex.ts` : `createProdContext` + `computeAllNotes`, tri du référentiel (A/B/C), séparation calculées / à saisir, variation N/N-1 seulement si les deux existent, comptage des valeurs indéterminées, 5 contrôles. Diffusion : onglet, document imprimé, feuille XLSX. |
+| Mesures (seed) | **13 notes calculées** · **15 à compléter** · 38 au référentiel · 78 valeurs indéterminées · 0 bloquant. |
+| Règle affichée | Une note manquante est une information, pas une erreur ; un total de note est la somme de ses lignes, pas un poste du bilan ; un vide s'imprime « — ». |
+| Vérifications | `tsc` 0 erreur · `npm run build` 13,19 s · `vitest` **157/157** (7 nouveaux) |

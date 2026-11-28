@@ -11,6 +11,10 @@ import { fcfa, formatDate } from "../lib/format";
 import { PrintLine } from "./StatementsPrint";
 import type { CoherenceCheck, LiasseStatements } from "../lib/liasse";
 import type { Tafire } from "../lib/tafire";
+<<<<<<< HEAD
+import type { NotesAnnex } from "../lib/notesAnnex";
+=======
+>>>>>>> origin/main
 import type { Company } from "../lib/types";
 
 interface Props {
@@ -20,6 +24,11 @@ interface Props {
   exercise: string;
   /** TAFIRE calculé depuis les balances N-1 et N (null = non calculé). */
   tafire?: Tafire | null;
+<<<<<<< HEAD
+  /** Notes annexes calculées depuis la balance (null = non calculé). */
+  annex?: NotesAnnex | null;
+=======
+>>>>>>> origin/main
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -36,7 +45,11 @@ function CheckBadge({ status }: { status: CoherenceCheck["status"] }) {
   return <span className="border border-black px-1.5 py-[1px] text-[9px] font-bold uppercase">{label}</span>;
 }
 
+<<<<<<< HEAD
+export default function LiassePrint({ company, stmt, checks, exercise, tafire, annex }: Props) {
+=======
 export default function LiassePrint({ company, stmt, checks, exercise, tafire }: Props) {
+>>>>>>> origin/main
   const b = stmt.bilan;
   const blocking = checks.filter((c) => c.status === "blocking").length;
   const warnings = checks.filter((c) => c.status === "warning").length;
@@ -162,6 +175,50 @@ export default function LiassePrint({ company, stmt, checks, exercise, tafire }:
         </Section>
       )}
 
+<<<<<<< HEAD
+      {/* ---------- Notes annexes ---------- */}
+      {annex && (
+        <Section title="Notes annexes">
+          <table className="w-full text-[10px]">
+            <thead>
+              <tr className="border-b border-black text-left">
+                <th className="py-1 pr-1">Réf.</th>
+                <th className="py-1 pr-1">Intitulé</th>
+                <th className="py-1 pr-1 text-right">N</th>
+                <th className="py-1 pr-1 text-right">N-1</th>
+                <th className="py-1 pr-1 text-right">Variation</th>
+                <th className="py-1">Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              {annex.notes.map((n) => (
+                <tr key={n.code} className="border-b border-slate-200">
+                  <td className="py-[2px] pr-1 font-mono">{n.code.replace("NOTE_", "")}</td>
+                  <td className="py-[2px] pr-1">{n.title}</td>
+                  <td className="py-[2px] pr-1 text-right tabular-nums">{n.totalN === null ? "—" : fcfa(n.totalN)}</td>
+                  <td className="py-[2px] pr-1 text-right tabular-nums">{n.totalN1 === null ? "—" : fcfa(n.totalN1)}</td>
+                  <td className="py-[2px] pr-1 text-right tabular-nums">{n.variation === null ? "—" : fcfa(n.variation)}</td>
+                  <td className="py-[2px]">{n.status === "calculated" ? "Calculée" : "À confirmer"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {annex.manualNotes.length > 0 && (
+            <p className="mt-2 text-[9.5px]">
+              <strong>{annex.manualNotes.length} note(s) à compléter à la main :</strong>{" "}
+              {annex.manualNotes.map((n) => n.code.replace("NOTE_", "")).join(", ")}. Aucune valeur n'est remplacée par 0 :
+              une donnée absente s'imprime « — ».
+            </p>
+          )}
+          <p className="mt-1 text-[9.5px] text-slate-700">
+            {annex.computedCount} note(s) calculée(s) sur {annex.registryCount} au référentiel · {annex.undeterminedCells} valeur(s) indéterminée(s).
+            Un total de note est la somme de ses lignes, pas un poste du bilan.
+          </p>
+        </Section>
+      )}
+
+=======
+>>>>>>> origin/main
       {/* ---------- Contrôles ---------- */}
       <Section title="Contrôles de cohérence">
         <table className="w-full text-[10.5px]">

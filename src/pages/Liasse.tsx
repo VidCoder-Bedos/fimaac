@@ -12,6 +12,10 @@ import { readAny, detectColumns, normalize, KIND_LABELS, type RawGrid, type Dete
 import { auditWorkbook, cloneWorkbook, patchWorkbook, downloadWorkbookWb, type WorkbookAudit } from "../lib/reconstitution";
 import type { BalanceRow } from "../lib/liasse";
 import { buildTafire } from "../lib/tafire";
+<<<<<<< HEAD
+import { buildNotesAnnex } from "../lib/notesAnnex";
+=======
+>>>>>>> origin/main
 import PrintSheet from "../components/PrintSheet";
 import LiassePrint from "../components/LiassePrint";
 import { fcfa, fcfaCompact } from "../lib/format";
@@ -34,6 +38,13 @@ export default function Liasse() {
   const stmt = useMemo(() => (cur ? buildStatements(cur) : null), [cur]);
   const checks = useMemo(() => (stmt ? runChecks(stmt) : []), [stmt]);
   const tafire = useMemo(() => (cur ? buildTafire(prev, cur) : null), [prev, cur]);
+<<<<<<< HEAD
+  const annex = useMemo(
+    () => (cur ? buildNotesAnnex({ n: cur, n1: prev ?? [], accounts: db.accounts, companyName: company?.name, exercise: String(new Date().getFullYear()) }) : null),
+    [cur, prev, db.accounts, company],
+  );
+=======
+>>>>>>> origin/main
 
   const onFile = async (which: string, file: File | null) => {
     if (!file || !company) return;
@@ -125,7 +136,11 @@ export default function Liasse() {
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <div className="flex items-center gap-2 rounded-xl bg-sky-50 px-3 py-2 text-xs font-medium text-sky-700"><Info size={14} /> Aucune API GUDEF connectée : export fidèle au modèle, prêt pour dépôt. Le mapping officiel se règle par import du modèle (Mode B).</div>
       </div>
+<<<<<<< HEAD
+      <div className="mb-6"><Tabs active={tab} onChange={setTab} tabs={[{ id: "univ", label: "Import universel", icon: <Upload size={15} /> }, { id: "reconst", label: "Audit & reconstitution", icon: <FileSpreadsheet size={15} /> }, { id: "edit", label: "Génération (mode A)", icon: <FileSpreadsheet size={15} /> }, { id: "bal6", label: "Balance 6 colonnes", icon: <FileSpreadsheet size={15} /> }, { id: "fourni", label: "État fourni (mode B)", icon: <Wand2 size={15} /> }, { id: "checks", label: "Contrôles de base", icon: <ShieldCheck size={15} /> }, { id: "coherence", label: "Cohérence SYSCOHADA", icon: <ShieldCheck size={15} /> }, { id: "tafire", label: "TAFIRE", icon: <FileSpreadsheet size={15} /> }, { id: "notes", label: "Notes annexes", icon: <FileSpreadsheet size={15} /> }, { id: "plan", label: "Plan & écritures", icon: <ShieldCheck size={15} /> }]} /></div>
+=======
       <div className="mb-6"><Tabs active={tab} onChange={setTab} tabs={[{ id: "univ", label: "Import universel", icon: <Upload size={15} /> }, { id: "reconst", label: "Audit & reconstitution", icon: <FileSpreadsheet size={15} /> }, { id: "edit", label: "Génération (mode A)", icon: <FileSpreadsheet size={15} /> }, { id: "bal6", label: "Balance 6 colonnes", icon: <FileSpreadsheet size={15} /> }, { id: "fourni", label: "État fourni (mode B)", icon: <Wand2 size={15} /> }, { id: "checks", label: "Contrôles de base", icon: <ShieldCheck size={15} /> }, { id: "coherence", label: "Cohérence SYSCOHADA", icon: <ShieldCheck size={15} /> }, { id: "tafire", label: "TAFIRE", icon: <FileSpreadsheet size={15} /> }, { id: "plan", label: "Plan & écritures", icon: <ShieldCheck size={15} /> }]} /></div>
+>>>>>>> origin/main
       <div className="mb-4 flex flex-wrap items-center gap-2">
         {(prev || cur) && <Button onClick={onRunChecks}><ShieldCheck size={15} /> Lancer les contrôles de cohérence</Button>}
         <Button variant="outline" disabled={!cur} onClick={() => setPrinting(true)}>
@@ -282,6 +297,84 @@ export default function Liasse() {
           )}
         </div>
       )}
+<<<<<<< HEAD
+      {tab === "notes" && (
+        <div className="space-y-6">
+          {!annex ? (
+            <Card className="p-5"><EmptyState icon={<FileSpreadsheet />} title="Importez une balance N" description="Les notes annexes se calculent depuis la balance (et la balance N-1 pour les variations)." /></Card>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <StatMini label="Notes calculées" value={String(annex.computedCount)} tone="emerald" />
+                <StatMini label="À compléter à la main" value={String(annex.manualCount)} tone="rose" />
+                <StatMini label="Référentiel" value={String(annex.registryCount)} tone="indigo" />
+                <StatMini label="Valeurs indéterminées" value={String(annex.undeterminedCells)} tone="sky" />
+              </div>
+              <Card className="p-5">
+                <SectionHeading title="Contrôles des notes annexes" subtitle="Ce que la balance permet de calculer — et ce qu'elle ne permet pas" />
+                <div className="space-y-2">
+                  {annex.controls.map((c) => (
+                    <div key={c.id} className="flex items-start gap-3 rounded-xl border border-slate-100 px-3 py-2.5">
+                      {c.level === "ok" ? <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-emerald-500" /> : <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-500" />}
+                      <div className="min-w-0"><p className="text-sm font-semibold text-slate-800">{c.label}</p><p className="text-xs text-slate-500">{c.detail}</p></div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+              {annex.notes.length > 0 && (
+                <Card className="p-5">
+                  <SectionHeading title="Notes calculées" subtitle="Montants N, N-1 et variation · « — » = valeur non déterminée, jamais 0" />
+                  <div className="space-y-3">
+                    {annex.notes.map((note) => (
+                      <details key={note.code} className="rounded-xl border border-slate-100">
+                        <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2 px-4 py-3">
+                          <span className="flex items-center gap-2"><Badge tone="indigo">{note.code}</Badge><span className="text-sm font-semibold text-slate-800">{note.title}</span></span>
+                          <span className="flex items-center gap-4 text-sm tabular-nums text-slate-600">
+                            <span>N {note.totalN === null ? "—" : fcfa(note.totalN)}</span>
+                            <span className="text-slate-400">N-1 {note.totalN1 === null ? "—" : fcfa(note.totalN1)}</span>
+                            <span className={note.variation && note.variation !== 0 ? "font-semibold text-indigo-600" : "text-slate-400"}>Δ {note.variation === null ? "—" : fcfa(note.variation)}</span>
+                          </span>
+                        </summary>
+                        {note.rows.length > 0 && (
+                          <div className="overflow-x-auto border-t border-slate-100">
+                            <table className="w-full text-xs">
+                              <thead className="bg-slate-50 text-slate-400"><tr><th className="px-4 py-2 text-left">Réf.</th><th className="px-4 py-2 text-left">Libellé</th><th className="px-4 py-2 text-right">N</th><th className="px-4 py-2 text-right">N-1</th><th className="px-4 py-2 text-right">Variation</th></tr></thead>
+                              <tbody>{note.rows.map((r, i) => (
+                                <tr key={i} className="border-t border-slate-50">
+                                  <td className="px-4 py-1.5 font-mono text-slate-500">{r.ref || "—"}</td>
+                                  <td className="px-4 py-1.5 text-slate-700">{r.label}</td>
+                                  <td className="px-4 py-1.5 text-right tabular-nums">{r.n === null ? "—" : fcfa(r.n)}</td>
+                                  <td className="px-4 py-1.5 text-right tabular-nums text-slate-500">{r.n1 === null ? "—" : fcfa(r.n1)}</td>
+                                  <td className="px-4 py-1.5 text-right tabular-nums text-slate-500">{r.variation === null ? "—" : fcfa(r.variation)}</td>
+                                </tr>
+                              ))}</tbody>
+                            </table>
+                          </div>
+                        )}
+                      </details>
+                    ))}
+                  </div>
+                </Card>
+              )}
+              {annex.manualNotes.length > 0 && (
+                <Card className="p-5">
+                  <SectionHeading title="Notes à compléter" subtitle="Aucune donnée de balance ne permet de les déduire — elles ne sont pas remplies de zéros" />
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {annex.manualNotes.map((note) => (
+                      <div key={note.code} className="rounded-xl border border-amber-100 bg-amber-50/50 px-3 py-2">
+                        <p className="text-sm font-semibold text-slate-800"><span className="font-mono text-xs text-amber-700">{note.code}</span> {note.title}</p>
+                        <p className="text-[11px] text-slate-500">{note.missingInfo[0] || "Saisie manuelle requise."}</p>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
+            </>
+          )}
+        </div>
+      )}
+=======
+>>>>>>> origin/main
       {tab === "univ" && <UniversalImportView onResult={(n) => { setCur(n.balanceN.length ? n.balanceN : null); setPrev(n.balanceN1.length ? n.balanceN1 : null); if (n.kind === "balance6" || n.kind === "balance") setTab("coherence"); }} />}
       {tab === "reconst" && <ReconstitutionView cur={cur} prev={prev} />}
       {tab === "plan" && <PlanCoherenceView companyId={companyId!} />}
@@ -440,6 +533,10 @@ export default function Liasse() {
             checks={runChecks(buildStatements(cur))}
             exercise={String(new Date().getFullYear())}
             tafire={tafire}
+<<<<<<< HEAD
+            annex={annex}
+=======
+>>>>>>> origin/main
           />
         )}
       </PrintSheet>

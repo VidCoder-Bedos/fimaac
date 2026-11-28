@@ -3,6 +3,10 @@ import { loadXlsxSafe } from "./xlsx-sanitizer";
 import { parseBalanceGrid, parseBalanceText, type BalanceImportResult } from "./balanceImport";
 import { computePostes, money } from "./etatsMapping";
 import { buildTafire, tafireLines } from "./tafire";
+<<<<<<< HEAD
+import { buildNotesAnnex } from "./notesAnnex";
+=======
+>>>>>>> origin/main
 // FIMAAC liasse engine — GUDEF / SYSCOHADA
 export interface BalanceRow {
   code: string;
@@ -320,6 +324,28 @@ export async function exportLiasseXlsx(info: { name: string; nif: string; rccm: 
   wst.getRow(tr).getCell(3).numFmt = NUMFMT;
   wst.columns.forEach((col, i) => { col.width = [56, 8, 18][i] || 16; });
 
+<<<<<<< HEAD
+  // P8 — Notes annexes : mêmes valeurs que l'écran et le document imprimé.
+  const annex = buildNotesAnnex({ n: curRows, n1: prevRows, accounts: [], companyName: info.name, exercise: info.exercise });
+  const wsn = wb.addWorksheet("Notes annexes");
+  wsn.getRow(1).values = ["Réf.", "Intitulé", "N", "N-1", "Variation", "Statut"];
+  styleHeaderRow(wsn, 1, 6);
+  let nr = 2;
+  annex.notes.forEach((n) => {
+    const row = wsn.getRow(nr);
+    row.values = [n.code.replace("NOTE_", ""), n.title, n.totalN, n.totalN1, n.variation, n.status === "calculated" ? "Calculée" : "À confirmer"];
+    for (let i = 3; i <= 5; i++) row.getCell(i).numFmt = NUMFMT;
+    nr++;
+  });
+  if (annex.manualNotes.length > 0) {
+    wsn.getRow(nr).values = [`${annex.manualNotes.length} note(s) à saisie manuelle : ${annex.manualNotes.map((n) => n.code.replace("NOTE_", "")).join(", ")}`, "", "", "", "", ""];
+    wsn.getRow(nr).font = { italic: true, color: { argb: "FF92400E" } };
+    nr++;
+  }
+  wsn.columns.forEach((col, i) => { col.width = [10, 52, 18, 18, 18, 14][i] || 16; });
+
+=======
+>>>>>>> origin/main
   const wsc = wb.addWorksheet("Contrôles cohérence");
   wsc.getRow(1).values = ["Contrôle", "Feuille", "Attendu", "Constaté", "Écart", "Statut", "Détail"];
   styleHeaderRow(wsc, 1, 7);

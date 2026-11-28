@@ -2,6 +2,7 @@ import ExcelJS from "exceljs";
 import { loadXlsxSafe } from "./xlsx-sanitizer";
 import { parseBalanceGrid, parseBalanceText, type BalanceImportResult } from "./balanceImport";
 import { computePostes, money } from "./etatsMapping";
+import { buildTafire, tafireLines } from "./tafire";
 // FIMAAC liasse engine — GUDEF / SYSCOHADA
 export interface BalanceRow {
   code: string;
@@ -296,6 +297,28 @@ export async function exportLiasseXlsx(info: { name: string; nif: string; rccm: 
     br++;
   });
   wsb.columns.forEach((col, i) => { col.width = [42, 8, 18, 18][i] || 16; });
+
+  // P7 — TAFIRE : mêmes montants que le document imprimé, calculés une seule fois.
+  const tafire = buildTafire(prevRows.length ? prevRows : null, curRows);
+  const wst = wb.addWorksheet("TAFIRE");
+  wst.getRow(1).values = ["Tableau des flux de trésorerie (TAFIRE)", "", "Exercice N"];
+  styleHeaderRow(wst, 1, 3);
+  let tr = 2;
+  tafireLines(tafire).forEach((l) => {
+    const row = wst.getRow(tr);
+    row.values = [l.label, "", l.amount];
+    row.getCell(3).numFmt = NUMFMT;
+    if (l.strong) { row.font = { bold: true }; row.getCell(1).fill = SECTION_FILL; row.getCell(3).fill = SECTION_FILL; }
+    tr++;
+  });
+  if (!tafire.available && tafire.reason) {
+    wst.getRow(tr).values = [tafire.reason, "", ""];
+    wst.getRow(tr).font = { italic: true, color: { argb: "FFB91C1C" } };
+    tr++;
+  }
+  wst.getRow(tr).values = ["Contrôle de bouclage", "", tafire.ecart];
+  wst.getRow(tr).getCell(3).numFmt = NUMFMT;
+  wst.columns.forEach((col, i) => { col.width = [56, 8, 18][i] || 16; });
 
   const wsc = wb.addWorksheet("Contrôles cohérence");
   wsc.getRow(1).values = ["Contrôle", "Feuille", "Attendu", "Constaté", "Écart", "Statut", "Détail"];

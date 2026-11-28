@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { FileSpreadsheet, Upload, FileDown, AlertTriangle, CheckCircle2, XCircle, Info, Wand2, ShieldCheck } from "lucide-react";
 import { useDB } from "../lib/store";
 import { useCompanyScope, Page } from "../components/Layout";
@@ -11,6 +11,7 @@ import { CHART_OF_ACCOUNTS } from "../lib/chartOfAccounts";
 import { readAny, detectColumns, normalize, KIND_LABELS, type RawGrid, type DetectedColumn, type NormalizedDoc, type ColRole } from "../lib/universalImport";
 import { auditWorkbook, cloneWorkbook, patchWorkbook, downloadWorkbookWb, type WorkbookAudit } from "../lib/reconstitution";
 import type { BalanceRow } from "../lib/liasse";
+import { buildTafire } from "../lib/tafire";
 import PrintSheet from "../components/PrintSheet";
 import LiassePrint from "../components/LiassePrint";
 import { fcfa, fcfaCompact } from "../lib/format";
@@ -32,6 +33,7 @@ export default function Liasse() {
   const company = db.companies.find((c) => c.id === companyId);
   const stmt = useMemo(() => (cur ? buildStatements(cur) : null), [cur]);
   const checks = useMemo(() => (stmt ? runChecks(stmt) : []), [stmt]);
+  const tafire = useMemo(() => (cur ? buildTafire(prev, cur) : null), [prev, cur]);
 
   const onFile = async (which: string, file: File | null) => {
     if (!file || !company) return;
@@ -123,7 +125,7 @@ export default function Liasse() {
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <div className="flex items-center gap-2 rounded-xl bg-sky-50 px-3 py-2 text-xs font-medium text-sky-700"><Info size={14} /> Aucune API GUDEF connectée : export fidèle au modèle, prêt pour dépôt. Le mapping officiel se règle par import du modèle (Mode B).</div>
       </div>
-      <div className="mb-6"><Tabs active={tab} onChange={setTab} tabs={[{ id: "univ", label: "Import universel", icon: <Upload size={15} /> }, { id: "reconst", label: "Audit & reconstitution", icon: <FileSpreadsheet size={15} /> }, { id: "edit", label: "Génération (mode A)", icon: <FileSpreadsheet size={15} /> }, { id: "bal6", label: "Balance 6 colonnes", icon: <FileSpreadsheet size={15} /> }, { id: "fourni", label: "État fourni (mode B)", icon: <Wand2 size={15} /> }, { id: "checks", label: "Contrôles de base", icon: <ShieldCheck size={15} /> }, { id: "coherence", label: "Cohérence SYSCOHADA", icon: <ShieldCheck size={15} /> }, { id: "plan", label: "Plan & écritures", icon: <ShieldCheck size={15} /> }]} /></div>
+      <div className="mb-6"><Tabs active={tab} onChange={setTab} tabs={[{ id: "univ", label: "Import universel", icon: <Upload size={15} /> }, { id: "reconst", label: "Audit & reconstitution", icon: <FileSpreadsheet size={15} /> }, { id: "edit", label: "Génération (mode A)", icon: <FileSpreadsheet size={15} /> }, { id: "bal6", label: "Balance 6 colonnes", icon: <FileSpreadsheet size={15} /> }, { id: "fourni", label: "État fourni (mode B)", icon: <Wand2 size={15} /> }, { id: "checks", label: "Contrôles de base", icon: <ShieldCheck size={15} /> }, { id: "coherence", label: "Cohérence SYSCOHADA", icon: <ShieldCheck size={15} /> }, { id: "tafire", label: "TAFIRE", icon: <FileSpreadsheet size={15} /> }, { id: "plan", label: "Plan & écritures", icon: <ShieldCheck size={15} /> }]} /></div>
       <div className="mb-4 flex flex-wrap items-center gap-2">
         {(prev || cur) && <Button onClick={onRunChecks}><ShieldCheck size={15} /> Lancer les contrôles de cohérence</Button>}
         <Button variant="outline" disabled={!cur} onClick={() => setPrinting(true)}>
@@ -227,6 +229,58 @@ export default function Liasse() {
             </>
           )}
         </Card>
+      )}
+      {tab === "tafire" && (
+        <div className="space-y-6">
+          {!tafire ? (
+            <Card className="p-5"><EmptyState icon={<FileSpreadsheet />} title="Importez une balance N" description="Le TAFIRE se calcule à partir des balances N-1 et N." /></Card>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <StatMini label="CAFG" value={fcfa(tafire.cafg)} tone="emerald" />
+                <StatMini label="Variation du BFR" value={fcfa(tafire.variationBfr)} tone="sky" />
+                <StatMini label="Trésorerie de clôture" value={fcfa(tafire.tresorerieCloture)} tone="indigo" />
+                <StatMini label="Écart de bouclage" value={fcfa(tafire.ecart)} tone={tafire.ecart === 0 ? "emerald" : "rose"} />
+              </div>
+              <Card className="p-5">
+                <SectionHeading title="Tableau des flux de trésorerie" subtitle="SYSCOHADA révisé · aucun flux saisi : tout découle de la variation des soldes" />
+                {!tafire.available ? (
+                  <div className="flex items-start gap-2 rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700"><AlertTriangle size={16} className="mt-0.5 shrink-0" />{tafire.reason}</div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <tbody>
+                        <tr className="border-b border-slate-100"><td className="px-3 py-2.5 font-bold text-slate-800">Trésorerie d'ouverture</td><td className="px-3 py-2.5 text-right font-bold tabular-nums">{fcfa(tafire.tresorerieOuverture)}</td></tr>
+                        {tafire.zones.map((z) => (
+                          <Fragment key={z.id}>
+                            <tr className="bg-slate-50"><td colSpan={2} className="px-3 py-2 text-xs font-bold uppercase tracking-wide text-slate-500">{z.label}</td></tr>
+                            {z.fluxes.map((f) => (
+                              <tr key={f.label} className="border-b border-slate-50">
+                                <td className="px-3 py-2 pl-6 text-slate-700">{f.label}<p className="text-[11px] text-slate-400">{f.basis}</p></td>
+                                <td className="px-3 py-2 text-right tabular-nums text-slate-700">{fcfa(f.amount)}</td>
+                              </tr>
+                            ))}
+                            <tr className="border-b border-slate-200"><td className="px-3 py-2 text-right text-xs font-semibold uppercase text-slate-500">Total de la zone</td><td className="px-3 py-2 text-right font-bold tabular-nums text-slate-800">{fcfa(z.total)}</td></tr>
+                          </Fragment>
+                        ))}
+                        <tr className="border-t-2 border-slate-300"><td className="px-3 py-3 font-black text-slate-900">Trésorerie de clôture (calculée)</td><td className="px-3 py-3 text-right font-black tabular-nums text-slate-900">{fcfa(tafire.tresorerieCalculee)}</td></tr>
+                        <tr><td className="px-3 py-2 text-slate-500">Trésorerie de clôture (balance)</td><td className="px-3 py-2 text-right tabular-nums text-slate-500">{fcfa(tafire.tresorerieCloture)}</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                <div className="mt-4 space-y-2">
+                  {tafire.controls.map((c) => (
+                    <div key={c.id} className="flex items-start gap-3 rounded-xl border border-slate-100 px-3 py-2.5">
+                      {c.level === "ok" ? <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-emerald-500" /> : <AlertTriangle size={16} className={`mt-0.5 shrink-0 ${c.level === "blocking" ? "text-rose-500" : "text-amber-500"}`} />}
+                      <div className="min-w-0"><p className="text-sm font-semibold text-slate-800">{c.label}</p><p className="text-xs text-slate-500">{c.detail}</p></div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </>
+          )}
+        </div>
       )}
       {tab === "univ" && <UniversalImportView onResult={(n) => { setCur(n.balanceN.length ? n.balanceN : null); setPrev(n.balanceN1.length ? n.balanceN1 : null); if (n.kind === "balance6" || n.kind === "balance") setTab("coherence"); }} />}
       {tab === "reconst" && <ReconstitutionView cur={cur} prev={prev} />}
@@ -385,6 +439,7 @@ export default function Liasse() {
             stmt={buildStatements(cur)}
             checks={runChecks(buildStatements(cur))}
             exercise={String(new Date().getFullYear())}
+            tafire={tafire}
           />
         )}
       </PrintSheet>
@@ -580,4 +635,19 @@ function UploadZone({ label, hint, loading, onFile }: { label: string; hint: str
 
 function Row2({ l, v, tone, bold }: { l: string; v: string; tone?: string; bold?: boolean }) {
   return <div className="flex items-center justify-between rounded-lg px-3 py-1.5 text-sm"><span className={bold ? "font-black text-slate-900" : "text-slate-600"}>{l}</span><span className={`tabular-nums ${bold ? "text-base font-black" : "font-semibold"} ${tone === "emerald" ? "text-emerald-600" : tone === "rose" ? "text-rose-600" : "text-slate-800"}`}>{v}</span></div>;
+}
+
+function StatMini({ label, value, tone }: { label: string; value: string; tone: "emerald" | "sky" | "indigo" | "rose" }) {
+  const tones: Record<string, string> = {
+    emerald: "bg-emerald-50 text-emerald-700",
+    sky: "bg-sky-50 text-sky-700",
+    indigo: "bg-indigo-50 text-indigo-700",
+    rose: "bg-rose-50 text-rose-700",
+  };
+  return (
+    <div className={`rounded-xl px-4 py-3 ${tones[tone]}`}>
+      <p className="text-[11px] font-semibold uppercase tracking-wide opacity-70">{label}</p>
+      <p className="mt-1 font-black tabular-nums">{value}</p>
+    </div>
+  );
 }

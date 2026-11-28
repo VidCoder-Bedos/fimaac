@@ -80,6 +80,7 @@ export default function LiassePrint({ company, stmt, checks, exercise, tafire, a
             <PrintLine label="Dépréciations des stocks" value={-b.deprecStocks} />
             <PrintLine label="Créances clients" value={b.creancesClients} />
             <PrintLine label="Créances sur l'État" value={b.creancesEtat} />
+            <PrintLine label="Créances sociales et fiscales" value={b.creancesFiscalesSociales} />
             <PrintLine label="Dépréciations des créances" value={-b.deprecTiers} />
             <PrintLine label="Trésorerie" value={b.tresorerie} />
             <PrintLine label="TOTAL ACTIF" value={b.actifTotal} bold />

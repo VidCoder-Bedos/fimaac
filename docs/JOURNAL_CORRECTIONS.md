@@ -288,3 +288,11 @@
 | Livré | `thirdParties.ts` : détection (comptes 40x/41x, lignes non nulles, sans tiers), regroupement par compte avec enjeu FCFA et nature attendue, propositions classant le tiers du bon collectif. Actions `assignThirdPartyToLine` et `assignThirdPartyToAccount` : **jamais d'écrasement** d'une ligne déjà rattachée, refus explicites (compte non-tiers, tiers d'une autre société), décompte établi avant la mutation, **audit scellé** (`AFFECT_TIER`, `AFFECT_TIER_MASSE`). Écran : carte « Tiers manquants » en tête de l'onglet Tiers (montant en jeu, sélecteur, détail des lignes, affectation ligne à ligne). |
 | Mesures | Seed : **62** lignes à compléter sur **67** · `4011` 38 lignes / 11 157 286 FCFA · `4111` 24 lignes / 37 704 751 FCFA · affectation en masse `4011` : 38 lignes, clients intacts · seconde affectation : 0 |
 | Vérifications | `tsc` 0 erreur · `vitest` **223/223** (12 nouveaux) |
+
+## P15 — Le sens du solde décide du côté du bilan (PR #30)
+| Point | Détail |
+|---|---|
+| Symptôme | Le compte **441 « État, impôt sur les bénéfices »** du dossier de démonstration est **débiteur de 520 000**. Présenté en diminution des dettes fiscales, il n'était **ni à l'actif** (créance sur l'État) **ni au passif** : 520 000 FCFA d'actif avaient disparu. Le bilan restait équilibré, ce qui rendait le défaut indétectable par un contrôle d'équilibre. |
+| Livré | Poste d'actif `creancesFiscalesSociales` (42/43/44 hors 445/4492, solde débiteur) ; `dettesFiscalesSociales` restreint aux soldes créditeurs ; `actifTotal` intègre le poste ; côté moteur factorisé, `aggregateSigned` + `RULE_CREANCES_FISCALES_SOCIALES` et mise à jour de `RULE_TOTAL_ACTIF` ; ligne « Créances sociales et fiscales » à l'écran, à l'impression d'états et dans la liasse. |
+| Mesures | Seed : dettes fiscales et sociales **16 889 734**, créances sociales et fiscales **520 000**, **actif = passif = 27 960 921** (27 440 921 auparavant) · `engine` ↔ `liasse` d'accord sur l'actif, le passif et les dettes · cas synthétique : 300 000 / 170 000 / total 300 000 des deux côtés |
+| Vérifications | `tsc` 0 erreur · `vitest` **228/228** (5 nouveaux) |

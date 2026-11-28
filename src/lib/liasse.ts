@@ -22,6 +22,8 @@ export interface LiasseStatements {
     dettesFiscalesSociales: number;
     creancesClients: number;
     creancesEtat: number;
+    /** P15 — comptes 42/43/44 à solde débiteur, à l'actif et non en moins des dettes. */
+    creancesFiscalesSociales: number;
     deprecTiers: number;
     deprecStocks: number;
     stocksBrut: number;
@@ -130,8 +132,9 @@ export function buildStatements(rows: BalanceRow[]): LiasseStatements {
   const stocks = stocksBrut - deprecStocks;
   const creancesClients = money(postes.creancesClients);
   const creancesEtat = money(postes.creancesEtat);
+  const creancesFiscalesSociales = money(postes.creancesFiscalesSociales);
   const deprecTiers = money(postes.deprecTiers);
-  const creances = creancesClients + creancesEtat + money(postes.autresCreances) - deprecTiers;
+  const creances = creancesClients + creancesEtat + creancesFiscalesSociales + money(postes.autresCreances) - deprecTiers;
   const tresorerie = money(postes.tresorerie);
   const actifTotal = immoNet + stocks + creances + tresorerie;
 
@@ -162,7 +165,7 @@ export function buildStatements(rows: BalanceRow[]): LiasseStatements {
     bilan: {
       immoBrut, amort, immoNet, stocks, creances, tresorerie, actifTotal,
       capitaux, resultat, dettesFin, dettesFourn, autresDettes, tresoPassif, passifTotal,
-      dettesFiscalesSociales, creancesClients, creancesEtat, deprecTiers, deprecStocks,
+      dettesFiscalesSociales, creancesClients, creancesEtat, creancesFiscalesSociales, deprecTiers, deprecStocks,
       stocksBrut, capitauxHorsReport, reportANouveau,
     },
     result: { produits, charges, resultat, produitsHAO, chargesHAO },

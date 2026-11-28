@@ -201,8 +201,11 @@ describe("référence : jeu de démonstration (102 écritures)", () => {
     expect(st.totals.debit).toBe(st.totals.credit);
     // 28 140 921 (ancien calcul) − 180 000 de dépréciations de créances (49),
     // désormais déduites de l'actif au lieu d'être présentées en dettes.
-    expect(st.bilan.actifTotal).toBe(27_440_921);
-    expect(st.bilan.passifTotal).toBe(27_440_921);
+    // P15 : + 520 000 du compte 441 « État, impôt sur les bénéfices » **débiteur**,
+    // qui n'était plus soustrait des dettes fiscales mais manquait à l'actif.
+    expect(st.bilan.actifTotal).toBe(27_960_921);
+    expect(st.bilan.passifTotal).toBe(27_960_921);
+    expect(st.bilan.creancesFiscalesSociales).toBe(520_000);
     expect(st.bilan.actifTotal - st.bilan.passifTotal).toBe(0);
     expect(st.nonMappes).toEqual([]);
     // Classes 6 + 7 + opérations HAO (classe 8) : 20 640 000 − 21 119 805

@@ -116,6 +116,45 @@ export function aggregateExcept(
 }
 
 /**
+ * P15 — Agrégation **par sens du solde** : seuls les comptes dont le solde va
+ * dans le sens demandé sont retenus, et pour leur valeur absolue.
+ *
+ * Un compte 44 « État » débiteur (impôt payé d'avance) n'est pas une dette : il
+ * appartient à l'actif. L'ancienne agrégation signée le retranchait des dettes
+ * fiscales, si bien que ce montant disparaissait des deux côtés du bilan.
+ */
+export function aggregateSigned(
+  ctx: EngineContext,
+  includePrefixes: string[],
+  excludePrefixes: string[],
+  period: Period,
+  sign: "debit" | "credit",
+): number {
+  const balance = getBalance(ctx, period);
+  let total = 0;
+  const sourceCodes: string[] = [];
+  for (const row of balance) {
+    const included = includePrefixes.some((p) => row.code === p || row.code.startsWith(p));
+    const excluded = excludePrefixes.some((p) => row.code === p || row.code.startsWith(p));
+    if (!included || excluded) continue;
+    const solde = row.debit - row.credit;
+    const retained = sign === "debit" ? Math.max(0, solde) : Math.max(0, -solde);
+    if (retained === 0) continue;
+    total += retained;
+    sourceCodes.push(row.code);
+  }
+  ctx.trace.push({
+    ruleId: `SIGNED:${includePrefixes.join(",")}:${sign}`,
+    period,
+    result: total,
+    sourceCodes,
+    formula: `aggregateSigned([${includePrefixes.join(", ")}], ${period}, ${sign})`,
+    timestamp: Date.now(),
+  });
+  return total;
+}
+
+/**
  * Crée un contexte moteur fraîchement initialisé.
  */
 export function createContext(

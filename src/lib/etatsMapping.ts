@@ -13,7 +13,7 @@
 export type Poste =
   | "immoBrut" | "amort"
   | "stocks" | "deprecStocks"
-  | "creancesClients" | "creancesEtat" | "autresCreances" | "deprecTiers"
+  | "creancesClients" | "creancesEtat" | "creancesFiscalesSociales" | "autresCreances" | "deprecTiers"
   | "tresorerie" | "tresoreriePassif"
   | "capitaux" | "reportANouveau" | "resultatPoste"
   | "dettesFin" | "dettesFourn" | "dettesFiscalesSociales" | "autresDettes"
@@ -69,13 +69,18 @@ export const MAPPING: MappingRule[] = [
   { poste: "deprecTiers", label: "Dépréciations des créances", side: "actif", prefixes: ["49"], mode: "creditNet" },
   { poste: "creancesClients", label: "Créances clients", side: "actif", prefixes: ["409", "411", "412", "414", "416", "417", "418"], mode: "debitNet" },
   { poste: "creancesEtat", label: "Créances sur l'État (TVA récupérable…)", side: "actif", prefixes: ["445", "4492"], mode: "debitNet" },
+  { poste: "creancesFiscalesSociales", label: "Créances sociales et fiscales", side: "actif", prefixes: ["42", "43", "44"], exclude: ["445", "4492"], mode: "debitNet", onlySign: "positive" },
   { poste: "autresCreances", label: "Autres créances", side: "actif", prefixes: ["46", "47", "48"], exclude: ["476", "477"], mode: "debitNet", onlySign: "positive" },
 
   // ---- FOURNISSEURS ----
   { poste: "dettesFourn", label: "Dettes fournisseurs", side: "passif", prefixes: ["40"], exclude: ["409"], mode: "creditNet" },
 
   // ---- DETTES FISCALES ET SOCIALES ----
-  { poste: "dettesFiscalesSociales", label: "Dettes fiscales et sociales", side: "passif", prefixes: ["42", "43", "44"], exclude: ["445", "4492"], mode: "creditNet" },
+  // P15 — un compte 42/43/44 **débiteur** (impôt payé d'avance, cotisations à
+  // recevoir, avance au personnel) n'est pas une dette : présenté en diminution
+  // des dettes fiscales et sociales, il faussait le passif et disparaissait de
+  // l'actif. Le signe décide du côté du bilan, jamais le préfixe seul.
+  { poste: "dettesFiscalesSociales", label: "Dettes fiscales et sociales", side: "passif", prefixes: ["42", "43", "44"], exclude: ["445", "4492"], mode: "creditNet", onlySign: "negative" },
 
   // ---- AUTRES DETTES (même racine que les autres créances → split par signe) ----
   { poste: "autresDettes", label: "Autres dettes", side: "passif", prefixes: ["46", "47", "48"], exclude: ["476", "477"], mode: "creditNet", onlySign: "negative" },
@@ -119,7 +124,7 @@ export interface MappingResult {
 function emptyPostes(): Record<Poste, number> {
   return {
     immoBrut: 0, amort: 0, stocks: 0, deprecStocks: 0,
-    creancesClients: 0, creancesEtat: 0, autresCreances: 0, deprecTiers: 0,
+    creancesClients: 0, creancesEtat: 0, creancesFiscalesSociales: 0, autresCreances: 0, deprecTiers: 0,
     tresorerie: 0, tresoreriePassif: 0, capitaux: 0, reportANouveau: 0,
     resultatPoste: 0, dettesFin: 0, dettesFourn: 0, dettesFiscalesSociales: 0,
     autresDettes: 0, charges: 0, produits: 0, chargesHAO: 0, produitsHAO: 0, horsBilan: 0,

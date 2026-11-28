@@ -151,7 +151,7 @@ export function Register() {
         )}
         <Field label="Adresse e-mail" required><Input type="email" value={f.email} onChange={(e) => set("email", e.target.value)} placeholder="vous@cabinet.tg" required /></Field>
         <Field label="Mot de passe" hint="Minimum 8 caractères." required>
-          <div className="relative"><Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><Input type="password" className="pl-9" value={f.password} onChange={(e) => set("password", e.target.value)} placeholder="••••••••" required /></div>
+          <div className="relative"><Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" /><Input type="password" className="pl-9" value={f.password} onChange={(e) => set("password", e.target.value)} placeholder="••••••••" required /></div>
         </Field>
         {/* Correction : `!cabinetId` ne bloque que le mode CLIENT (le cabinet qui
             s'inscrit ne choisit pas de cabinet — il EST le cabinet). Avant, le

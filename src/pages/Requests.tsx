@@ -74,7 +74,7 @@ function DocRequestsTab({ companyId, items, journals }: { companyId: string; ite
       {items.length === 0 ? <EmptyState icon={<FileInput />} title="Aucune demande documentaire" /> : (
         <div className="space-y-2">{items.map((r) => (
           <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-100 px-4 py-3">
-            <div className="flex items-center gap-2"><Badge tone="indigo">{r.category}</Badge><div><p className="font-semibold text-slate-800">{r.docType}</p><p className="text-xs text-slate-400">Période {r.periodLabel} · échéance {formatDate(r.dueDate)} · {r.recurring}</p></div></div>
+            <div className="flex items-center gap-2"><Badge tone="indigo">{r.category}</Badge><div><p className="font-semibold text-slate-800">{r.docType}</p><p className="text-xs text-slate-500">Période {r.periodLabel} · échéance {formatDate(r.dueDate)} · {r.recurring}</p></div></div>
             <div className="flex items-center gap-2">
               {/* P29 — le cabinet peut enfin dire qu'une pièce est reçue ou la demande clôturée. */}
               <select
@@ -85,7 +85,7 @@ function DocRequestsTab({ companyId, items, journals }: { companyId: string; ite
               >
                 {(["to_request", "sent", "partial", "received", "overdue"] as const).map((st) => <option key={st} value={st}>{DOC_REQUEST_STATUS_LABELS[st]}</option>)}
               </select>
-              <button onClick={() => deleteDocumentRequest(r.id)} className="text-slate-300 hover:text-rose-500"><Trash2 size={15} /></button>
+              <button onClick={() => deleteDocumentRequest(r.id)} className="text-slate-500 hover:text-rose-700"><Trash2 size={15} /></button>
             </div>
           </div>
         ))}</div>
@@ -135,8 +135,8 @@ function TemplatesTab({ companyId, items, accounts, journals }: { companyId: str
       {items.length === 0 ? <EmptyState icon={<Plus />} title="Aucun modèle" /> : (
         <div className="space-y-2">{items.map((t) => (
           <div key={t.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-100 px-4 py-3">
-            <div><p className="font-semibold text-slate-800">{t.name}</p><p className="text-xs text-slate-400">{t.recurring} · {t.lines.length} ligne(s){t.lastRun ? ` · dernière exécution ${relativeTime(t.lastRun)}` : ""}</p></div>
-            <div className="flex items-center gap-2"><Button size="sm" variant="outline" onClick={() => { runEntryTemplate(t.id); toast("Écriture générée (brouillon)."); }}><Play size={13} /> Exécuter</Button><button onClick={() => deleteEntryTemplate(t.id)} className="text-slate-300 hover:text-rose-500"><Trash2 size={15} /></button></div>
+            <div><p className="font-semibold text-slate-800">{t.name}</p><p className="text-xs text-slate-500">{t.recurring} · {t.lines.length} ligne(s){t.lastRun ? ` · dernière exécution ${relativeTime(t.lastRun)}` : ""}</p></div>
+            <div className="flex items-center gap-2"><Button size="sm" variant="outline" onClick={() => { runEntryTemplate(t.id); toast("Écriture générée (brouillon)."); }}><Play size={13} /> Exécuter</Button><button onClick={() => deleteEntryTemplate(t.id)} className="text-slate-500 hover:text-rose-700"><Trash2 size={15} /></button></div>
           </div>
         ))}</div>
       )}
@@ -153,7 +153,7 @@ function TemplatesTab({ companyId, items, accounts, journals }: { companyId: str
               <Input value={l.label} onChange={(e) => setLines((p) => p.map((x, idx) => idx === i ? { ...x, label: e.target.value } : x))} placeholder="Libellé" />
               <Input value={l.debit} onChange={(e) => setLines((p) => p.map((x, idx) => idx === i ? { ...x, debit: e.target.value } : x))} inputMode="numeric" placeholder="Débit" />
               <Input value={l.credit} onChange={(e) => setLines((p) => p.map((x, idx) => idx === i ? { ...x, credit: e.target.value } : x))} inputMode="numeric" placeholder="Crédit" />
-              <button onClick={() => setLines((p) => p.filter((_, idx) => idx !== i))} className="text-slate-300 hover:text-rose-500"><Trash2 size={14} /></button>
+              <button onClick={() => setLines((p) => p.filter((_, idx) => idx !== i))} className="text-slate-500 hover:text-rose-700"><Trash2 size={14} /></button>
             </div>
           ))}</div>
           <button onClick={() => setLines((p) => [...p, { accountId: "", label: "", debit: "", credit: "" }])} className="text-sm font-semibold text-indigo-600"><Plus size={14} className="inline" /> Ligne</button>
@@ -174,7 +174,7 @@ function TaxPayTab({ companyId, items }: { companyId: string; items: TaxPaymentR
       {items.length === 0 ? <EmptyState icon={<CreditCard />} title="Aucun paiement demandé" /> : (
         <div className="space-y-2">{items.map((r) => (
           <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-100 px-4 py-3">
-            <div className="flex items-center gap-2"><Receipt size={16} className="text-indigo-500" /><div><p className="font-semibold text-slate-800">{r.label}</p><p className="text-xs text-slate-400">{r.taxCode} · {fcfa(r.amount)} · échéance {formatDate(r.dueDate)}</p></div></div>
+            <div className="flex items-center gap-2"><Receipt size={16} className="text-indigo-600" /><div><p className="font-semibold text-slate-800">{r.label}</p><p className="text-xs text-slate-500">{r.taxCode} · {fcfa(r.amount)} · échéance {formatDate(r.dueDate)}</p></div></div>
             <div className="flex items-center gap-2">{r.status === "paid" ? <Badge tone="emerald"><CheckCircle2 size={11} /> Payé</Badge> : <Button size="sm" variant="outline" onClick={() => markTaxPaymentPaid(r.id)}>Marquer payé</Button>}</div>
           </div>
         ))}</div>
@@ -202,7 +202,7 @@ function ClientReqsTab({ items }: { items: ClientRequest[] }) {
       {items.length === 0 ? <EmptyState icon={<ClipboardList />} title="Aucune demande client" /> : (
         <div className="space-y-2">{items.map((r) => (
           <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-100 px-4 py-3">
-            <div className="min-w-0"><div className="flex items-center gap-2"><span className="font-mono text-xs text-slate-400">{r.number}</span><p className="truncate font-semibold text-slate-800">{r.title}</p></div><p className="text-xs text-slate-400">{relativeTime(r.createdAt)} · {r.messages.length} message(s)</p></div>
+            <div className="min-w-0"><div className="flex items-center gap-2"><span className="font-mono text-xs text-slate-500">{r.number}</span><p className="truncate font-semibold text-slate-800">{r.title}</p></div><p className="text-xs text-slate-500">{relativeTime(r.createdAt)} · {r.messages.length} message(s)</p></div>
             <div className="flex items-center gap-2">
               <Badge tone={STATUS_LABELS[r.status]?.tone}>{STATUS_LABELS[r.status]?.label || r.status}</Badge>
               <select value={r.status} onChange={(e) => setClientRequestStatus(r.id, e.target.value as ClientRequestStatus, "cabinet")} className="h-8 rounded-lg border border-slate-200 px-2 text-xs">
@@ -259,14 +259,14 @@ function LibraryTab({ companyId, active, all }: { companyId: string; active: Ent
             return (
               <Card key={t.id} hover className="flex flex-col p-4">
                 <div className="flex items-start justify-between">
-                  <div className="min-w-0"><p className="truncate font-semibold text-slate-800">{t.name}</p><p className="text-xs text-slate-400">{t.lines.length} ligne(s) · base {new Intl.NumberFormat("fr-FR", { notation: "compact" }).format(d)} FCFA</p></div>
+                  <div className="min-w-0"><p className="truncate font-semibold text-slate-800">{t.name}</p><p className="text-xs text-slate-500">{t.lines.length} ligne(s) · base {new Intl.NumberFormat("fr-FR", { notation: "compact" }).format(d)} FCFA</p></div>
                   <Badge tone="sky">{t.recurring === "none" ? "Ponctuel" : t.recurring === "monthly" ? "Mensuel" : "Annuel"}</Badge>
                 </div>
                 <div className="mt-2 flex-1 space-y-0.5">
                   {t.lines.slice(0, 3).map((l, i) => (
-                    <p key={i} className="truncate text-[11px] text-slate-500"><span className="font-mono text-slate-400">{l.accountId}</span> {l.label}</p>
+                    <p key={i} className="truncate text-[11px] text-slate-500"><span className="font-mono text-slate-500">{l.accountId}</span> {l.label}</p>
                   ))}
-                  {t.lines.length > 3 && <p className="text-[10px] text-slate-400">+{t.lines.length - 3} autre(s) ligne(s)</p>}
+                  {t.lines.length > 3 && <p className="text-[10px] text-slate-500">+{t.lines.length - 3} autre(s) ligne(s)</p>}
                 </div>
                 <div className="mt-3 flex gap-2">
                   <Button size="sm" variant="outline" onClick={() => { setRunTpl(t.id); setAmount(""); setRef(""); }}><Play size={13} /> Utiliser</Button>
@@ -285,8 +285,8 @@ function LibraryTab({ companyId, active, all }: { companyId: string; active: Ent
             <div className="space-y-4">
               <div className="rounded-xl bg-indigo-50 px-3 py-2 text-xs text-indigo-700">Le modèle est mis à l&apos;échelle proportionnellement au montant saisi, puis équilibré automatiquement (Σ débit = Σ crédit). L&apos;écriture est créée en <b>brouillon</b>.</div>
               <div className="rounded-xl border border-slate-100 p-3">
-                <p className="mb-1 text-xs font-bold uppercase text-slate-400">{t.name}</p>
-                {t.lines.map((l, i) => <p key={i} className="text-xs text-slate-600"><span className="font-mono text-slate-400">{l.accountId}</span> {l.label} <span className="text-slate-400">· {l.debit ? "D" : "C"} {new Intl.NumberFormat("fr-FR").format(l.debit || l.credit)}</span></p>)}
+                <p className="mb-1 text-xs font-bold uppercase text-slate-500">{t.name}</p>
+                {t.lines.map((l, i) => <p key={i} className="text-xs text-slate-600"><span className="font-mono text-slate-500">{l.accountId}</span> {l.label} <span className="text-slate-500">· {l.debit ? "D" : "C"} {new Intl.NumberFormat("fr-FR").format(l.debit || l.credit)}</span></p>)}
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field label="Montant de base (FCFA)" required><Input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="numeric" /></Field>

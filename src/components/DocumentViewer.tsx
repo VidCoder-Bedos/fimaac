@@ -54,7 +54,7 @@ export function DocumentViewer({ doc, onClose }: { doc: DocumentItem | null; onC
         <Badge tone="indigo">{doc.category}</Badge>
         <Badge tone={rb.tone}>{rb.label}</Badge>
         <Badge tone="slate">{(doc.size / 1024).toFixed(0)} Ko</Badge>
-        <span className="text-xs text-slate-400">{formatDate(doc.uploadedAt)} · {relativeTime(doc.uploadedAt)}</span>
+        <span className="text-xs text-slate-500">{formatDate(doc.uploadedAt)} · {relativeTime(doc.uploadedAt)}</span>
         {url && (
           <Button size="sm" variant="outline" className="ml-auto" onClick={download}>
             <Download size={14} /> Télécharger
@@ -83,21 +83,21 @@ export function DocumentViewer({ doc, onClose }: { doc: DocumentItem | null; onC
       )}
       {doc.extraction && (
         <div className="mt-4 rounded-xl border border-slate-100 p-4">
-          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">Données extraites</p>
+          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">Données extraites</p>
           {Object.keys(doc.extraction.fields).length === 0 ? (
-            <p className="text-sm text-slate-400">Aucune donnée lue — les zones non lisibles n'ont pas été devinées.</p>
+            <p className="text-sm text-slate-500">Aucune donnée lue — les zones non lisibles n'ont pas été devinées.</p>
           ) : (
             <dl className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {Object.entries(doc.extraction.fields).map(([k, v]) => (
                 <div key={k} className="rounded-lg bg-slate-50 px-3 py-1.5 text-sm">
-                  <dt className="text-[11px] uppercase text-slate-400">{k}</dt>
+                  <dt className="text-[11px] uppercase text-slate-500">{k}</dt>
                   <dd className="font-semibold text-slate-800">{v}</dd>
                 </div>
               ))}
             </dl>
           )}
           {doc.extraction.warnings?.map((w, i) => (
-            <p key={i} className="mt-2 flex items-start gap-1.5 text-xs text-amber-600"><AlertTriangle size={12} className="mt-0.5 shrink-0" /> {w}</p>
+            <p key={i} className="mt-2 flex items-start gap-1.5 text-xs text-amber-700"><AlertTriangle size={12} className="mt-0.5 shrink-0" /> {w}</p>
           ))}
         </div>
       )}
@@ -149,20 +149,20 @@ export function EntryAttachments({ entry, onClose }: { entry: JournalEntry | nul
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-slate-800">{d.name}</p>
-                  <p className="text-xs text-slate-400">{formatDate(d.uploadedAt)} · {(d.size / 1024).toFixed(0)} Ko</p>
+                  <p className="text-xs text-slate-500">{formatDate(d.uploadedAt)} · {(d.size / 1024).toFixed(0)} Ko</p>
                 </div>
                 <Badge tone={rb}>{d.extraction?.readable === false ? "Illisible" : d.extraction?.readable ? "Lu" : "—"}</Badge>
                 <Button size="sm" variant="ghost" onClick={() => setViewerDoc(d)}><Eye size={14} /> Voir</Button>
-                <button onClick={() => unlinkDocumentFromEntry(d.id)} className="text-slate-300 hover:text-rose-500"><Trash2 size={15} /></button>
+                <button onClick={() => unlinkDocumentFromEntry(d.id)} className="text-slate-500 hover:text-rose-700"><Trash2 size={15} /></button>
               </div>
             );
           })}
         </div>
         <div className="mt-5 space-y-4 border-t border-slate-100 pt-4">
           <div>
-            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">Rattacher une pièce existante</p>
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">Rattacher une pièce existante</p>
             {candidates.length === 0 ? (
-              <p className="text-sm text-slate-400">Toutes les pièces de l'entreprise sont déjà rattachées.</p>
+              <p className="text-sm text-slate-500">Toutes les pièces de l'entreprise sont déjà rattachées.</p>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {candidates.slice(0, 8).map((d) => (
@@ -174,7 +174,7 @@ export function EntryAttachments({ entry, onClose }: { entry: JournalEntry | nul
             )}
           </div>
           <div>
-            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">Ajouter une nouvelle pièce</p>
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">Ajouter une nouvelle pièce</p>
             <input type="file" className="hidden" id="entry-att-file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
             <div className="flex flex-wrap items-center gap-2">
               <label htmlFor="entry-att-file" className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-slate-300 px-3 py-2 text-sm font-medium text-slate-600 hover:border-indigo-300 hover:text-indigo-600">
@@ -190,7 +190,7 @@ export function EntryAttachments({ entry, onClose }: { entry: JournalEntry | nul
                 </>
               )}
             </div>
-            <p className="mt-2 text-[11px] text-slate-400">La pièce est classée (exercice / mois / catégorie) puis lue : seules les données réellement lisibles sont extraites.</p>
+            <p className="mt-2 text-[11px] text-slate-500">La pièce est classée (exercice / mois / catégorie) puis lue : seules les données réellement lisibles sont extraites.</p>
           </div>
         </div>
       </Modal>
@@ -202,7 +202,7 @@ export function EntryAttachments({ entry, onClose }: { entry: JournalEntry | nul
 /** Petit indicateur de pièces jointes (utilisé dans les lignes de tableaux). */
 export function AttachmentCount({ count, onClick }: { count: number; onClick: () => void }) {
   if (count === 0) {
-    return <span className="text-xs text-slate-300">—</span>;
+    return <span className="text-xs text-slate-500">—</span>;
   }
   return (
     <button onClick={onClick} className="inline-flex items-center gap-1 rounded-lg bg-indigo-50 px-2 py-1 text-xs font-semibold text-indigo-600 hover:bg-indigo-100">

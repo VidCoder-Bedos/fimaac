@@ -125,11 +125,11 @@ export default function GlobalSearch() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="hidden items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-400 transition-all hover:border-indigo-300 hover:text-indigo-600 md:flex"
+        className="hidden items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500 transition-all hover:border-indigo-300 hover:text-indigo-600 md:flex"
         aria-keyshortcuts="Meta+K Control+K"
       >
         <Search size={15} /> <span>Rechercher ou aller à…</span>
-        <kbd className="ml-4 rounded border border-slate-200 bg-slate-50 px-1.5 text-[10px] font-semibold text-slate-400">⌘K</kbd>
+        <kbd className="ml-4 rounded border border-slate-200 bg-slate-50 px-1.5 text-[10px] font-semibold text-slate-500">⌘K</kbd>
       </button>
       <button onClick={() => setOpen(true)} className="rounded-xl p-2.5 text-slate-500 hover:bg-slate-100 md:hidden" aria-label="Ouvrir la palette de commandes">
         <Search size={18} />
@@ -148,7 +148,7 @@ export default function GlobalSearch() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center gap-3 border-b border-slate-100 px-4">
-                <Search size={18} className="text-slate-400" aria-hidden="true" />
+                <Search size={18} className="text-slate-500" aria-hidden="true" />
                 <input
                   autoFocus
                   value={q}
@@ -160,17 +160,17 @@ export default function GlobalSearch() {
                   aria-activedescendant={flat.length ? `command-${safeActive}` : undefined}
                   aria-label="Rechercher une page, une entreprise, une pièce ou une action"
                   placeholder="Aller à une page, une entreprise, une pièce, une action…"
-                  className="h-14 flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
+                  className="h-14 flex-1 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-500"
                 />
-                <kbd className="rounded border border-slate-200 bg-slate-50 px-1.5 text-[10px] font-semibold text-slate-400">ESC</kbd>
+                <kbd className="rounded border border-slate-200 bg-slate-50 px-1.5 text-[10px] font-semibold text-slate-500">ESC</kbd>
               </div>
               <div ref={listRef} id="command-list" role="listbox" aria-label="Résultats" className="max-h-[60vh] overflow-y-auto p-2">
                 {flat.length === 0 && (
-                  <p className="px-3 py-8 text-center text-sm text-slate-400">Aucun résultat pour « {q} ».</p>
+                  <p className="px-3 py-8 text-center text-sm text-slate-500">Aucun résultat pour « {q} ».</p>
                 )}
                 {groups.map((g) => (
                   <div key={g.group} className="mb-1">
-                    <p className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">{g.group}</p>
+                    <p className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">{g.group}</p>
                     {g.items.map((c) => {
                       index += 1;
                       const isActive = index === safeActive;
@@ -185,19 +185,19 @@ export default function GlobalSearch() {
                           onClick={() => go(c)}
                           className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors ${isActive ? "bg-indigo-50" : ""}`}
                         >
-                          <span className={`shrink-0 ${isActive ? "text-indigo-500" : "text-slate-400"}`}>{GROUP_ICON[c.group] || <BookOpen size={15} />}</span>
+                          <span className={`shrink-0 ${isActive ? "text-indigo-600" : "text-slate-500"}`}>{GROUP_ICON[c.group] || <BookOpen size={15} />}</span>
                           <span className="min-w-0 flex-1">
                             <span className="block truncate text-sm font-semibold text-slate-800">{c.label}</span>
-                            {c.hint && <span className="block truncate text-xs text-slate-400">{c.hint}</span>}
+                            {c.hint && <span className="block truncate text-xs text-slate-500">{c.hint}</span>}
                           </span>
-                          {isActive && <ArrowRight size={15} className="shrink-0 text-indigo-500" />}
+                          {isActive && <ArrowRight size={15} className="shrink-0 text-indigo-600" />}
                         </button>
                       );
                     })}
                   </div>
                 ))}
               </div>
-              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 px-4 py-2 text-[11px] text-slate-400">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 px-4 py-2 text-[11px] text-slate-500">
                 <span className="flex items-center gap-3">
                   <span className="flex items-center gap-1"><CornerDownLeft size={11} /> Ouvrir</span>
                   <span className="hidden sm:inline">↑ ↓ naviguer</span>

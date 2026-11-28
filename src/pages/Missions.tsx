@@ -33,7 +33,7 @@ export default function Missions() {
         <Card className="p-5"><SectionHeading title="Missions" />
           {missions.length === 0 ? <EmptyState icon={<Briefcase />} title="Aucune mission" /> : (
             <div className="space-y-3">{missions.map((m) => { const c = companies.find((x) => x.id === m.companyId); return (
-              <div key={m.id} className="rounded-xl border border-slate-100 p-4"><div className="flex items-center justify-between"><p className="font-bold text-slate-800">{m.title}</p><StatusBadge status={m.status} /></div><p className="text-xs text-slate-400">{c?.name} · {m.type} · {formatDate(m.dueDate)}</p><div className="mt-2 flex items-center gap-2"><ProgressBar value={m.progress} tone="violet" /><span className="text-xs font-semibold text-slate-500">{m.progress}%</span></div></div>
+              <div key={m.id} className="rounded-xl border border-slate-100 p-4"><div className="flex items-center justify-between"><p className="font-bold text-slate-800">{m.title}</p><StatusBadge status={m.status} /></div><p className="text-xs text-slate-500">{c?.name} · {m.type} · {formatDate(m.dueDate)}</p><div className="mt-2 flex items-center gap-2"><ProgressBar value={m.progress} tone="violet" /><span className="text-xs font-semibold text-slate-500">{m.progress}%</span></div></div>
             ); })}</div>
           )}
         </Card>
@@ -41,8 +41,8 @@ export default function Missions() {
           {tasks.length === 0 ? <EmptyState icon={<Flag />} title="Aucune tâche" /> : (
             <div className="space-y-2">{tasks.map((t) => { const c = companies.find((x) => x.id === t.companyId); return (
               <div key={t.id} className="flex items-center gap-3 rounded-xl border border-slate-100 px-4 py-3">
-                <button onClick={() => setTaskStatus(t.id, t.status === "done" ? "todo" : "done")}>{t.status === "done" ? <CheckCircle2 size={18} className="text-emerald-500" /> : <Circle size={18} className="text-slate-300" />}</button>
-                <div className="flex-1"><p className={`text-sm font-medium ${t.status === "done" ? "text-slate-400 line-through" : "text-slate-800"}`}>{t.title}</p><p className="text-xs text-slate-400">{c?.name} · {formatDate(t.dueDate)}</p></div>
+                <button onClick={() => setTaskStatus(t.id, t.status === "done" ? "todo" : "done")}>{t.status === "done" ? <CheckCircle2 size={18} className="text-emerald-700" /> : <Circle size={18} className="text-slate-500" />}</button>
+                <div className="flex-1"><p className={`text-sm font-medium ${t.status === "done" ? "text-slate-500 line-through" : "text-slate-800"}`}>{t.title}</p><p className="text-xs text-slate-500">{c?.name} · {formatDate(t.dueDate)}</p></div>
                 <Badge tone={t.priority === "high" ? "rose" : t.priority === "medium" ? "amber" : "slate"}>{t.priority}</Badge>
               </div>
             ); })}</div>

@@ -175,7 +175,7 @@ export function EntryEditor({
         <div className="grid gap-3 sm:grid-cols-4">
           <Field label="Date">
             <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-            <p className="mt-1 text-[11px] text-slate-400">
+            <p className="mt-1 text-[11px] text-slate-500">
               Exercices du dossier : {describeFiscalYears(db.fiscalYears.filter((f) => f.companyId === companyId))}
             </p>
           </Field>
@@ -196,7 +196,7 @@ export function EntryEditor({
         <div className="overflow-hidden rounded-xl border border-slate-200">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-slate-50 text-xs font-semibold uppercase text-slate-400">
+              <tr className="bg-slate-50 text-xs font-semibold uppercase text-slate-500">
                 <th className="px-2 py-2 text-left">Compte / Tiers</th>
                 <th className="px-2 py-2 text-left">Libellé ligne</th>
                 <th className="px-2 py-2 text-right min-w-[150px]">Débit</th>
@@ -227,7 +227,7 @@ export function EntryEditor({
                     <td className="px-2 py-1.5"><Input value={l.debit} onChange={(e) => setLine(i, { debit: e.target.value, credit: "" })} inputMode="numeric" className="h-9 text-right" /></td>
                     <td className="px-2 py-1.5"><Input value={l.credit} onChange={(e) => setLine(i, { credit: e.target.value, debit: "" })} inputMode="numeric" className="h-9 text-right" /></td>
                     <td className="px-2 py-1.5 text-center">
-                      <button onClick={() => setLines((p) => p.filter((_, idx) => idx !== i))} className="text-slate-300 hover:text-rose-500"><Trash2 size={15} /></button>
+                      <button onClick={() => setLines((p) => p.filter((_, idx) => idx !== i))} className="text-slate-500 hover:text-rose-700"><Trash2 size={15} /></button>
                     </td>
                   </tr>
                 );
@@ -260,7 +260,7 @@ export function EntryEditor({
           </div>
         </div>
         {!balanced && diff !== 0 && !editing && (
-          <p className="text-xs font-medium text-amber-600">
+          <p className="text-xs font-medium text-amber-700">
             Écriture déséquilibrée : elle ne pourra être enregistrée qu'en brouillon.
           </p>
         )}

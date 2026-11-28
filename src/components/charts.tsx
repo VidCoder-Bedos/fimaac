@@ -47,13 +47,13 @@ export function Sparkline({ data, color = "#6366f1", height = 32, fill = true }:
 /* TrendDelta — variation % avec flèche directionnelle                 */
 /* ------------------------------------------------------------------ */
 export function TrendDelta({ current, previous, invert = false }: { current: number; previous: number; invert?: boolean }) {
-  if (!previous) return <span className="text-xs text-slate-400">—</span>;
+  if (!previous) return <span className="text-xs text-slate-500">—</span>;
   const pct = ((current - previous) / Math.abs(previous)) * 100;
   const up = pct >= 0;
   // invert : une hausse est défavorable (ex. charges)
   const good = invert ? !up : up;
   return (
-    <span className={`inline-flex items-center gap-1 text-xs font-bold ${good ? "text-emerald-600" : "text-rose-500"}`}>
+    <span className={`inline-flex items-center gap-1 text-xs font-bold ${good ? "text-emerald-700" : "text-rose-700"}`}>
       <svg width="10" height="10" viewBox="0 0 10 10" className={up ? "" : "rotate-180"}>
         <path d="M5 2L9 7H1L5 2Z" fill="currentColor" />
       </svg>
@@ -183,7 +183,7 @@ export function HBars({
 }: { items: { label: string; value: number }[]; color?: string; formatter?: (n: number) => string; max?: number }) {
   const sorted = [...items].sort((a, b) => b.value - a.value);
   const max = maxProp ?? Math.max(...sorted.map((i) => Math.abs(i.value)), 1);
-  if (sorted.length === 0) return <p className="py-6 text-center text-sm text-slate-400">Aucune donnée</p>;
+  if (sorted.length === 0) return <p className="py-6 text-center text-sm text-slate-500">Aucune donnée</p>;
   return (
     <div className="space-y-2">
       {sorted.map((it, i) => {
@@ -193,7 +193,7 @@ export function HBars({
           <div key={i}>
             <div className="mb-0.5 flex items-baseline justify-between text-xs">
               <span className="truncate font-medium text-slate-600">{it.label}</span>
-              <span className={`shrink-0 font-bold tabular-nums ${negative ? "text-rose-500" : "text-slate-800"}`}>{formatter(it.value)}</span>
+              <span className={`shrink-0 font-bold tabular-nums ${negative ? "text-rose-700" : "text-slate-800"}`}>{formatter(it.value)}</span>
             </div>
             <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
               <div
@@ -260,7 +260,7 @@ export function RadialRings({ rings, size = 160 }: { rings: { label: string; val
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-2xl font-extrabold text-slate-900">{Math.round(rings[0]?.value ?? 0)}</span>
-        <span className="text-[10px] font-medium uppercase text-slate-400">{rings[0]?.label}</span>
+        <span className="text-[10px] font-medium uppercase text-slate-500">{rings[0]?.label}</span>
       </div>
     </div>
   );
@@ -274,7 +274,7 @@ export function ScatterPlot({
 }: { points: { x: number; y: number; label: string; size?: number }[]; xLabel: string; yLabel: string; height?: number; color?: string }) {
   const W = 500, H = 300, PAD = { l: 56, r: 20, t: 16, b: 36 };
   const iw = W - PAD.l - PAD.r, ih = H - PAD.t - PAD.b;
-  if (points.length === 0) return <p className="py-8 text-center text-sm text-slate-400">Aucune donnée</p>;
+  if (points.length === 0) return <p className="py-8 text-center text-sm text-slate-500">Aucune donnée</p>;
   const maxX = Math.max(...points.map((p) => p.x), 1) * 1.15;
   const maxY = Math.max(...points.map((p) => Math.abs(p.y)), 1) * 1.15;
   const px = (v: number) => PAD.l + (v / maxX) * iw;

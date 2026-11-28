@@ -73,7 +73,7 @@ function ForceChangePassword() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
       <Card className="w-full max-w-md p-8">
-        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-600"><KeyRound size={24} /></div>
+        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-700"><KeyRound size={24} /></div>
         <h1 className="text-xl font-black tracking-tight text-slate-900">Changez votre mot de passe</h1>
         <p className="mt-2 text-sm text-slate-500">
           Vos identifiants ont été générés par votre cabinet. Pour sécuriser votre compte,

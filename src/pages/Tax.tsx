@@ -59,7 +59,7 @@ export default function Tax() {
       <Card className="mb-5 p-4">
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Profil fiscal déclaré</p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Profil fiscal déclaré</p>
             <p className="mt-0.5 text-sm font-semibold text-slate-800">{describeProfile(profile)}</p>
           </div>
           <Field label="Régime">
@@ -88,7 +88,7 @@ export default function Tax() {
       {tab === "calc" && (
         <div className="grid gap-6 lg:grid-cols-2">
           <Card className="p-5">
-            <div className="mb-4 flex items-center justify-between"><h3 className="flex items-center gap-2 font-bold text-slate-800"><Receipt size={17} className="text-indigo-500" /> TVA du mois</h3>{!tva.verified && <Badge tone="amber">À vérifier</Badge>}</div>
+            <div className="mb-4 flex items-center justify-between"><h3 className="flex items-center gap-2 font-bold text-slate-800"><Receipt size={17} className="text-indigo-600" /> TVA du mois</h3>{!tva.verified && <Badge tone="amber">À vérifier</Badge>}</div>
             <div className="rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 p-5 text-white"><p className="text-xs uppercase opacity-80">TVA nette à payer</p><p className="mt-1 text-3xl font-black">{scopeTVA.shouldCompute ? fcfa(tva.montant) : "—"}</p><p className="mt-1 text-xs opacity-80">{scopeTVA.shouldCompute ? `Base HT : ${fcfa(tva.base)} · taux ${tva.rule.rate} %` : "Non calculée : régime exonéré déclaré"}</p>{tva.tva && tva.tva.creditReporte > 0 && <p className="mt-1 text-xs font-medium text-sky-100">Crédit de TVA à reporter : {fcfa(tva.tva.creditReporte)}</p>}</div>
             <div className="mt-4 space-y-1.5">{tva.breakdown.map((b, i) => <div key={i} className="flex justify-between rounded-lg bg-slate-50 px-3 py-1.5 text-sm"><span className="text-slate-500">{b.label}</span><span className="font-semibold tabular-nums text-slate-800">{fcfa(b.amount)}</span></div>)}</div>
             <Button className="mt-4 w-full" onClick={() => { const r = generateTvaDeclaration(company.id); if (!r.ok) toast(r.error); }}><FileDown size={15} /> Générer la déclaration TVA</Button>
@@ -110,9 +110,9 @@ export default function Tax() {
               }
             />
             <div className="mb-3 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-xl bg-slate-50 px-4 py-3"><p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Résultat comptable</p><p className="mt-1 font-black tabular-nums text-slate-800">{fcfa(is.is?.resultatComptable ?? 0)}</p></div>
-              <div className="rounded-xl bg-rose-50 px-4 py-3"><p className="text-[11px] font-semibold uppercase tracking-wide text-rose-500">+ Réintégrations</p><p className="mt-1 font-black tabular-nums text-rose-700">{fcfa(adjustments.reintegrations)}</p></div>
-              <div className="rounded-xl bg-emerald-50 px-4 py-3"><p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-600">− Déductions</p><p className="mt-1 font-black tabular-nums text-emerald-700">{fcfa(adjustments.deductions)}</p></div>
+              <div className="rounded-xl bg-slate-50 px-4 py-3"><p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Résultat comptable</p><p className="mt-1 font-black tabular-nums text-slate-800">{fcfa(is.is?.resultatComptable ?? 0)}</p></div>
+              <div className="rounded-xl bg-rose-50 px-4 py-3"><p className="text-[11px] font-semibold uppercase tracking-wide text-rose-700">+ Réintégrations</p><p className="mt-1 font-black tabular-nums text-rose-700">{fcfa(adjustments.reintegrations)}</p></div>
+              <div className="rounded-xl bg-emerald-50 px-4 py-3"><p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-700">− Déductions</p><p className="mt-1 font-black tabular-nums text-emerald-700">{fcfa(adjustments.deductions)}</p></div>
             </div>
             <div className="mb-4 flex items-center justify-between rounded-xl bg-indigo-50 px-4 py-3">
               <span className="text-sm font-semibold text-indigo-900">Résultat fiscal avant arrondi</span>
@@ -135,7 +135,7 @@ export default function Tax() {
                         <div key={sg.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-white px-3 py-2">
                           <div className="min-w-0">
                             <p className="text-sm font-medium text-slate-800">{sg.label} · <span className="tabular-nums">{fcfa(sg.amount)}</span></p>
-                            <p className="text-[11px] text-slate-500">{sg.rationale} <span className="text-slate-400">({sg.accounts.map((a) => a.code).join(", ")})</span></p>
+                            <p className="text-[11px] text-slate-500">{sg.rationale} <span className="text-slate-500">({sg.accounts.map((a) => a.code).join(", ")})</span></p>
                           </div>
                           {sg.alreadyRecorded ? (
                             <Badge tone="emerald">Reprise</Badge>
@@ -155,14 +155,14 @@ export default function Tax() {
                   <p className="mt-2 text-[11px] text-slate-500">Un compte proposé n'est pas une décision : la déductibilité dépend des pièces et du texte applicable. Rien n'est enregistré sans votre clic.</p>
                 </div>
                 <table className="w-full text-sm">
-                  <thead className="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-400"><tr><th className="px-3 py-2">Type</th><th className="px-3 py-2">Libellé</th><th className="px-3 py-2">Référence</th><th className="px-3 py-2 text-right">Montant</th><th className="px-3 py-2" /></tr></thead>
+                  <thead className="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500"><tr><th className="px-3 py-2">Type</th><th className="px-3 py-2">Libellé</th><th className="px-3 py-2">Référence</th><th className="px-3 py-2 text-right">Montant</th><th className="px-3 py-2" /></tr></thead>
                   <tbody>{exerciseAdjustments.map((a) => (
                     <tr key={a.id} className="border-t border-slate-50">
                       <td className="px-3 py-2"><Badge tone={a.type === "reintegration" ? "rose" : "emerald"}>{a.type === "reintegration" ? "Réintégration" : "Déduction"}</Badge></td>
                       <td className="px-3 py-2 text-slate-700">{a.label}</td>
-                      <td className="px-3 py-2 text-xs text-slate-400">{a.reference || "—"}</td>
+                      <td className="px-3 py-2 text-xs text-slate-500">{a.reference || "—"}</td>
                       <td className="px-3 py-2 text-right tabular-nums">{fcfa(a.amount)}</td>
-                      <td className="px-3 py-2 text-right"><button className="text-xs font-semibold text-rose-600 hover:underline" onClick={() => deleteTaxAdjustment(a.id)}>Supprimer</button></td>
+                      <td className="px-3 py-2 text-right"><button className="text-xs font-semibold text-rose-700 hover:underline" onClick={() => deleteTaxAdjustment(a.id)}>Supprimer</button></td>
                     </tr>
                   ))}</tbody>
                 </table>
@@ -181,16 +181,16 @@ export default function Tax() {
                 }}>Ajouter</Button>
               </div>
             </div>
-            <p className="mt-3 text-xs text-slate-400">
+            <p className="mt-3 text-xs text-slate-500">
               Chaque ligne est attribuée, horodatée et scellée dans le journal d'audit. Le calcul de l'IS reprend ces montants : le même résultat fiscal alimente l'écran, la déclaration et la liasse.
             </p>
           </Card>
           <Card className="p-5 lg:col-span-2">
             <h3 className="mb-3 font-bold text-slate-800">Explication du calcul (traçabilité)</h3>
             <div className="grid gap-3 sm:grid-cols-4">
-              {[["Montant", fcfa(tva.montant)], ["Base", fcfa(tva.base)], ["Règle", tva.rule.code], ["Version", tva.rule.version]].map(([k, v]) => <div key={k} className="rounded-xl border border-slate-100 p-3"><p className="text-xs text-slate-400">{k}</p><p className="mt-0.5 truncate font-bold text-slate-800">{v}</p></div>)}
+              {[["Montant", fcfa(tva.montant)], ["Base", fcfa(tva.base)], ["Règle", tva.rule.code], ["Version", tva.rule.version]].map(([k, v]) => <div key={k} className="rounded-xl border border-slate-100 p-3"><p className="text-xs text-slate-500">{k}</p><p className="mt-0.5 truncate font-bold text-slate-800">{v}</p></div>)}
             </div>
-            <p className="mt-3 text-xs text-slate-400">Source : {tva.rule.source}</p>
+            <p className="mt-3 text-xs text-slate-500">Source : {tva.rule.source}</p>
           </Card>
         </div>
       )}
@@ -209,7 +209,7 @@ export default function Tax() {
             <SectionHeading title="Déclarations générées" />
             {declarations.length === 0 ? (
               <div>
-                <p className="text-sm text-slate-400">Aucune déclaration. Générez la TVA depuis l'onglet Calculs.</p>
+                <p className="text-sm text-slate-500">Aucune déclaration. Générez la TVA depuis l'onglet Calculs.</p>
                 {missingFor("fiscalite", db, companyId) ? (
                   <p className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-amber-50 px-2.5 py-1 text-xs text-amber-800">
                     <Info size={12} /> {missingFor("fiscalite", db, companyId)!.message}
@@ -217,15 +217,15 @@ export default function Tax() {
                 ) : null}
               </div>
             ) : (
-              <div className="space-y-2">{declarations.map((d) => <div key={d.id} className="flex items-center justify-between rounded-xl border border-slate-100 px-4 py-3"><div><p className="font-semibold text-slate-800">{d.taxCode} · {d.periodLabel}</p><p className="text-xs text-slate-400">Échéance {formatDate(d.dueDate)} · {fcfa(d.amount)}</p></div><StatusBadge status={d.status} /></div>)}</div>
+              <div className="space-y-2">{declarations.map((d) => <div key={d.id} className="flex items-center justify-between rounded-xl border border-slate-100 px-4 py-3"><div><p className="font-semibold text-slate-800">{d.taxCode} · {d.periodLabel}</p><p className="text-xs text-slate-500">Échéance {formatDate(d.dueDate)} · {fcfa(d.amount)}</p></div><StatusBadge status={d.status} /></div>)}</div>
             )}
           </Card>
           <Card className="p-5">
             <SectionHeading title="Calendrier fiscal" />
-            {deadlines.length === 0 ? <p className="text-sm text-slate-400">Aucune échéance.</p> : (
+            {deadlines.length === 0 ? <p className="text-sm text-slate-500">Aucune échéance.</p> : (
               <div className="space-y-2">{deadlines.map((d) => (
                 <div key={d.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-100 px-4 py-3">
-                  <div><p className="font-semibold text-slate-800">{d.label}</p><p className="text-xs text-slate-400">{d.taxCode} · échéance {formatDate(d.dueDate)}</p></div>
+                  <div><p className="font-semibold text-slate-800">{d.label}</p><p className="text-xs text-slate-500">{d.taxCode} · échéance {formatDate(d.dueDate)}</p></div>
                   <div className="flex items-center gap-2"><StatusBadge status={d.status} /><select value={d.status} onChange={(e) => setDeadlineStatus(d.id, e.target.value as DeclarationStatus)} className="h-8 rounded-lg border border-slate-200 px-2 text-xs"><option value="pending">En attente</option><option value="in_progress">En cours</option><option value="ready">Prête</option><option value="submitted">Déposée</option><option value="paid">Payée</option></select></div>
                 </div>
               ))}</div>
@@ -240,9 +240,9 @@ export default function Tax() {
           <Card className="p-5">
             <SectionHeading title="Grille de TVA" subtitle={`Taux paramétré : ${g.rate}% (à vérifier)`} />
             <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-xl border border-slate-100 p-4"><p className="text-xs text-slate-400">Base HT estimée</p><p className="text-xl font-bold text-slate-800">{fcfa(g.baseHT)}</p></div>
-              <div className="rounded-xl border border-slate-100 p-4"><p className="text-xs text-slate-400">TVA collectée (443)</p><p className="text-xl font-bold text-emerald-600">{fcfa(g.tvaCollectee)}</p></div>
-              <div className="rounded-xl border border-slate-100 p-4"><p className="text-xs text-slate-400">TVA récupérable (445)</p><p className="text-xl font-bold text-sky-600">{fcfa(g.tvaRecuperable)}</p></div>
+              <div className="rounded-xl border border-slate-100 p-4"><p className="text-xs text-slate-500">Base HT estimée</p><p className="text-xl font-bold text-slate-800">{fcfa(g.baseHT)}</p></div>
+              <div className="rounded-xl border border-slate-100 p-4"><p className="text-xs text-slate-500">TVA collectée (443)</p><p className="text-xl font-bold text-emerald-700">{fcfa(g.tvaCollectee)}</p></div>
+              <div className="rounded-xl border border-slate-100 p-4"><p className="text-xs text-slate-500">TVA récupérable (445)</p><p className="text-xl font-bold text-sky-700">{fcfa(g.tvaRecuperable)}</p></div>
             </div>
             <div className="mt-4 flex items-center justify-between rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 p-5 text-white"><span className="text-sm opacity-90">TVA nette à payer {net >= 0 ? "(à reverser)" : "(crédit à reporter)"}</span><span className="text-2xl font-black">{fcfa(Math.abs(net))}</span></div>
             <div className="mt-4 flex items-start gap-2 rounded-xl bg-sky-50 px-3 py-2 text-xs text-sky-700"><Info size={14} className="mt-0.5 shrink-0" /> Calcul explicable, identique à celui de l'onglet Calculs : TVA nette = TVA collectée (443) − TVA déductible (445) − crédit reporté. La base HT est le chiffre d'affaires comptable (comptes 70), et non la TVA collectée.</div>
@@ -252,7 +252,7 @@ export default function Tax() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-400">
+                    <tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-500">
                       <th className="px-3 py-2">Taux</th>
                       <th className="px-3 py-2 text-right">Base HT</th>
                       <th className="px-3 py-2 text-right">TVA comptabilisée</th>
@@ -266,14 +266,14 @@ export default function Tax() {
                       <tr key={b.rate} className="border-b border-slate-50">
                         <td className="px-3 py-2.5 font-semibold text-slate-700">{b.label}</td>
                         <td className="px-3 py-2.5 text-right tabular-nums">{fcfa(b.base)}</td>
-                        <td className="px-3 py-2.5 text-right tabular-nums text-emerald-600">{fcfa(b.vat)}</td>
+                        <td className="px-3 py-2.5 text-right tabular-nums text-emerald-700">{fcfa(b.vat)}</td>
                         <td className="px-3 py-2.5 text-right tabular-nums text-slate-500">{fcfa(b.vatTheorique)}</td>
-                        <td className={`px-3 py-2.5 text-right tabular-nums ${Math.abs(b.ecart) > 1 ? "font-semibold text-rose-600" : "text-slate-400"}`}>{b.ecart === 0 ? "—" : fcfa(b.ecart)}</td>
+                        <td className={`px-3 py-2.5 text-right tabular-nums ${Math.abs(b.ecart) > 1 ? "font-semibold text-rose-700" : "text-slate-500"}`}>{b.ecart === 0 ? "—" : fcfa(b.ecart)}</td>
                         <td className="px-3 py-2.5 text-center text-xs text-slate-500">{b.entries}{b.inferred > 0 ? ` (dont ${b.inferred} déduit${b.inferred > 1 ? "s" : ""})` : ""}</td>
                       </tr>
                     ))}
                     {vat.bands.length === 0 && (
-                      <tr><td colSpan={6} className="px-3 py-4 text-center text-xs text-slate-400">Aucune vente validée sur le dossier.</td></tr>
+                      <tr><td colSpan={6} className="px-3 py-4 text-center text-xs text-slate-500">Aucune vente validée sur le dossier.</td></tr>
                     )}
                   </tbody>
                   <tfoot>
@@ -291,7 +291,7 @@ export default function Tax() {
               <div className="mt-4 space-y-2">
                 {vat.controls.map((c) => (
                   <div key={c.id} className="flex items-start gap-3 rounded-xl border border-slate-100 px-3 py-2.5">
-                    {c.level === "ok" ? <Check size={15} className="mt-0.5 shrink-0 text-emerald-500" /> : <AlertTriangle size={15} className={`mt-0.5 shrink-0 ${c.level === "blocking" ? "text-rose-500" : "text-amber-500"}`} />}
+                    {c.level === "ok" ? <Check size={15} className="mt-0.5 shrink-0 text-emerald-700" /> : <AlertTriangle size={15} className={`mt-0.5 shrink-0 ${c.level === "blocking" ? "text-rose-700" : "text-amber-700"}`} />}
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-slate-800">{c.label}</p>
                       <p className="text-xs text-slate-500">{c.detail}</p>
@@ -318,7 +318,7 @@ function RuleRow({ rule }: { rule: TaxRuleRef }) {
   return (
     <div className="rounded-xl border border-slate-100 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div><p className="font-bold text-slate-800">{rule.code} — {rule.name}</p><p className="text-xs text-slate-400">{rule.source} · v{rule.version}</p></div>
+        <div><p className="font-bold text-slate-800">{rule.code} — {rule.name}</p><p className="text-xs text-slate-500">{rule.source} · v{rule.version}</p></div>
         <Badge tone={rule.verified ? "emerald" : "amber"}>{rule.verified ? <><Check size={11} /> Vérifié</> : "À vérifier"}</Badge>
       </div>
       <div className="mt-3 flex flex-wrap items-end gap-3">
@@ -326,7 +326,7 @@ function RuleRow({ rule }: { rule: TaxRuleRef }) {
         <label className="flex items-center gap-2 pb-2 text-xs font-medium text-slate-600"><input type="checkbox" checked={verified} onChange={(e) => setVerified(e.target.checked)} className="h-4 w-4 rounded" /> Vérifié contre source officielle</label>
         <Button size="sm" onClick={() => updateTaxRate(rule.code, parseFloat(rate) || 0, verified)}>Enregistrer</Button>
       </div>
-      {rule.note && <p className="mt-2 text-xs text-slate-400">{rule.note}</p>}
+      {rule.note && <p className="mt-2 text-xs text-slate-500">{rule.note}</p>}
     </div>
   );
 }

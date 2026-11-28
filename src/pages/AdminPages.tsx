@@ -45,10 +45,10 @@ function LogoPicker({ orgId, current, onDone }: { orgId: string; current?: strin
   return (
     <div className="flex items-center gap-3">
       <label className="cursor-pointer">
-        {preview ? <img src={preview} alt="Logo" className="h-12 w-12 rounded-xl object-cover ring-1 ring-slate-200" /> : <div className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-dashed border-slate-200 text-slate-300"><Image size={20} /></div>}
+        {preview ? <img src={preview} alt="Logo" className="h-12 w-12 rounded-xl object-cover ring-1 ring-slate-200" /> : <div className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-dashed border-slate-200 text-slate-500"><Image size={20} /></div>}
         <input type="file" accept="image/*" className="hidden" onChange={(e) => pick(e.target.files?.[0] || null)} />
       </label>
-      <div><p className="text-xs font-semibold text-slate-600">Logo</p><p className="text-[10px] text-slate-400">PNG/SVG · max 500 Ko</p></div>
+      <div><p className="text-xs font-semibold text-slate-600">Logo</p><p className="text-[10px] text-slate-500">PNG/SVG · max 500 Ko</p></div>
     </div>
   );
 }
@@ -92,12 +92,12 @@ export function AdminOverview() {
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <Card className="p-5"><SectionHeading title="Cabinets récents" action={<Button size="sm" variant="ghost" onClick={() => window.location.hash = "#/admin/cabinets"}>Tout voir</Button>} />
           <div className="space-y-2">{cabinets.slice(0, 5).map((c) => { const st = cabinetStats(db, c.id); return (
-            <div key={c.id} className="flex items-center gap-3 rounded-xl border border-slate-100 px-3 py-2.5"><OrgLogo org={c} size={36} /><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-slate-800">{c.name}</p><p className="text-xs text-slate-400">{st.companies.length} entreprise(s) · {st.users.length} utilisateur(s)</p></div><Badge tone={st.sub?.status === "past_due" ? "rose" : "emerald"}>{st.sub?.status === "past_due" ? "Suspendu" : "Actif"}</Badge></div>
+            <div key={c.id} className="flex items-center gap-3 rounded-xl border border-slate-100 px-3 py-2.5"><OrgLogo org={c} size={36} /><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-slate-800">{c.name}</p><p className="text-xs text-slate-500">{st.companies.length} entreprise(s) · {st.users.length} utilisateur(s)</p></div><Badge tone={st.sub?.status === "past_due" ? "rose" : "emerald"}>{st.sub?.status === "past_due" ? "Suspendu" : "Actif"}</Badge></div>
           ); })}</div>
         </Card>
         <Card className="p-5"><SectionHeading title="Activité système" />
           <div className="space-y-2">{recentLogs.map((l) => { const u = db.users.find((x) => x.id === l.userId); return (
-            <div key={l.id} className="flex items-start gap-2 text-xs"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400" /><div><p className="text-slate-700"><span className="font-semibold">{u?.firstName || "Système"}</span> · {l.action.replace(/_/g, " ").toLowerCase()}</p><p className="text-slate-400">{formatDateTime(l.createdAt)} · {l.after}</p></div></div>
+            <div key={l.id} className="flex items-start gap-2 text-xs"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400" /><div><p className="text-slate-700"><span className="font-semibold">{u?.firstName || "Système"}</span> · {l.action.replace(/_/g, " ").toLowerCase()}</p><p className="text-slate-500">{formatDateTime(l.createdAt)} · {l.after}</p></div></div>
           ); })}</div>
         </Card>
       </div>
@@ -120,7 +120,7 @@ export function AdminCabinets() {
     <Page>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div><h2 className="text-xl font-black tracking-tight text-slate-900">Cabinets clients</h2><p className="text-sm text-slate-500">{cabinets.length} cabinet(s) inscrit(s) — tenants de la plateforme</p></div>
-        <div className="relative w-64"><Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><Input className="pl-9" placeholder="Rechercher un cabinet…" value={q} onChange={(e) => setQ(e.target.value)} /></div>
+        <div className="relative w-64"><Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" /><Input className="pl-9" placeholder="Rechercher un cabinet…" value={q} onChange={(e) => setQ(e.target.value)} /></div>
       </div>
       {!current ? (
         list.length === 0 ? <EmptyState icon={<Building2 />} title="Aucun cabinet" /> : (
@@ -134,23 +134,23 @@ export function AdminCabinets() {
                     <OrgLogo org={c} size={44} />
                     <div>
                       <p className="font-bold text-slate-900">{c.name}</p>
-                      <p className="flex items-center gap-2 text-xs text-slate-400"><MapPin size={11} /> {c.city || "—"} · {c.country} {c.email ? <><Mail size={11} /> {c.email}</> : null}{c.phone ? <><Phone size={11} /> {c.phone}</> : null}</p>
+                      <p className="flex items-center gap-2 text-xs text-slate-500"><MapPin size={11} /> {c.city || "—"} · {c.country} {c.email ? <><Mail size={11} /> {c.email}</> : null}{c.phone ? <><Phone size={11} /> {c.phone}</> : null}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     {suspended && <Badge tone="rose"><Ban size={11} /> Suspendu</Badge>}
                     <div className="grid grid-cols-3 gap-3 text-center">
-                      <div><p className="text-xs text-slate-400">Entreprises</p><p className="font-bold text-slate-800">{st.companies.length}</p></div>
-                      <div><p className="text-xs text-slate-400">Users</p><p className="font-bold text-slate-800">{st.users.length}</p></div>
-                      <div><p className="text-xs text-slate-400">Plan</p><p className="text-xs font-bold capitalize text-indigo-600">{st.sub?.plan || c.plan}</p></div>
+                      <div><p className="text-xs text-slate-500">Entreprises</p><p className="font-bold text-slate-800">{st.companies.length}</p></div>
+                      <div><p className="text-xs text-slate-500">Users</p><p className="font-bold text-slate-800">{st.users.length}</p></div>
+                      <div><p className="text-xs text-slate-500">Plan</p><p className="text-xs font-bold capitalize text-indigo-600">{st.sub?.plan || c.plan}</p></div>
                     </div>
                   </div>
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-3 border-t border-slate-100 pt-3 text-xs sm:grid-cols-4">
-                  <div><span className="text-slate-400">Écritures :</span> <b className="text-slate-700">{st.entries}</b></div>
-                  <div><span className="text-slate-400">Documents :</span> <b className="text-slate-700">{st.docs}</b></div>
-                  <div><span className="text-slate-400">MRR :</span> <b className="text-emerald-600">{fcfa(st.sub?.monthlyAmount || 0)}</b></div>
-                  <div><span className="text-slate-400">Depuis :</span> <b className="text-slate-700">{formatDate(c.createdAt)}</b></div>
+                  <div><span className="text-slate-500">Écritures :</span> <b className="text-slate-700">{st.entries}</b></div>
+                  <div><span className="text-slate-500">Documents :</span> <b className="text-slate-700">{st.docs}</b></div>
+                  <div><span className="text-slate-500">MRR :</span> <b className="text-emerald-700">{fcfa(st.sub?.monthlyAmount || 0)}</b></div>
+                  <div><span className="text-slate-500">Depuis :</span> <b className="text-slate-700">{formatDate(c.createdAt)}</b></div>
                 </div>
               </Card>
             );
@@ -193,7 +193,7 @@ function CabinetDetail({ cabinetId, onBack }: { cabinetId: string; onBack: () =>
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <Card className="p-5">
           <SectionHeading title="Branding du cabinet" subtitle="Logo visible par ses entreprises et sur ses documents" />
-          <div className="flex items-center gap-4"><LogoPicker orgId={cabinetId} current={org.logoDataUrl} /><div className="flex-1"><p className="text-sm font-semibold text-slate-800">{org.name}</p><p className="text-xs text-slate-400">Le logo apparaît sur le portail de ses entreprises.</p></div></div>
+          <div className="flex items-center gap-4"><LogoPicker orgId={cabinetId} current={org.logoDataUrl} /><div className="flex-1"><p className="text-sm font-semibold text-slate-800">{org.name}</p><p className="text-xs text-slate-500">Le logo apparaît sur le portail de ses entreprises.</p></div></div>
         </Card>
         <Card className="p-5">
           <SectionHeading title="Abonnement" />
@@ -209,7 +209,7 @@ function CabinetDetail({ cabinetId, onBack }: { cabinetId: string; onBack: () =>
         <SectionHeading title={`Entreprises gérées (${st.companies.length})`} subtitle="Portefeuille du cabinet" />
         {st.companies.length === 0 ? <EmptyState icon={<Database />} title="Aucune entreprise" /> : (
           <div className="overflow-x-auto"><table className="w-full text-sm">
-            <thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-400"><th className="px-3 py-2">Entreprise</th><th className="px-3 py-2">NIF</th><th className="px-3 py-2">Régime</th><th className="px-3 py-2 text-right">Écritures</th><th className="px-3 py-2">Accès portail</th></tr></thead>
+            <thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-500"><th className="px-3 py-2">Entreprise</th><th className="px-3 py-2">NIF</th><th className="px-3 py-2">Régime</th><th className="px-3 py-2 text-right">Écritures</th><th className="px-3 py-2">Accès portail</th></tr></thead>
             <tbody>{st.companies.map((c) => { const hasAccess = db.users.some((u) => u.companyId === c.id); return (
               <tr key={c.id} className="border-b border-slate-50"><td className="px-3 py-2.5 font-medium text-slate-800">{c.tradeName || c.name}</td><td className="px-3 py-2.5 text-slate-500">{c.nif || "—"}</td><td className="px-3 py-2.5"><Badge tone="sky">{c.taxRegime.toUpperCase()}</Badge></td><td className="px-3 py-2.5 text-right tabular-nums">{db.entries.filter((e) => e.companyId === c.id).length}</td><td className="px-3 py-2.5">{hasAccess ? <Badge tone="emerald"><Check size={11} /> Créé</Badge> : <Badge tone="amber">À créer</Badge>}</td></tr>
             ); })}</tbody>
@@ -219,7 +219,7 @@ function CabinetDetail({ cabinetId, onBack }: { cabinetId: string; onBack: () =>
       <Card className="mt-6 p-5">
         <SectionHeading title={`Utilisateurs du cabinet (${st.users.length})`} />
         <div className="space-y-2">{st.users.map((u) => (
-          <div key={u.id} className="flex items-center gap-3 rounded-xl border border-slate-100 px-3 py-2.5"><Avatar name={`${u.firstName} ${u.lastName}`} color={u.avatarColor} size={32} /><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-slate-800">{u.firstName} {u.lastName}</p><p className="truncate text-xs text-slate-400">{u.email}</p></div><Badge tone="slate">{ROLE_LABELS[u.role]}</Badge><Badge tone={u.active ? "emerald" : "rose"}>{u.active ? "Actif" : "Inactif"}</Badge></div>
+          <div key={u.id} className="flex items-center gap-3 rounded-xl border border-slate-100 px-3 py-2.5"><Avatar name={`${u.firstName} ${u.lastName}`} color={u.avatarColor} size={32} /><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-slate-800">{u.firstName} {u.lastName}</p><p className="truncate text-xs text-slate-500">{u.email}</p></div><Badge tone="slate">{ROLE_LABELS[u.role]}</Badge><Badge tone={u.active ? "emerald" : "rose"}>{u.active ? "Actif" : "Inactif"}</Badge></div>
         ))}</div>
       </Card>
     </div>
@@ -248,16 +248,16 @@ export function AdminUsers() {
         <StatCard title="Entreprises clientes" value={String(counts.client)} icon={<Users size={18} />} tone="amber" />
       </div>
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <div className="relative flex-1 max-w-xs"><Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><Input className="pl-9" placeholder="Rechercher (nom, e-mail)…" value={q} onChange={(e) => setQ(e.target.value)} /></div>
+        <div className="relative flex-1 max-w-xs"><Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" /><Input className="pl-9" placeholder="Rechercher (nom, e-mail)…" value={q} onChange={(e) => setQ(e.target.value)} /></div>
         <Select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="w-48">
           <option value="all">Tous types</option><option value="admin">Admins</option><option value="cabinet">Cabinets</option><option value="client">Entreprises</option>
         </Select>
         <Badge tone="slate">{list.length}</Badge>
       </div>
       <Card className="overflow-x-auto p-5"><table className="w-full text-sm">
-        <thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-400"><th className="px-3 py-2">Utilisateur</th><th className="px-3 py-2">E-mail</th><th className="px-3 py-2">Rôle</th><th className="px-3 py-2">Organisation</th><th className="px-3 py-2">Entreprise</th><th className="px-3 py-2">Dernière connexion</th><th className="px-3 py-2">Statut</th></tr></thead>
+        <thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-500"><th className="px-3 py-2">Utilisateur</th><th className="px-3 py-2">E-mail</th><th className="px-3 py-2">Rôle</th><th className="px-3 py-2">Organisation</th><th className="px-3 py-2">Entreprise</th><th className="px-3 py-2">Dernière connexion</th><th className="px-3 py-2">Statut</th></tr></thead>
         <tbody>{list.map((u) => { const org = db.organizations.find((o) => o.id === u.organizationId); const co = db.companies.find((c) => c.id === u.companyId); return (
-          <tr key={u.id} className="border-b border-slate-50"><td className="px-3 py-2.5"><div className="flex items-center gap-2"><Avatar name={`${u.firstName} ${u.lastName}`} color={u.avatarColor} size={28} /><span className="font-medium text-slate-800">{u.firstName} {u.lastName}</span></div></td><td className="px-3 py-2.5 text-slate-500">{u.email}</td><td className="px-3 py-2.5"><Badge tone="indigo">{ROLE_LABELS[u.role]}</Badge></td><td className="px-3 py-2.5 text-slate-500">{org?.name}</td><td className="px-3 py-2.5 text-slate-500">{co?.tradeName || co?.name || "—"}</td><td className="px-3 py-2.5 text-slate-400">{u.lastLoginAt ? formatDate(u.lastLoginAt) : "Jamais"}</td><td className="px-3 py-2.5">{u.active ? <Badge tone="emerald">Actif</Badge> : <Badge tone="rose">Inactif</Badge>}</td></tr>
+          <tr key={u.id} className="border-b border-slate-50"><td className="px-3 py-2.5"><div className="flex items-center gap-2"><Avatar name={`${u.firstName} ${u.lastName}`} color={u.avatarColor} size={28} /><span className="font-medium text-slate-800">{u.firstName} {u.lastName}</span></div></td><td className="px-3 py-2.5 text-slate-500">{u.email}</td><td className="px-3 py-2.5"><Badge tone="indigo">{ROLE_LABELS[u.role]}</Badge></td><td className="px-3 py-2.5 text-slate-500">{org?.name}</td><td className="px-3 py-2.5 text-slate-500">{co?.tradeName || co?.name || "—"}</td><td className="px-3 py-2.5 text-slate-500">{u.lastLoginAt ? formatDate(u.lastLoginAt) : "Jamais"}</td><td className="px-3 py-2.5">{u.active ? <Badge tone="emerald">Actif</Badge> : <Badge tone="rose">Inactif</Badge>}</td></tr>
         ); })}</tbody>
       </table></Card>
     </Page>
@@ -297,10 +297,10 @@ export function AdminBilling() {
                   <div className="flex gap-1"><Button size="sm" onClick={() => savePrice(p.id)}><Check size={13} /> OK</Button><Button size="sm" variant="ghost" onClick={() => setEditing(null)}>Annuler</Button></div>
                 </div>
               ) : (
-                <div className="mt-2"><p className="text-2xl font-black text-slate-900">{fcfa(p.monthlyPrice)}<span className="text-xs font-normal text-slate-400">/mois</span></p><p className="mt-1 text-xs text-slate-400">{mrrByPlan.find((x) => x.id === p.id)?.count || 0} abonné(s)</p><button onClick={() => setEditing(p.id)} className="mt-2 text-xs font-semibold text-indigo-600">Modifier le tarif</button></div>
+                <div className="mt-2"><p className="text-2xl font-black text-slate-900">{fcfa(p.monthlyPrice)}<span className="text-xs font-normal text-slate-500">/mois</span></p><p className="mt-1 text-xs text-slate-500">{mrrByPlan.find((x) => x.id === p.id)?.count || 0} abonné(s)</p><button onClick={() => setEditing(p.id)} className="mt-2 text-xs font-semibold text-indigo-600">Modifier le tarif</button></div>
               )}
-              <ul className="mt-3 space-y-1">{p.features.map((f) => <li key={f} className="flex items-center gap-1.5 text-[11px] text-slate-500"><Check size={11} className="text-emerald-500" /> {f}</li>)}</ul>
-              <div className="mt-2 border-t border-slate-100 pt-2 text-[11px] text-slate-400"><span>Entreprises : {p.maxCompanies ?? "∞"}</span> · <span>Users : {p.maxUsers ?? "∞"}</span></div>
+              <ul className="mt-3 space-y-1">{p.features.map((f) => <li key={f} className="flex items-center gap-1.5 text-[11px] text-slate-500"><Check size={11} className="text-emerald-700" /> {f}</li>)}</ul>
+              <div className="mt-2 border-t border-slate-100 pt-2 text-[11px] text-slate-500"><span>Entreprises : {p.maxCompanies ?? "∞"}</span> · <span>Users : {p.maxUsers ?? "∞"}</span></div>
             </Card>
           ))}
         </div>
@@ -309,15 +309,15 @@ export function AdminBilling() {
         <SectionHeading title="Répartition des revenus par plan" />
         <div className="space-y-3">
           {mrrByPlan.map((p) => { const rev = p.count * p.monthlyPrice; const pct = mrr > 0 ? Math.round((rev / mrr) * 100) : 0; return (
-            <div key={p.id}><div className="mb-1 flex justify-between text-sm"><span className="font-semibold text-slate-700">{p.name} <span className="text-xs text-slate-400">({p.count} abonné(s))</span></span><span className="font-bold tabular-nums text-slate-800">{fcfa(rev)} <span className="text-xs text-slate-400">({pct}%)</span></span></div><ProgressBar value={pct} tone={p.id === "pro" ? "indigo" : p.id === "enterprise" ? "violet" : "emerald"} /></div>
+            <div key={p.id}><div className="mb-1 flex justify-between text-sm"><span className="font-semibold text-slate-700">{p.name} <span className="text-xs text-slate-500">({p.count} abonné(s))</span></span><span className="font-bold tabular-nums text-slate-800">{fcfa(rev)} <span className="text-xs text-slate-500">({pct}%)</span></span></div><ProgressBar value={pct} tone={p.id === "pro" ? "indigo" : p.id === "enterprise" ? "violet" : "emerald"} /></div>
           ); })}
         </div>
       </Card>
       <Card className="p-5">
         <SectionHeading title="Factures émises" />
-        {db.invoices.length === 0 ? <p className="text-sm text-slate-400">Aucune facture.</p> : (
+        {db.invoices.length === 0 ? <p className="text-sm text-slate-500">Aucune facture.</p> : (
           <div className="space-y-2">{db.invoices.map((inv) => { const org = db.organizations.find((o) => o.id === inv.organizationId); return (
-            <div key={inv.id} className="flex items-center justify-between rounded-xl border border-slate-100 px-4 py-3"><div><p className="font-semibold text-slate-800">{inv.number}</p><p className="text-xs text-slate-400">{org?.name} · {inv.plan}</p></div><div className="flex items-center gap-3"><span className="font-bold tabular-nums text-slate-800">{fcfa(inv.amount)}</span><StatusBadge status={inv.status} /></div></div>
+            <div key={inv.id} className="flex items-center justify-between rounded-xl border border-slate-100 px-4 py-3"><div><p className="font-semibold text-slate-800">{inv.number}</p><p className="text-xs text-slate-500">{org?.name} · {inv.plan}</p></div><div className="flex items-center gap-3"><span className="font-bold tabular-nums text-slate-800">{fcfa(inv.amount)}</span><StatusBadge status={inv.status} /></div></div>
           ); })}</div>
         )}
       </Card>
@@ -343,7 +343,7 @@ export function AdminRegulatory() {
       <div className="mb-5"><h2 className="text-xl font-black tracking-tight text-slate-900">Moteur réglementaire</h2><p className="text-sm text-slate-500">Administration des règles (Togo)</p></div>
       <Card className="p-5"><div className="mb-4 flex items-start gap-2 rounded-xl bg-rose-50 px-3 py-2 text-xs text-rose-700"><ShieldAlert size={14} className="mt-0.5 shrink-0" /> Toute règle doit être sourcée, versionnée et validée par un humain. L&apos;IA ne publie jamais seule.</div>
         <div className="space-y-3">{db.taxRules.map((r) => (
-          <div key={r.id} className="rounded-xl border border-slate-100 p-4"><div className="flex items-center justify-between"><div><p className="font-bold text-slate-800">{r.code} — {r.name}</p><p className="text-xs text-slate-400">{r.source} · v{r.version}</p></div><Badge tone={r.verified ? "emerald" : "amber"}>{r.verified ? "Vérifié" : "À vérifier"}</Badge></div><div className="mt-2 flex items-center gap-3 text-sm"><span className="font-semibold text-slate-700">Taux : {r.rate}%</span><span className="text-slate-400">· base : {r.base}</span></div>{r.note && <p className="mt-1 text-xs text-slate-400">{r.note}</p>}</div>
+          <div key={r.id} className="rounded-xl border border-slate-100 p-4"><div className="flex items-center justify-between"><div><p className="font-bold text-slate-800">{r.code} — {r.name}</p><p className="text-xs text-slate-500">{r.source} · v{r.version}</p></div><Badge tone={r.verified ? "emerald" : "amber"}>{r.verified ? "Vérifié" : "À vérifier"}</Badge></div><div className="mt-2 flex items-center gap-3 text-sm"><span className="font-semibold text-slate-700">Taux : {r.rate}%</span><span className="text-slate-500">· base : {r.base}</span></div>{r.note && <p className="mt-1 text-xs text-slate-500">{r.note}</p>}</div>
         ))}</div>
       </Card>
       <Card className="mt-6 p-5"><SectionHeading title="Country packs" /><div className="flex flex-wrap gap-2">{["🇹🇬 Togo", "🇧🇯 Bénin", "🇨🇮 Côte d'Ivoire", "🇸🇳 Sénégal", "🇧🇫 Burkina Faso"].map((c) => <Badge key={c} tone={c.includes("Togo") ? "emerald" : "slate"}><Globe2 size={11} /> {c}</Badge>)}</div></Card>
@@ -363,7 +363,7 @@ export function AdminAudit() {
     <Page>
       <div className="mb-5"><h2 className="text-xl font-black tracking-tight text-slate-900">Journal d&apos;audit</h2><p className="text-sm text-slate-500">{db.auditLogs.length} événement(s) — traçabilité complète</p></div>
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <div className="w-full max-w-xs"><div className="relative"><Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" /><Input className="pl-9" placeholder="Rechercher une action…" value={q} onChange={(e) => setQ(e.target.value)} /></div></div>
+        <div className="w-full max-w-xs"><div className="relative"><Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" /><Input className="pl-9" placeholder="Rechercher une action…" value={q} onChange={(e) => setQ(e.target.value)} /></div></div>
         <Button variant="outline" size="sm" onClick={() => setVerif(verifyAuditChain(db.auditLogs))}>
           <ShieldCheck size={14} /> Vérifier l&apos;intégrité
         </Button>
@@ -381,9 +381,9 @@ export function AdminAudit() {
         Chaque trace est scellée par un SHA-256 enchaîné au précédent : toute modification, insertion ou suppression locale casse la chaîne à cet endroit.
         Ce contrôle détecte l&apos;altération ; il ne l&apos;empêche pas — l&apos;inviolabilité réelle exige un ancrage serveur.
       </div>
-      <Card className="overflow-x-auto p-5"><table className="w-full text-sm"><thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-400"><th className="px-3 py-2">Date</th><th className="px-3 py-2">Utilisateur</th><th className="px-3 py-2">Action</th><th className="px-3 py-2">Entité</th><th className="px-3 py-2">Détail</th></tr></thead>
+      <Card className="overflow-x-auto p-5"><table className="w-full text-sm"><thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-500"><th className="px-3 py-2">Date</th><th className="px-3 py-2">Utilisateur</th><th className="px-3 py-2">Action</th><th className="px-3 py-2">Entité</th><th className="px-3 py-2">Détail</th></tr></thead>
         <tbody>{list.map((l) => { const u = db.users.find((x) => x.id === l.userId); return (
-          <tr key={l.id} className="border-b border-slate-50"><td className="px-3 py-2.5 text-slate-400">{formatDateTime(l.createdAt)}</td><td className="px-3 py-2.5 font-medium text-slate-700">{u?.firstName || "Système"} {u?.lastName}</td><td className="px-3 py-2.5"><Badge tone="indigo">{l.action}</Badge></td><td className="px-3 py-2.5 text-slate-500">{l.entity}</td><td className="px-3 py-2.5 text-slate-500">{l.after}</td></tr>
+          <tr key={l.id} className="border-b border-slate-50"><td className="px-3 py-2.5 text-slate-500">{formatDateTime(l.createdAt)}</td><td className="px-3 py-2.5 font-medium text-slate-700">{u?.firstName || "Système"} {u?.lastName}</td><td className="px-3 py-2.5"><Badge tone="indigo">{l.action}</Badge></td><td className="px-3 py-2.5 text-slate-500">{l.entity}</td><td className="px-3 py-2.5 text-slate-500">{l.after}</td></tr>
         ); })}</tbody>
       </table></Card>
     </Page>
@@ -414,7 +414,7 @@ export function AdminAnnouncements() {
         <Card className="p-5">
           <SectionHeading title="Notifications récentes envoyées" />
           <div className="space-y-2">{db.notifications.slice(0, 12).map((n) => { const org = db.organizations.find((o) => o.id === n.organizationId); return (
-            <div key={n.id} className="flex items-start gap-2 rounded-lg border border-slate-100 px-3 py-2"><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium text-slate-700">{n.title}</p><p className="truncate text-xs text-slate-400">{org?.name} · {formatDate(n.createdAt)}</p></div><Badge tone={n.read ? "slate" : "indigo"}>{n.read ? "Lu" : "Non lu"}</Badge></div>
+            <div key={n.id} className="flex items-start gap-2 rounded-lg border border-slate-100 px-3 py-2"><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium text-slate-700">{n.title}</p><p className="truncate text-xs text-slate-500">{org?.name} · {formatDate(n.createdAt)}</p></div><Badge tone={n.read ? "slate" : "indigo"}>{n.read ? "Lu" : "Non lu"}</Badge></div>
           ); })}</div>
         </Card>
       </div>
@@ -443,7 +443,7 @@ export function AdminData() {
       <Card className="mb-6 p-5">
         <SectionHeading title="Collections les plus volumineuses" />
         <div className="space-y-2">{biggest.map(([name, arr]) => { const pct = Math.round((arr.length / Math.max(1, collections.reduce((s, [, v]) => s + v.length, 0))) * 100); return (
-          <div key={name}><div className="mb-0.5 flex justify-between text-xs"><span className="font-medium text-slate-600">{name}</span><span className="tabular-nums text-slate-400">{arr.length} enregistrement(s)</span></div><ProgressBar value={pct} tone="indigo" /></div>
+          <div key={name}><div className="mb-0.5 flex justify-between text-xs"><span className="font-medium text-slate-600">{name}</span><span className="tabular-nums text-slate-500">{arr.length} enregistrement(s)</span></div><ProgressBar value={pct} tone="indigo" /></div>
         ); })}</div>
       </Card>
       <Card className="p-5">

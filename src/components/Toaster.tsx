@@ -11,10 +11,10 @@ const ICONS: Record<ToastTone, typeof Info> = {
 };
 
 const TONES: Record<ToastTone, { box: string; icon: string; title: string }> = {
-  success: { box: "border-emerald-200 bg-emerald-50", icon: "text-emerald-600", title: "text-emerald-900" },
-  info: { box: "border-sky-200 bg-sky-50", icon: "text-sky-600", title: "text-sky-900" },
-  warning: { box: "border-amber-200 bg-amber-50", icon: "text-amber-600", title: "text-amber-900" },
-  danger: { box: "border-rose-200 bg-rose-50", icon: "text-rose-600", title: "text-rose-900" },
+  success: { box: "border-emerald-200 bg-emerald-50", icon: "text-emerald-700", title: "text-emerald-900" },
+  info: { box: "border-sky-200 bg-sky-50", icon: "text-sky-700", title: "text-sky-900" },
+  warning: { box: "border-amber-200 bg-amber-50", icon: "text-amber-700", title: "text-amber-900" },
+  danger: { box: "border-rose-200 bg-rose-50", icon: "text-rose-700", title: "text-rose-900" },
 };
 
 /** Abonnement au magasin de notifications. */
@@ -74,7 +74,7 @@ export default function Toaster() {
                   type="button"
                   onClick={() => dismissToast(t.id)}
                   aria-label={`Fermer la notification : ${t.title}`}
-                  className="shrink-0 rounded-lg p-1 text-slate-400 transition-colors hover:bg-white/70 hover:text-slate-700"
+                  className="shrink-0 rounded-lg p-1 text-slate-500 transition-colors hover:bg-white/70 hover:text-slate-700"
                 >
                   <X size={14} />
                 </button>

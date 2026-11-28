@@ -158,10 +158,10 @@ export function Field({ label, children, hint, required }: { label: string; chil
   return (
     <label className="block">
       <span className="mb-1.5 block text-sm font-medium text-slate-700">
-        {label} {required && <span className="text-rose-500" aria-hidden="true">*</span>}
+        {label} {required && <span className="text-rose-700" aria-hidden="true">*</span>}
       </span>
       {control}
-      {hint && <span id={hintId} className="mt-1 block text-xs text-slate-400">{hint}</span>}
+      {hint && <span id={hintId} className="mt-1 block text-xs text-slate-500">{hint}</span>}
     </label>
   );
 }
@@ -170,7 +170,7 @@ export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttribute
   ({ className, ...props }, ref) => (
     <input
       ref={ref}
-      className={cn("h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100", className)}
+      className={cn("h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-500 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100", className)}
       {...props}
     />
   ),
@@ -178,7 +178,7 @@ export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttribute
 Input.displayName = "Input";
 
 export function Textarea({ className, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return <textarea className={cn("w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100", className)} {...props} />;
+  return <textarea className={cn("w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-500 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100", className)} {...props} />;
 }
 
 export function Select({ className, children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
@@ -261,7 +261,7 @@ export function Modal({ open, onClose, title, children, size = "md" }: { open: b
             {title && (
               <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
                 <h3 id={titleId} className="text-lg font-bold text-slate-900">{title}</h3>
-                <button type="button" onClick={onClose} aria-label="Fermer le dialogue" className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+                <button type="button" onClick={onClose} aria-label="Fermer le dialogue" className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700">
                   <X size={18} />
                 </button>
               </div>
@@ -310,11 +310,11 @@ export function StatCard({ title, value, icon, trend, tone = "indigo", sub, coun
         <div className="min-w-0">
           <p className="truncate text-[13px] font-medium text-slate-500">{title}</p>
           <p className="font-display mt-2 text-[26px] font-extrabold leading-none tracking-tight text-slate-900">{countTo !== undefined ? <AnimatedCounter value={countTo} /> : value}</p>
-          {sub && <p className="mt-1.5 text-xs text-slate-400">{sub}</p>}
+          {sub && <p className="mt-1.5 text-xs text-slate-500">{sub}</p>}
         </div>
         {icon && <div className={cn("relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-white shadow-lg", tones[tone])}>{icon}</div>}
       </div>
-      {trend && <p className="mt-3 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-600">{trend}</p>}
+      {trend && <p className="mt-3 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">{trend}</p>}
     </Card>
   );
 }
@@ -345,9 +345,9 @@ export function Avatar({ name, color, size = 36 }: { name: string; color?: strin
 export function EmptyState({ icon, title, description, action, next }: { icon?: React.ReactNode; title: string; description?: string; action?: React.ReactNode; next?: { message: string; href: string; cta: string } }) {
   return (
     <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 px-6 py-14 text-center">
-      {icon && <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-400 shadow-sm">{icon}</div>}
+      {icon && <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-500 shadow-sm">{icon}</div>}
       <p className="font-semibold text-slate-700">{title}</p>
-      {description && <p className="mt-1 max-w-sm text-sm text-slate-400">{description}</p>}
+      {description && <p className="mt-1 max-w-sm text-sm text-slate-500">{description}</p>}
       {next && (
         <div className="mt-3 max-w-md rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-800">{next.message}</div>
       )}
@@ -381,7 +381,7 @@ export function Donut({ value, size = 130, stroke = 14, color = "#6366f1", track
       </svg>
       <div className="absolute flex flex-col items-center">
         <span className="text-2xl font-bold text-slate-900">{label ?? `${Math.round(value)}%`}</span>
-        {sublabel && <span className="text-[10px] font-medium uppercase tracking-wide text-slate-400">{sublabel}</span>}
+        {sublabel && <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500">{sublabel}</span>}
       </div>
     </div>
   );
@@ -396,7 +396,7 @@ export function BarChart({ data, height = 180, tone = "indigo" }: { data: { labe
       {data.map((d, i) => (
         <div key={i} className="flex flex-1 flex-col items-center justify-end gap-2">
           <motion.div className="w-full rounded-t-lg" style={{ background: `linear-gradient(to top, ${color}, ${color}99)` }} initial={{ height: 0 }} animate={{ height: `${(d.value / max) * (height - 28)}px` }} transition={{ duration: 0.7, delay: i * 0.05 }} />
-          <span className="text-[10px] font-medium text-slate-400">{d.label}</span>
+          <span className="text-[10px] font-medium text-slate-500">{d.label}</span>
         </div>
       ))}
     </div>
@@ -429,7 +429,7 @@ export function LineArea({ data, height = 180, color = "#6366f1" }: { data: { la
       </svg>
       <div className="mt-1 flex justify-between">
         {data.map((d, i) => (
-          <span key={i} className="text-[10px] text-slate-400">{d.label}</span>
+          <span key={i} className="text-[10px] text-slate-500">{d.label}</span>
         ))}
       </div>
     </div>

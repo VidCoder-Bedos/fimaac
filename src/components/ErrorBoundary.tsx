@@ -47,7 +47,7 @@ export class ErrorBoundary extends Component<Props, State> {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
         <div className="w-full max-w-lg rounded-2xl border border-rose-200 bg-white p-8 text-center shadow-xl">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-700">
             <AlertTriangle size={24} />
           </div>
           <h1 className="text-lg font-black text-slate-900">Une erreur est survenue</h1>
@@ -55,7 +55,7 @@ export class ErrorBoundary extends Component<Props, State> {
             {this.props.label ? `Périmètre : ${this.props.label}. ` : ""}
             L'affichage n'a pas pu être complété. Vos données n'ont pas été modifiées.
           </p>
-          <pre className="mt-4 max-h-32 overflow-auto rounded-xl bg-slate-900 p-3 text-left font-mono text-[11px] text-slate-300">
+          <pre className="mt-4 max-h-32 overflow-auto rounded-xl bg-slate-900 p-3 text-left font-mono text-[11px] text-slate-500">
             {this.state.error.message || String(this.state.error)}
           </pre>
           <div className="mt-5 flex flex-wrap justify-center gap-2">
@@ -72,7 +72,7 @@ export class ErrorBoundary extends Component<Props, State> {
               Réinitialiser les données de démonstration
             </button>
           </div>
-          <p className="mt-4 text-[11px] text-slate-400">
+          <p className="mt-4 text-[11px] text-slate-500">
             Si le problème persiste après réinitialisation, signaler l'erreur avec le message ci-dessus.
           </p>
         </div>

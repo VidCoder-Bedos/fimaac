@@ -48,37 +48,37 @@ export default function AccountInquiry({
         <Badge tone={acc?.normalBalance === "debit" ? "sky" : "emerald"}>{acc?.normalBalance === "debit" ? "Solde débiteur" : "Solde créditeur"}</Badge>
         {tierList.length > 0 && (
           <div className="flex items-center gap-2">
-            <ArrowLeftRight size={14} className="text-slate-400" />
+            <ArrowLeftRight size={14} className="text-slate-500" />
             <Select value={tierId} onChange={(e) => setTierId(e.target.value)} className="h-8 w-56 text-xs">
               <option value="">Tous les tiers ({tierList.length})</option>
               {tierList.map((t) => <option key={t.id} value={t.id}>{t.code} · {t.name}</option>)}
             </Select>
           </div>
         )}
-        <span className="ml-auto text-xs text-slate-400">{companyName}</span>
+        <span className="ml-auto text-xs text-slate-500">{companyName}</span>
         <Button size="sm" variant="outline" onClick={exportCsv}><Download size={14} /> Exporter</Button>
         <Button size="sm" variant="outline" onClick={() => window.print()}><Printer size={14} /> Imprimer</Button>
       </div>
 
       {/* Situation card */}
       <div className="mb-3 grid grid-cols-3 gap-3">
-        <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-3"><p className="text-xs text-slate-400">Total débit</p><p className="font-display text-lg font-bold text-slate-800">{fcfa(sit.totalDebit)}</p></div>
-        <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-3"><p className="text-xs text-slate-400">Total crédit</p><p className="font-display text-lg font-bold text-slate-800">{fcfa(sit.totalCredit)}</p></div>
-        <div className="rounded-xl border border-slate-100 bg-indigo-50/60 p-3"><p className="text-xs text-slate-400">Solde ({acc?.normalBalance === "debit" ? "débiteur" : "créditeur"})</p><p className="font-display text-lg font-bold text-indigo-600">{fcfa(sit.solde)}</p></div>
+        <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-3"><p className="text-xs text-slate-500">Total débit</p><p className="font-display text-lg font-bold text-slate-800">{fcfa(sit.totalDebit)}</p></div>
+        <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-3"><p className="text-xs text-slate-500">Total crédit</p><p className="font-display text-lg font-bold text-slate-800">{fcfa(sit.totalCredit)}</p></div>
+        <div className="rounded-xl border border-slate-100 bg-indigo-50/60 p-3"><p className="text-xs text-slate-500">Solde ({acc?.normalBalance === "debit" ? "débiteur" : "créditeur"})</p><p className="font-display text-lg font-bold text-indigo-600">{fcfa(sit.solde)}</p></div>
       </div>
 
       {/* Table */}
       <div className="max-h-[48vh] overflow-auto rounded-xl border border-slate-100">
         <table className="w-full text-sm">
-          <thead className="sticky top-0 z-10 bg-slate-50 text-xs font-semibold uppercase text-slate-400">
+          <thead className="sticky top-0 z-10 bg-slate-50 text-xs font-semibold uppercase text-slate-500">
             <tr>
               <th className="px-3 py-2 text-left">Date</th><th className="px-2 py-2 text-left">Jnl</th><th className="px-3 py-2 text-left">Pièce</th><th className="px-3 py-2 text-left">Libellé</th>
               <th className="px-3 py-2 text-right">Débit</th><th className="px-3 py-2 text-right">Crédit</th><th className="px-3 py-2 text-right">Solde</th>
             </tr>
           </thead>
           <tbody>
-            <tr className="border-b border-slate-100 bg-amber-50/40 text-xs italic text-slate-400"><td colSpan={4} className="px-3 py-1.5">Solde à nouveau (ouverture)</td><td className="px-3 py-1.5 text-right">{fcfa(sit.openingDebit)}</td><td className="px-3 py-1.5 text-right">{fcfa(sit.openingCredit)}</td><td className="px-3 py-1.5 text-right">{fcfa(sit.openingDebit - sit.openingCredit)}</td></tr>
-            {sit.lines.length === 0 && <tr><td colSpan={7} className="px-3 py-8 text-center text-slate-400"><Building2 className="mx-auto mb-2 text-slate-300" size={24} /> Aucun mouvement sur ce compte</td></tr>}
+            <tr className="border-b border-slate-100 bg-amber-50/40 text-xs italic text-slate-500"><td colSpan={4} className="px-3 py-1.5">Solde à nouveau (ouverture)</td><td className="px-3 py-1.5 text-right">{fcfa(sit.openingDebit)}</td><td className="px-3 py-1.5 text-right">{fcfa(sit.openingCredit)}</td><td className="px-3 py-1.5 text-right">{fcfa(sit.openingDebit - sit.openingCredit)}</td></tr>
+            {sit.lines.length === 0 && <tr><td colSpan={7} className="px-3 py-8 text-center text-slate-500"><Building2 className="mx-auto mb-2 text-slate-500" size={24} /> Aucun mouvement sur ce compte</td></tr>}
             {sit.lines.map((l) => (
               <tr key={l.entryId + l.number + l.label} className="border-b border-slate-50 hover:bg-indigo-50/40">
                 <td className="px-3 py-1.5 text-slate-500">{formatDate(l.date)}</td>
@@ -99,7 +99,7 @@ export default function AccountInquiry({
           </tbody>
         </table>
       </div>
-      <p className="mt-3 text-[11px] text-slate-400">Double-cliquez un compte dans la balance ou le plan pour ouvrir cette fenêtre. Solde à nouveau = 0 (ouvertures non gérées dans cette démo).</p>
+      <p className="mt-3 text-[11px] text-slate-500">Double-cliquez un compte dans la balance ou le plan pour ouvrir cette fenêtre. Solde à nouveau = 0 (ouvertures non gérées dans cette démo).</p>
     </Modal>
   );
 }

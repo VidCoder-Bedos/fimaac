@@ -89,15 +89,15 @@ export default function Dashboard() {
         <div className="grid gap-6 p-5 lg:grid-cols-[200px_1fr_240px]">
           <div className="flex flex-col items-center justify-center">
             <Gauge value={health.global} size={180} label={String(health.global)} sublabel="/ 100" />
-            <p className="mt-1 text-center text-xs text-slate-400">Score global pondéré</p>
+            <p className="mt-1 text-center text-xs text-slate-500">Score global pondéré</p>
           </div>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               {health.details.map((d) => (
                 <div key={d.label} className="rounded-xl border border-slate-100 p-3">
-                  <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">{d.label}</p>
+                  <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">{d.label}</p>
                   <p className="font-display mt-0.5 text-xl font-extrabold text-slate-900">{d.value}</p>
-                  <p className="text-[10px] text-slate-400">{d.desc}</p>
+                  <p className="text-[10px] text-slate-500">{d.desc}</p>
                 </div>
               ))}
             </div>
@@ -136,9 +136,9 @@ export default function Dashboard() {
             const pendingDocs = db.documentRequests.filter((r) => inScope(r.companyId) && r.status !== "received").length;
             const toPay = db.taxPaymentRequests.filter((p) => inScope(p.companyId) && p.status !== "paid").length;
             const items = [
-              { label: "En retard", value: late, tone: "text-rose-600" },
-              { label: "Urgents (≤ 7 j)", value: urgent, tone: "text-amber-600" },
-              { label: "Pièces attendues", value: pendingDocs, tone: "text-sky-600" },
+              { label: "En retard", value: late, tone: "text-rose-700" },
+              { label: "Urgents (≤ 7 j)", value: urgent, tone: "text-amber-700" },
+              { label: "Pièces attendues", value: pendingDocs, tone: "text-sky-700" },
               { label: "Paiements à faire", value: toPay, tone: "text-indigo-600" },
             ];
             return items.map((x) => (
@@ -213,7 +213,7 @@ export default function Dashboard() {
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <Card className="p-5">
           <SectionHeading title="Composition des charges" subtitle="Répartition par nature (classe 6)" />
-          {data.chargesByCat.length === 0 ? <p className="py-6 text-center text-sm text-slate-400">Aucune charge</p> : (
+          {data.chargesByCat.length === 0 ? <p className="py-6 text-center text-sm text-slate-500">Aucune charge</p> : (
             <>
               <StackedComposition
                 segments={data.chargesByCat.slice(0, 6).map((c) => ({ label: c.label, value: c.amount, color: ["#6366f1", "#8b5cf6", "#a78bfa", "#f59e0b", "#ef4444", "#ec4899"][Math.min(5, data.chargesByCat.indexOf(c))] }))}
@@ -234,7 +234,7 @@ export default function Dashboard() {
         </Card>
         <Card className="p-5">
           <SectionHeading title="Composition des produits" subtitle="Répartition par nature (classe 7)" />
-          {data.produitsByCat.length === 0 ? <p className="py-6 text-center text-sm text-slate-400">Aucun produit</p> : (
+          {data.produitsByCat.length === 0 ? <p className="py-6 text-center text-sm text-slate-500">Aucun produit</p> : (
             <>
               <StackedComposition
                 segments={data.produitsByCat.map((c) => ({ label: c.label, value: c.amount, color: ["#10b981", "#34d399", "#6ee7b7", "#a3e635", "#84cc16"][Math.min(4, data.produitsByCat.indexOf(c))] }))}
@@ -269,9 +269,9 @@ export default function Dashboard() {
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {data.ratios.map((r) => (
             <div key={r.key} className="rounded-xl border border-slate-100 p-3 text-center">
-              <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">{r.label}</p>
-              <p className={`font-display mt-1 text-xl font-extrabold ${r.tone === "emerald" ? "text-emerald-600" : r.tone === "amber" ? "text-amber-600" : r.tone === "rose" ? "text-rose-500" : "text-indigo-600"}`}>{r.value}</p>
-              <p className="mt-0.5 text-[9px] text-slate-400">{r.desc}</p>
+              <p className="text-[10px] font-medium uppercase tracking-wide text-slate-500">{r.label}</p>
+              <p className={`font-display mt-1 text-xl font-extrabold ${r.tone === "emerald" ? "text-emerald-700" : r.tone === "amber" ? "text-amber-700" : r.tone === "rose" ? "text-rose-700" : "text-indigo-600"}`}>{r.value}</p>
+              <p className="mt-0.5 text-[9px] text-slate-500">{r.desc}</p>
             </div>
           ))}
         </div>
@@ -281,7 +281,7 @@ export default function Dashboard() {
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <Card className="p-5">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="flex items-center gap-2 font-bold text-slate-800"><Clock size={16} className="text-amber-500" /> Échéances</h3>
+            <h3 className="flex items-center gap-2 font-bold text-slate-800"><Clock size={16} className="text-amber-700" /> Échéances</h3>
             <Link to="/app/obligations" className="text-xs font-semibold text-indigo-600">Tout voir</Link>
           </div>
           <div className="space-y-2">
@@ -298,13 +298,13 @@ export default function Dashboard() {
         </Card>
         <Card className="p-5">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="flex items-center gap-2 font-bold text-slate-800"><Briefcase size={16} className="text-indigo-500" /> Missions</h3>
+            <h3 className="flex items-center gap-2 font-bold text-slate-800"><Briefcase size={16} className="text-indigo-600" /> Missions</h3>
             <Link to="/app/missions" className="text-xs font-semibold text-indigo-600">Tout voir</Link>
           </div>
           <div className="space-y-2.5">
             {missions.slice(0, 3).map((m) => (
               <div key={m.id}>
-                <div className="mb-0.5 flex justify-between text-xs"><span className="truncate text-slate-600">{m.title}</span><span className="font-semibold text-slate-400">{m.progress}%</span></div>
+                <div className="mb-0.5 flex justify-between text-xs"><span className="truncate text-slate-600">{m.title}</span><span className="font-semibold text-slate-500">{m.progress}%</span></div>
                 <ProgressBar value={m.progress} tone="violet" />
               </div>
             ))}
@@ -312,7 +312,7 @@ export default function Dashboard() {
         </Card>
         <Card className="p-5">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="flex items-center gap-2 font-bold text-slate-800"><ShieldCheck size={16} className="text-rose-500" /> Activité</h3>
+            <h3 className="flex items-center gap-2 font-bold text-slate-800"><ShieldCheck size={16} className="text-rose-700" /> Activité</h3>
           </div>
           <div className="space-y-2">
             {recent.map((a) => {
@@ -320,7 +320,7 @@ export default function Dashboard() {
               return (
                 <div key={a.id} className="flex gap-2 text-[11px]">
                   <div className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400" />
-                  <div><p className="text-slate-700"><b>{actor?.firstName || "Système"}</b> · {a.action.replace(/_/g, " ").toLowerCase()}</p><p className="text-slate-400">{formatDate(a.createdAt)}</p></div>
+                  <div><p className="text-slate-700"><b>{actor?.firstName || "Système"}</b> · {a.action.replace(/_/g, " ").toLowerCase()}</p><p className="text-slate-500">{formatDate(a.createdAt)}</p></div>
                 </div>
               );
             })}

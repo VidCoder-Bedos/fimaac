@@ -2,11 +2,7 @@
 
 > Registre tenu à jour à chaque lot livré. Il sert de point de reprise : tout ce
 > qui est ici est **non fait**, avec sa raison et son blocage éventuel.
-<<<<<<< HEAD
 > Dernière mise à jour : 28/11/2026, après les PR #5 à #14.
-=======
-> Dernière mise à jour : 28/11/2026, après les PR #5 à #13.
->>>>>>> origin/main
 
 ## Déjà réglé (ne plus y revenir)
 
@@ -21,10 +17,7 @@
 | P0-5 | Garde-fou de quota + signal de démonstration | #9 |
 | P1a | Bilan unifié à l'écran + document imprimable (PDF navigateur) | #11 |
 | P2a | Contrôles croisés branchés dans le Centre de conformité | #13 |
-<<<<<<< HEAD
 | P2b | Journal d'audit chaîné (détection d'altération locale) | #14 |
-=======
->>>>>>> origin/main
 
 ## 1. Bloqué par une décision d'infrastructure (à arbitrer par le porteur)
 
@@ -45,13 +38,8 @@ Ces points ne peuvent pas avancer sans base de données et hébergement d'API.
 
 5. **Liasse GUDEF imprimable** — le XLSX fonctionne ; l'équivalent PDF/A4
    manque (le bilan est déjà imprimable depuis la PR #11).
-<<<<<<< HEAD
 6. ~~**Journal d'audit chaîné localement**~~ — **fait (PR #14)**. Reste la
    version serveur : ancrage hors du poste, acteur et IP réels (point 4).
-=======
-6. **Journal d'audit chaîné localement** — détection d'altération du
-   `localStorage` par chaînage de hachages, vérifiable à la demande.
->>>>>>> origin/main
 7. **Export FEC conforme** — 15 colonnes seulement, `DateRglt` toujours vide,
    pas de colonne devise : utilisable en interne, pas pour un contrôle.
 8. **Obligations : règles de report** — jour férié, week-end, prorogation,

@@ -46,7 +46,7 @@ export function OnboardingCard({ report }: { report: OnboardingReport }) {
                   <span
                     className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${
                       step.status === "done"
-                        ? "bg-emerald-500 text-white"
+                        ? "bg-emerald-700 text-white"
                         : isCurrent
                           ? "bg-indigo-600 text-white"
                           : "bg-slate-200 text-slate-500"

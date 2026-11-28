@@ -156,7 +156,7 @@ function TopBar({ onMenu, title, toolbar }: { onMenu: () => void; title: string;
       <div className="relative">
         <button onClick={() => { setNotifOpen((v) => !v); setUserOpen(false); }} className="relative rounded-xl p-2.5 text-slate-500 hover:bg-slate-100">
           <Bell size={19} />
-          {unread > 0 && <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">{unread}</span>}
+          {unread > 0 && <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-700 px-1 text-[10px] font-bold text-white">{unread}</span>}
         </button>
         <AnimatePresence>
           {notifOpen && (
@@ -177,7 +177,7 @@ function TopBar({ onMenu, title, toolbar }: { onMenu: () => void; title: string;
                       className={cn("flex w-full gap-3 border-b border-slate-50 px-4 py-3 text-left transition hover:bg-slate-50", !n.read && "bg-indigo-50/40")}
                       aria-label={n.read ? n.title : `${n.title} — non lue, cliquer pour marquer comme lue`}
                     >
-                      <span className={cn("mt-0.5 h-2 w-2 shrink-0 rounded-full", n.type === "danger" ? "bg-rose-500" : n.type === "warning" ? "bg-amber-500" : n.type === "success" ? "bg-emerald-500" : "bg-sky-500")} />
+                      <span className={cn("mt-0.5 h-2 w-2 shrink-0 rounded-full", n.type === "danger" ? "bg-rose-500" : n.type === "warning" ? "bg-amber-600" : n.type === "success" ? "bg-emerald-600" : "bg-sky-600")} />
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-slate-800">{n.title}</p>
                         <p className="text-xs text-slate-500">{n.body}</p>

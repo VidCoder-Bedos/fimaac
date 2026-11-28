@@ -2,7 +2,7 @@
 
 > Registre tenu à jour à chaque lot livré. Il sert de point de reprise : tout ce
 > qui est ici est **non fait**, avec sa raison et son blocage éventuel.
-> Dernière mise à jour : 28/11/2026, après les PR #5 à #36.
+> Dernière mise à jour : 28/11/2026, après les PR #5 à #37.
 
 ## Déjà réglé (ne plus y revenir)
 
@@ -39,6 +39,7 @@
 | P19 | Palette de commandes ⌘K : navigation, actions, données | #34 |
 | P20 | Réintégrations proposées depuis les comptes non déductibles | #35 |
 | P21 | Régime déclaré (réel/forfait/exonéré) et taux par catégorie | #36 |
+| P22 | Balance 6 colonnes : un seul lecteur, diagnostic complet | #37 |
 
 ## 1. Bloqué par une décision d'infrastructure (à arbitrer par le porteur)
 
@@ -153,8 +154,13 @@ Ces points ne peuvent pas avancer sans base de données et hébergement d'API.
     Chacun doit être soit branché, soit archivé explicitement.
 21. **Modules morts à supprimer** — 4 945 lignes (23,5 % du code) jamais
     exécutées ; à trancher un par un, jamais en bloc.
-22. **Balance 6 colonnes** — `parseBalance6` garde son propre lecteur ; à
-    aligner sur `balanceImport` (P0-4) avec ses propres tests.
+22. ~~**Balance 6 colonnes**~~ — **fait (PR #37)** : `parseBalance6` passe par
+    `balance6.ts`, entrée = grille de texte (testable sans fichier). Les **soldes**
+    sont préférés aux mouvements (une balance « Débit · Crédit · SD · SC » était
+    lue de travers), N et N-1 sont reconnus, le repli positionnel est annoncé, les
+    lignes écartées sont listées avec leur motif et un fichier illisible est
+    refusé explicitement. Reste : brancher le même lecteur sur l'import de
+    balance des **écritures** (`balanceImport`) pour n'avoir qu'un seul code.
 
 ## 5. Points fiscaux et sociaux à confirmer par un professionnel
 

@@ -74,36 +74,75 @@ export function setCurrentCompany(companyId: string): void {
 // dossier passe par `addCompanyWithAccess`, qui crée aussi l'accès et l'audit.
 
 // ---------------- Journals / Fiscal year ----------------
-export function ensureFiscalYear(companyId: string, year: number, startMonth = 1): void {
-  const db = getDB();
-  if (db.fiscalYears.some((f) => f.companyId === companyId && f.label.includes(String(year)))) return;
-  mutate((s) => {
-    const fyId = uid();
-    const start = new Date(year, startMonth - 1, 1);
-    const end = new Date(year + (startMonth === 1 ? 0 : 1), startMonth - 1, 0);
-    s.fiscalYears.push({
-      id: fyId,
+/**
+ * P28 — Cœur commun d'ouverture d'exercice, utilisable **dans** une mutation en
+ * cours (création de dossier) comme depuis l'action publique.
+ */
+function openFiscalYearIn(
+  s: ReturnType<typeof getDB>,
+  companyId: string,
+  year: number,
+  startMonth: number,
+): { fiscalYearId: string } {
+  const fyId = uid();
+  const start = new Date(year, startMonth - 1, 1);
+  // Fin = dernier jour du 12e mois de l'exercice (et non du mois précédent).
+  const end = new Date(year, startMonth - 1 + 12, 0);
+  s.fiscalYears.push({
+    id: fyId,
+    companyId,
+    label: `Exercice ${year}`,
+    startDate: start.toISOString().slice(0, 10),
+    endDate: end.toISOString().slice(0, 10),
+    status: "open",
+  });
+  for (let m = 1; m <= 12; m++) {
+    const offset = startMonth - 1 + m - 1;
+    const realMonth = (offset % 12) + 1;
+    const realYear = year + Math.floor(offset / 12);
+    const periodStart = new Date(realYear, realMonth - 1, 1);
+    const periodEnd = new Date(realYear, realMonth, 0);
+    s.periods.push({
+      id: uid(),
+      fiscalYearId: fyId,
       companyId,
-      label: `Exercice ${year}`,
-      startDate: start.toISOString().slice(0, 10),
-      endDate: end.toISOString().slice(0, 10),
+      label: new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(periodStart),
+      month: realMonth,
+      year: realYear,
+      startDate: periodStart.toISOString().slice(0, 10),
+      endDate: periodEnd.toISOString().slice(0, 10),
       status: "open",
     });
-    for (let m = 1; m <= 12; m++) {
-      const realMonth = ((startMonth - 1 + m - 1) % 12) + 1;
-      s.periods.push({
-        id: uid(),
-        fiscalYearId: fyId,
-        companyId,
-        label: new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(new Date(year, realMonth - 1, 1)),
-        month: realMonth,
-        year,
-        startDate: `${year}-${String(realMonth).padStart(2, "0")}-01`,
-        endDate: `${year}-${String(realMonth).padStart(2, "0")}-28`,
-        status: "open",
-      });
-    }
+  }
+  return { fiscalYearId: fyId };
+}
+
+/**
+ * P28 — Ouvre un exercice et ses douze périodes. **Implémentation unique** :
+ * la création d'un dossier passait par une copie de ce code, et rien ne
+ * permettait d'ouvrir l'exercice suivant — un dossier arrivé au 31 décembre
+ * devenait impossible à saisir, sans autre issue que de le recréer.
+ *
+ * Idempotent : un exercice déjà présent n'est pas dupliqué (aucune écriture
+ * d'audit dans ce cas, pour ne pas gonfler le journal à chaque clic).
+ */
+export function ensureFiscalYear(companyId: string, year: number, startMonth = 1): { ok: boolean; created: boolean; error?: string } {
+  if (!companyId) return { ok: false, created: false, error: "Dossier manquant." };
+  if (!Number.isFinite(year) || year < 1990 || year > 2100) return { ok: false, created: false, error: "Exercice hors bornes (1990-2100)." };
+  if (startMonth < 1 || startMonth > 12) return { ok: false, created: false, error: "Mois de début attendu entre 1 et 12." };
+
+  const db = getDB();
+  const exists = db.fiscalYears.some((f) => f.companyId === companyId && (
+    f.label.includes(String(year)) || f.startDate.startsWith(String(year))
+  ));
+  if (exists) return { ok: true, created: false };
+
+  mutate((s) => {
+    const { fiscalYearId } = openFiscalYearIn(s, companyId, year, startMonth);
+    audit(s, currentUserId() || "", currentOrgId() || "", "FISCAL_YEAR_OPEN", "FiscalYear", fiscalYearId,
+      `Ouverture de l'exercice ${year} (12 périodes, démarrage mois ${startMonth})`);
   });
+  return { ok: true, created: true };
 }
 
 export function addJournal(companyId: string, code: string, name: string, type: JournalType): void {
@@ -1626,30 +1665,9 @@ export function addCompanyWithAccess(data: CompanyAccessInput): CompanyAccessRes
     });
     // Profil fiscal
     s.taxProfiles.push({ id: uid(), companyId, regime: data.taxRegime || "ri", vatPayer: data.vatPayer ?? true, tfeLiable: true, obligations: data.vatPayer ? ["TVA mensuelle"] : [] });
-    // Exercice + 12 périodes (sinon l'onglet Clôture sera vide pour cette entreprise)
-    const fyId = uid();
-    s.fiscalYears.push({
-      id: fyId,
-      companyId,
-      label: `Exercice ${exercise}`,
-      startDate: `${exercise}-01-01`,
-      endDate: `${exercise}-12-31`,
-      status: "open",
-    });
-    const year = parseInt(exercise, 10) || new Date().getFullYear();
-    for (let m = 1; m <= 12; m++) {
-      s.periods.push({
-        id: uid(),
-        fiscalYearId: fyId,
-        companyId,
-        label: new Intl.DateTimeFormat("fr-FR", { month: "long", year: "numeric" }).format(new Date(year, m - 1, 1)),
-        month: m,
-        year,
-        startDate: `${exercise}-${String(m).padStart(2, "0")}-01`,
-        endDate: `${exercise}-${String(m).padStart(2, "0")}-28`,
-        status: "open",
-      });
-    }
+    // Exercice + 12 périodes — P28 : même code que `ensureFiscalYear`, appelé ici
+    // plutôt que recopié (la copie se terminait au 28 de chaque mois).
+    openFiscalYearIn(s, companyId, parseInt(exercise, 10) || new Date().getFullYear(), 1);
     // Compte utilisateur de l'entreprise — hash uniquement (invariant I5)
     s.users.push({
       id: userId,

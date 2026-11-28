@@ -401,3 +401,12 @@
 | Livré | `src/lib/companyScope.ts` (clé unique + lecture/écriture/oubli, tolérant à un stockage indisponible) ; `addCompany`, `addClientRequest`, `createServiceRequest`, `setServiceRequestStatus` supprimés ; `export` retiré de `currentUserId`, `currentOrgId`, `fiscalAdjustmentsFor`, `updateFSSession` ; clic sur une notification = **lue** (`markNotificationRead`, jusqu'ici jamais appelé) ; `companyScope.test.ts` (7 tests). |
 | Mesures | exports sans usage : **386 → 376** · `actions.ts` : 21 → **10** · clé littérale `fimaac_company` : 3 fichiers → **1** · après déconnexion, `getStoredCompanyId()` = **null** · stockage en erreur ou absent : aucune exception |
 | Vérifications | `tsc` 0 erreur · `vitest` **335/335** (7 nouveaux) |
+
+## P28 — Ouvrir un exercice : une seule fois, et pour de vrai (PR #43)
+| Point | Détail |
+|---|---|
+| Symptôme | `ensureFiscalYear` n'était appelée par personne ; `addCompanyWithAccess` **recopiait** son code en terminant chaque période le **28** du mois ; et aucun écran n'ouvrait l'exercice **suivant**. Un dossier clôturé au 31 décembre devenait donc impossible à saisir l'année suivante, avec pour seule issue de le recréer. |
+| Décision | Une seule implémentation (`openFiscalYearIn`), utilisée par l'action publique **et** par la création de dossier ; idempotence réelle ; et une porte de sortie visible : le bandeau « l'exercice N n'est pas ouvert ». |
+| Livré | `openFiscalYearIn` + `ensureFiscalYear` (audit `FISCAL_YEAR_OPEN`, bornes, refus explicites) ; `addCompanyWithAccess` passe par le même code (fin du 28 corrigée) ; onglet Clôture : bandeau + bouton « Ouvrir l'exercice N » ; 7 tests. |
+| Mesures | 2031 → **2031-01-01 → 2031-12-31**, 12 périodes, janvier **2031-01-31**, février **2031-02-28** · second appel → `created: false`, **0** doublon, **0** audit · dossier créé en 2035 → janvier finissant le **31** (et non le 28) · date du 15/01/2034 → période trouvée dès l'ouverture · hors exercices → refus nommant l'année |
+| Vérifications | `tsc` 0 erreur · `vitest` **342/342** (7 nouveaux) |

@@ -5,7 +5,7 @@ import { useDB } from "../lib/store";
 import { useCompanyScope, Page } from "../components/Layout";
 import { Card, Button, Badge, StatusBadge, Tabs, Modal, Field, Input, Select, EmptyState, SectionHeading, ProgressBar } from "../components/ui";
 import { entryTotals, trialBalance, ledgerForAccount, classTotals, accountSituation } from "../lib/accounting";
-import { addJournal, setEntryStatus, counterEntry, letterLines, unletterLines, autoLetter, addThirdParty, updateThirdParty, deleteThirdParty, guidedSettlement, closePeriod, reopenPeriod, assignThirdPartyToAccount, assignThirdPartyToLine } from "../lib/actions";
+import { ensureFiscalYear, addJournal, setEntryStatus, counterEntry, letterLines, unletterLines, autoLetter, addThirdParty, updateThirdParty, deleteThirdParty, guidedSettlement, closePeriod, reopenPeriod, assignThirdPartyToAccount, assignThirdPartyToLine } from "../lib/actions";
 import { fcfa, formatDate, parseFcfa } from "../lib/format";
 import { CLASS_LABELS } from "../lib/chartOfAccounts";
 import { JOURNAL_TYPE_LABELS } from "../lib/journals";
@@ -91,7 +91,7 @@ export default function Accounting() {
       {tab === "ledger" && <LedgerView entries={entries} accounts={postable} />}
       {tab === "balance" && <BalanceView entries={entries} accounts={db.accounts} onOpen={(c: string) => setInquiry({ code: c })} />}
       {tab === "lettrage" && <LettrageView entries={entries} companyId={company.id} />}
-      {tab === "cloture" && <ClosingView periods={db.periods.filter((p) => p.companyId === company.id)} entries={entries} />}
+      {tab === "cloture" && <ClosingView companyId={company.id} years={db.fiscalYears.filter((f) => f.companyId === company.id)} periods={db.periods.filter((p) => p.companyId === company.id)} entries={entries} />}
       <EntryEditor
         open={editorOpen}
         entry={editing}
@@ -368,11 +368,26 @@ function EntriesView({ entries, accounts, documents, companyId, onEdit, onAttach
 }
 
 /* ---------------- Clôture des périodes ---------------- */
-function ClosingView({ periods, entries }: { periods: AccountingPeriod[]; entries: JournalEntry[] }) {
+function ClosingView({ companyId, years, periods, entries }: { companyId: string; years: DBState["fiscalYears"]; periods: AccountingPeriod[]; entries: JournalEntry[] }) {
   const sorted = [...periods].sort((a, b) => a.year - b.year || a.month - b.month);
+  // P28 — le dossier s'arrêtait au dernier exercice créé : au 1er janvier suivant,
+  // aucune saisie n'était plus possible et rien ne permettait d'ouvrir l'exercice.
+  const lastYear = years.reduce((max, y) => Math.max(max, Number(y.startDate.slice(0, 4)) || 0), 0);
+  const nextYear = years.length === 0 ? new Date().getFullYear() : lastYear + 1;
+  const nextMissing = !years.some((y) => y.startDate.startsWith(String(nextYear)));
   return (
     <Card className="p-5">
       <SectionHeading title="Clôture des périodes" subtitle="Workflow Sage : clôturer un mois bloque la saisie jusqu'à réouverture." />
+      {nextMissing && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-indigo-50 px-3 py-2 text-xs text-indigo-800">
+          <span>L'exercice {nextYear} n'est pas ouvert : aucune écriture datée de {nextYear} ne pourra être enregistrée, et l'onglet Clôture restera vide pour cette année.</span>
+          <Button size="sm" onClick={() => {
+            const r = ensureFiscalYear(companyId, nextYear);
+            if (!r.ok) toast(r.error);
+            else toast(`Exercice ${nextYear} ouvert`, "12 périodes créées, saisie possible dès maintenant.", "success");
+          }}>Ouvrir l'exercice {nextYear}</Button>
+        </div>
+      )}
       <div className="mb-4 flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-700"><AlertTriangle size={14} className="mt-0.5 shrink-0" /> Une période clôturée interdit toute saisie ou validation sur ce mois.</div>
       <div className="overflow-x-auto"><table className="w-full text-sm">
         <thead><tr className="border-b border-slate-100 text-left text-xs font-semibold uppercase text-slate-400"><th className="px-3 py-2">Période</th><th className="px-3 py-2 text-right">Écritures</th><th className="px-3 py-2">Statut</th><th className="px-3 py-2 text-right">Action</th></tr></thead>

@@ -419,3 +419,12 @@
 | Livré | Audits `DOC_STATUS`, `DOC_CATEGORY`, `DOC_REQUEST_STATUS` ; bouton « Archiver » (jamais sur une pièce non classée) ; sélecteur de nature dans la modale de classement (8 natures) ; sélecteur de statut côté cabinet (5 états réels) ; `runAllEntryTemplates` + bouton « Tout exécuter » ; 9 tests. |
 | Mesures | `a_traiter → archive` auditée · statut identique → **0** ligne · `invoice → bank` auditée, redite → **0** · pièce inconnue → **0** audit, aucune exception · demande `sent → received` auditée · exécution en lot = nombre exact de modèles avec journal, autant d'écritures créées · anciens noms **absents** de l'API |
 | Vérifications | `tsc` 0 erreur · `vitest` **351/351** (9 nouveaux) · exports sans usage **376 → 370** |
+
+## P30 — Tri des tableaux au clavier (PR #45)
+| Point | Détail |
+|---|---|
+| Symptôme | Aucune table ne se triait au clavier, la plupart ne se triaient pas du tout, et les en-têtes n'exposaient aucun état (`aria-sort`). Sur un journal de plusieurs centaines de lignes, on triait « à l'œil » ou on exportait dans un tableur. |
+| Décision | Une logique de tri **pure et testable**, une bascule à trois états (dont le retour à l'ordre d'origine), et des en-têtes qui sont de vrais boutons annonçant leur état. |
+| Livré | `tableSort.ts` (`toggleSort`, `ariaSort`, `compareValues`, `sortRows`) ; `SortableTh` et tri du journal (N°, date, libellé, montant, statut) dans Écritures ; en-têtes de `slate-400` → `slate-500` ; 12 tests. |
+| Mesures | croissant montants → **445, 601, 4011, 4111**, vide en fin · décroissant → **4111, 4011, 601, 445**, vide **toujours** en fin · libellés → `Achats, Clients, État, TVA, fournisseurs, Sans compte` (accents et casse ignorés) · ex æquo → `1, 3, 2, 4` · entrée jamais modifiée |
+| Vérifications | `tsc` 0 erreur · `vitest` **363/363** (12 nouveaux) · build 12,17 s |

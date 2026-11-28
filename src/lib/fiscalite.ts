@@ -53,6 +53,14 @@ export function fiscalBaseFromMoves(moves: Map<string, Mouvement>): FiscalBase {
     if (code.startsWith("70")) chiffreAffaires += m.credit - m.debit;
     if (code.startsWith("7")) produits += m.credit - m.debit;
     if (code.startsWith("6")) charges += m.debit - m.credit;
+    // P12 — classe 8 (opérations hors activités ordinaires) : elle appartient au
+    // résultat net et donc au résultat fiscal. L'ignorer faisait diverger la base
+    // de l'IS du résultat affiché par la liasse (écart réel de 108 000 FCFA sur
+    // le dossier de démonstration). Le sens du solde décide : produit ou charge.
+    if (code.startsWith("8")) {
+      const net = m.credit - m.debit;
+      if (net >= 0) produits += net; else charges += -net;
+    }
     if (code.startsWith("443")) tvaCollectee += m.credit - m.debit;
     if (code.startsWith("445")) {
       const deductible = m.debit - m.credit;

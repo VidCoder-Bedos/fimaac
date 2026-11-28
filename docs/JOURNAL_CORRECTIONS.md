@@ -254,3 +254,13 @@
 | Mesures | Seed : −479 805 + 1 000 000 → résultat fiscal 520 195 → arrondi 520 000 → IS 140 400 **et** minimum de perception 201 900 qui reste dû (le plus élevé des deux). |
 | Limites affichées | Aucune réintégration n'est supposée sans saisie ; la déclaration IS générée ne reprend pas encore ces montants (inscrit au registre). |
 | Vérifications | `tsc` 0 erreur · `vitest` **179/179** (9 nouveaux) · build 11,62 s |
+
+## P11 — Classe 8, déclarations TVA ventilée et IS (PR #26)
+| Point | Détail |
+|---|---|
+| Symptôme 1 (mesuré en écrivant les tests) | `fiscalBaseFromMoves` ne lisait que les classes 6 et 7 : la **classe 8** (opérations hors activités ordinaires) était absente de la base fiscale comme du Dashboard. Le même dossier affichait **−587 805** en Fiscalité et **−479 805** en liasse — **108 000 FCFA** d'écart, qui changeaient l'assiette de l'IS. |
+| Symptôme 2 | `generateTvaDeclaration` produisait un décompte à **un seul taux**, sans la ventilation 18 / 9 / exonéré livrée en #19, et une échéance écrite en dur (15 du mois M+1) sans report au jour ouvré. |
+| Symptôme 3 | **Aucune déclaration IS** : les réintégrations saisies n'avaient aucune traduction déclarative. |
+| Livré | Base fiscale et `financialSummary` intègrent la classe 8 (solde créditeur = produit, débiteur = charge ; CA toujours strict sur 70x, sans double compte). Déclaration TVA : ventilation par taux + collectée/déductible/crédit/net, échéance **reportée** au jour ouvré. Nouvelle `generateIsDeclaration(companyId, exercise)` : résultat comptable → réintégrations → déductions → résultat fiscal → IS au taux → minimum de perception → impôt dû → échéance **31/03 N+1 reportée**, auditée. Bouton dans Fiscalité ; refus explicite si la règle fiscale manque. |
+| Mesures | Seed : ventilation TVA 18 % (base 20 190 000, TVA 3 634 200), net **2 473 332** ; IS : résultat fiscal **−480 000**, impôt dû **201 900** (minimum), échéance `2027-03-31` ; avec réintégration 1 000 000 → résultat fiscal **520 195**, IS 140 400, impôt dû 201 900. |
+| Vérifications | `tsc` 0 erreur · `vitest` **187/187** (8 nouveaux) |

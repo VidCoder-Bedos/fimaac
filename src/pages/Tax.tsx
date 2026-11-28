@@ -4,7 +4,7 @@ import { useDB } from "../lib/store";
 import { useCompanyScope, Page } from "../components/Layout";
 import { Card, Button, Badge, StatusBadge, EmptyState, SectionHeading, Input, Tabs, Field, Select } from "../components/ui";
 import { computeTax } from "../lib/tax";
-import { generateTvaDeclaration, updateTaxRate, setDeadlineStatus, tvaGrid, addTaxAdjustment, deleteTaxAdjustment } from "../lib/actions";
+import { generateTvaDeclaration, generateIsDeclaration, updateTaxRate, setDeadlineStatus, tvaGrid, addTaxAdjustment, deleteTaxAdjustment } from "../lib/actions";
 import { fcfa, formatDate } from "../lib/format";
 import { ventilateVat } from "../lib/tvaVentilation";
 import { totalAdjustments } from "../lib/fiscalite";
@@ -43,12 +43,13 @@ export default function Tax() {
             <div className="mb-4 flex items-center justify-between"><h3 className="flex items-center gap-2 font-bold text-slate-800"><Receipt size={17} className="text-indigo-500" /> TVA du mois</h3>{!tva.verified && <Badge tone="amber">À vérifier</Badge>}</div>
             <div className="rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 p-5 text-white"><p className="text-xs uppercase opacity-80">TVA nette à payer</p><p className="mt-1 text-3xl font-black">{fcfa(tva.montant)}</p><p className="mt-1 text-xs opacity-80">Base HT : {fcfa(tva.base)} · taux {tva.rule.rate} %</p>{tva.tva && tva.tva.creditReporte > 0 && <p className="mt-1 text-xs font-medium text-sky-100">Crédit de TVA à reporter : {fcfa(tva.tva.creditReporte)}</p>}</div>
             <div className="mt-4 space-y-1.5">{tva.breakdown.map((b, i) => <div key={i} className="flex justify-between rounded-lg bg-slate-50 px-3 py-1.5 text-sm"><span className="text-slate-500">{b.label}</span><span className="font-semibold tabular-nums text-slate-800">{fcfa(b.amount)}</span></div>)}</div>
-            <Button className="mt-4 w-full" onClick={() => generateTvaDeclaration(company.id)}><FileDown size={15} /> Générer la déclaration TVA</Button>
+            <Button className="mt-4 w-full" onClick={() => { const r = generateTvaDeclaration(company.id); if (!r.ok) alert(r.error); }}><FileDown size={15} /> Générer la déclaration TVA</Button>
           </Card>
           <Card className="p-5">
             <div className="mb-4 flex items-center justify-between"><h3 className="font-bold text-slate-800">Impôt sur les bénéfices (IS)</h3>{!is.verified && <Badge tone="amber">À vérifier</Badge>}</div>
             <div className="rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-5 text-white"><p className="text-xs uppercase opacity-80">Impôt estimé</p><p className="mt-1 text-3xl font-black">{fcfa(is.montant)}</p><p className="mt-1 text-xs opacity-80">Base (résultat) : {fcfa(is.base)} · taux {is.rule.rate}%</p></div>
             <div className="mt-4 space-y-1.5">{is.breakdown.map((b, i) => <div key={i} className="flex justify-between rounded-lg bg-slate-50 px-3 py-1.5 text-sm"><span className="text-slate-500">{b.label}</span><span className="font-semibold tabular-nums text-slate-800">{fcfa(b.amount)}</span></div>)}</div>
+            <Button className="mt-4 w-full" variant="outline" onClick={() => { const r = generateIsDeclaration(company.id, exercise); if (!r.ok) alert(r.error); }}><FileDown size={15} /> Générer la déclaration IS {exercise}</Button>
           </Card>
           <Card className="p-5 lg:col-span-2">
             <SectionHeading

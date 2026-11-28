@@ -12,7 +12,10 @@ import { readAny, detectColumns, normalize, KIND_LABELS, type RawGrid, type Dete
 import { auditWorkbook, cloneWorkbook, patchWorkbook, downloadWorkbookWb, type WorkbookAudit } from "../lib/reconstitution";
 import type { BalanceRow } from "../lib/liasse";
 import { buildTafire } from "../lib/tafire";
+<<<<<<< HEAD
 import { buildNotesAnnex } from "../lib/notesAnnex";
+=======
+>>>>>>> origin/main
 import PrintSheet from "../components/PrintSheet";
 import LiassePrint from "../components/LiassePrint";
 import { fcfa, fcfaCompact } from "../lib/format";
@@ -35,10 +38,13 @@ export default function Liasse() {
   const stmt = useMemo(() => (cur ? buildStatements(cur) : null), [cur]);
   const checks = useMemo(() => (stmt ? runChecks(stmt) : []), [stmt]);
   const tafire = useMemo(() => (cur ? buildTafire(prev, cur) : null), [prev, cur]);
+<<<<<<< HEAD
   const annex = useMemo(
     () => (cur ? buildNotesAnnex({ n: cur, n1: prev ?? [], accounts: db.accounts, companyName: company?.name, exercise: String(new Date().getFullYear()) }) : null),
     [cur, prev, db.accounts, company],
   );
+=======
+>>>>>>> origin/main
 
   const onFile = async (which: string, file: File | null) => {
     if (!file || !company) return;
@@ -130,7 +136,11 @@ export default function Liasse() {
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <div className="flex items-center gap-2 rounded-xl bg-sky-50 px-3 py-2 text-xs font-medium text-sky-700"><Info size={14} /> Aucune API GUDEF connectée : export fidèle au modèle, prêt pour dépôt. Le mapping officiel se règle par import du modèle (Mode B).</div>
       </div>
+<<<<<<< HEAD
       <div className="mb-6"><Tabs active={tab} onChange={setTab} tabs={[{ id: "univ", label: "Import universel", icon: <Upload size={15} /> }, { id: "reconst", label: "Audit & reconstitution", icon: <FileSpreadsheet size={15} /> }, { id: "edit", label: "Génération (mode A)", icon: <FileSpreadsheet size={15} /> }, { id: "bal6", label: "Balance 6 colonnes", icon: <FileSpreadsheet size={15} /> }, { id: "fourni", label: "État fourni (mode B)", icon: <Wand2 size={15} /> }, { id: "checks", label: "Contrôles de base", icon: <ShieldCheck size={15} /> }, { id: "coherence", label: "Cohérence SYSCOHADA", icon: <ShieldCheck size={15} /> }, { id: "tafire", label: "TAFIRE", icon: <FileSpreadsheet size={15} /> }, { id: "notes", label: "Notes annexes", icon: <FileSpreadsheet size={15} /> }, { id: "plan", label: "Plan & écritures", icon: <ShieldCheck size={15} /> }]} /></div>
+=======
+      <div className="mb-6"><Tabs active={tab} onChange={setTab} tabs={[{ id: "univ", label: "Import universel", icon: <Upload size={15} /> }, { id: "reconst", label: "Audit & reconstitution", icon: <FileSpreadsheet size={15} /> }, { id: "edit", label: "Génération (mode A)", icon: <FileSpreadsheet size={15} /> }, { id: "bal6", label: "Balance 6 colonnes", icon: <FileSpreadsheet size={15} /> }, { id: "fourni", label: "État fourni (mode B)", icon: <Wand2 size={15} /> }, { id: "checks", label: "Contrôles de base", icon: <ShieldCheck size={15} /> }, { id: "coherence", label: "Cohérence SYSCOHADA", icon: <ShieldCheck size={15} /> }, { id: "tafire", label: "TAFIRE", icon: <FileSpreadsheet size={15} /> }, { id: "plan", label: "Plan & écritures", icon: <ShieldCheck size={15} /> }]} /></div>
+>>>>>>> origin/main
       <div className="mb-4 flex flex-wrap items-center gap-2">
         {(prev || cur) && <Button onClick={onRunChecks}><ShieldCheck size={15} /> Lancer les contrôles de cohérence</Button>}
         <Button variant="outline" disabled={!cur} onClick={() => setPrinting(true)}>
@@ -287,6 +297,7 @@ export default function Liasse() {
           )}
         </div>
       )}
+<<<<<<< HEAD
       {tab === "notes" && (
         <div className="space-y-6">
           {!annex ? (
@@ -362,6 +373,8 @@ export default function Liasse() {
           )}
         </div>
       )}
+=======
+>>>>>>> origin/main
       {tab === "univ" && <UniversalImportView onResult={(n) => { setCur(n.balanceN.length ? n.balanceN : null); setPrev(n.balanceN1.length ? n.balanceN1 : null); if (n.kind === "balance6" || n.kind === "balance") setTab("coherence"); }} />}
       {tab === "reconst" && <ReconstitutionView cur={cur} prev={prev} />}
       {tab === "plan" && <PlanCoherenceView companyId={companyId!} />}
@@ -520,7 +533,10 @@ export default function Liasse() {
             checks={runChecks(buildStatements(cur))}
             exercise={String(new Date().getFullYear())}
             tafire={tafire}
+<<<<<<< HEAD
             annex={annex}
+=======
+>>>>>>> origin/main
           />
         )}
       </PrintSheet>

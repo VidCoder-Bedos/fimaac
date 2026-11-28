@@ -8,6 +8,7 @@ import type {
 import { computeTax } from "./tax";
 import { computeTvaFiscal, fiscalBaseFromMoves } from "./fiscalite";
 import { calculerBulletin, paieParamsFromConfig, totaliserBulletins, ecrituresPaie } from "./paie";
+import { sealLog } from "./auditChain";
 import { movementsByAccount } from "./accounting";
 import { hashPassword, verifyPassword } from "./hash";
 import { TEMPLATE_BY_ID, scaleTemplate } from "./entryTemplates";
@@ -15,7 +16,10 @@ import { extractFromDocument, OCR_FIELD_DEFS } from "./ocr";
 import { getDocumentFile, putDocumentFile } from "./documentStore";
 
 function audit(s: DBState, userId: string, orgId: string, action: string, entity: string, entityId: string, after: string) {
-  s.auditLogs.unshift({
+  // P2 — chaque trace est scellée à la suite de la précédente : une altération
+  // ultérieure du stockage devient détectable (voir lib/auditChain.ts).
+  const previous = s.auditLogs[0];
+  const sealed = sealLog({
     id: uid(),
     userId: userId || "system",
     organizationId: orgId,
@@ -26,8 +30,10 @@ function audit(s: DBState, userId: string, orgId: string, action: string, entity
     after,
     ip: "127.0.0.1",
     createdAt: new Date().toISOString(),
-  });
+  }, previous && previous.hash ? { seq: previous.seq ?? -1, hash: previous.hash } : null);
+  s.auditLogs.unshift(sealed);
 }
+
 
 /** Notification non bloquante (remplace `alert`, qui gelait l'UI). */
 function notify(orgId: string, title: string, body: string, type: "info" | "warning" | "danger" = "warning") {

@@ -594,6 +594,12 @@ export interface AuditLog {
   after: string | null;
   ip: string;
   createdAt: string;
+  /** P2 — rang dans la chaîne d'audit (0 = première entrée scellée). */
+  seq?: number;
+  /** Empreinte de l'entrée précédente (GENESIS_HASH pour la première). */
+  prevHash?: string;
+  /** SHA-256(prevHash | contenu canonique) — détecte toute altération locale. */
+  hash?: string;
 }
 
 export interface ChatMessage {

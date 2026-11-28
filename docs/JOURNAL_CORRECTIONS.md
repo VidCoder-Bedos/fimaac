@@ -164,3 +164,11 @@
 | Correctif | `src/lib/auditChain.ts` : SHA-256 pur (vecteurs officiels vérifiés), scellement `hash = SHA-256(prevHash | contenu canonique)`, `verifyAuditChain` détectant modification / insertion / suppression / déplacement avec position. `audit()` scelle chaque trace ; page Journal d'audit dotée d'un bouton « Vérifier l'intégrité ». |
 | Portée assumée | Détecte l'altération, ne l'empêche pas : l'inviolabilité réelle exige un ancrage serveur (lot P1 infrastructure). Écrit tel quel dans l'écran. |
 | Vérifications | `tsc` 0 erreur · `npm run build` 11,66 s · `vitest` 83/83 (12 nouveaux, dont scellement réel par `runPayroll`) |
+
+## P1b — Liasse fiscale imprimable GUDEF (PR #16)
+| Point | Détail |
+|---|---|
+| Manque | Le XLSX de liasse existait ; aucun document remettable au client (page de garde, bilan, CR, contrôles). |
+| Livré | `components/LiassePrint.tsx` : page de garde d'identification fiscale (NIF, RCCM, régime, devise), bilan actif/passif, compte de résultat AO/HAO, tableau des contrôles avec statut et détail, mentions de validation humaine. Bouton « Imprimer la liasse / PDF » sur la page Liasse. |
+| Règle | Montants de `buildStatements`, contrôles de `runChecks` — aucun recalcul. Une liasse déséquilibrée s'écrit « NON déposable en l'état ». |
+| Vérifications | `tsc` 0 erreur · `npm run build` 11,39 s · `vitest` 84/84 (test de contrat sur les colonnes des contrôles) |

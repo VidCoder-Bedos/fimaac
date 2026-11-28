@@ -11,6 +11,8 @@ import { CHART_OF_ACCOUNTS } from "../lib/chartOfAccounts";
 import { readAny, detectColumns, normalize, KIND_LABELS, type RawGrid, type DetectedColumn, type NormalizedDoc, type ColRole } from "../lib/universalImport";
 import { auditWorkbook, cloneWorkbook, patchWorkbook, downloadWorkbookWb, type WorkbookAudit } from "../lib/reconstitution";
 import type { BalanceRow } from "../lib/liasse";
+import PrintSheet from "../components/PrintSheet";
+import LiassePrint from "../components/LiassePrint";
 import { fcfa, fcfaCompact } from "../lib/format";
 
 export default function Liasse() {
@@ -26,6 +28,7 @@ export default function Liasse() {
   const [stateFilled, setStateFilled] = useState<{ filled: number; unmatched: string[]; report: string[] } | null>(null);
   /** P0-4 — dernier rapport d'import : jamais d'échec muet. */
   const [importReport, setImportReport] = useState<{ which: string; report: BalanceImportResult } | null>(null);
+  const [printing, setPrinting] = useState(false);
   const company = db.companies.find((c) => c.id === companyId);
   const stmt = useMemo(() => (cur ? buildStatements(cur) : null), [cur]);
   const checks = useMemo(() => (stmt ? runChecks(stmt) : []), [stmt]);
@@ -121,7 +124,12 @@ export default function Liasse() {
         <div className="flex items-center gap-2 rounded-xl bg-sky-50 px-3 py-2 text-xs font-medium text-sky-700"><Info size={14} /> Aucune API GUDEF connectée : export fidèle au modèle, prêt pour dépôt. Le mapping officiel se règle par import du modèle (Mode B).</div>
       </div>
       <div className="mb-6"><Tabs active={tab} onChange={setTab} tabs={[{ id: "univ", label: "Import universel", icon: <Upload size={15} /> }, { id: "reconst", label: "Audit & reconstitution", icon: <FileSpreadsheet size={15} /> }, { id: "edit", label: "Génération (mode A)", icon: <FileSpreadsheet size={15} /> }, { id: "bal6", label: "Balance 6 colonnes", icon: <FileSpreadsheet size={15} /> }, { id: "fourni", label: "État fourni (mode B)", icon: <Wand2 size={15} /> }, { id: "checks", label: "Contrôles de base", icon: <ShieldCheck size={15} /> }, { id: "coherence", label: "Cohérence SYSCOHADA", icon: <ShieldCheck size={15} /> }, { id: "plan", label: "Plan & écritures", icon: <ShieldCheck size={15} /> }]} /></div>
-      {(prev || cur) && <div className="mb-4"><Button onClick={onRunChecks}><ShieldCheck size={15} /> Lancer les contrôles de cohérence</Button></div>}
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        {(prev || cur) && <Button onClick={onRunChecks}><ShieldCheck size={15} /> Lancer les contrôles de cohérence</Button>}
+        <Button variant="outline" disabled={!cur} onClick={() => setPrinting(true)}>
+          <FileDown size={15} /> Imprimer la liasse / PDF
+        </Button>
+      </div>
       {tab === "edit" && (
         <div className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2">
@@ -369,6 +377,17 @@ export default function Liasse() {
           )}
         </Card>
       )}
+
+      <PrintSheet open={printing} onClose={() => setPrinting(false)}>
+        {cur && (
+          <LiassePrint
+            company={company}
+            stmt={buildStatements(cur)}
+            checks={runChecks(buildStatements(cur))}
+            exercise={String(new Date().getFullYear())}
+          />
+        )}
+      </PrintSheet>
     </Page>
   );
 }

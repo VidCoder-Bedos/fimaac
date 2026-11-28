@@ -99,6 +99,22 @@ describe("balance de contrôle — moteur factorisé (engine)", () => {
     expect(b.totalPassif).toBe(st.bilan.passifTotal);
   });
 
+  it("les contrôles exposent le contrat attendu par la liasse imprimable", () => {
+    const checks = runChecks(buildStatements(CONTROLE));
+    // Le document papier affiche : titre, feuille, attendu, constaté, écart, statut.
+    for (const c of checks) {
+      expect(typeof c.title).toBe("string");
+      expect(typeof c.sheet).toBe("string");
+      expect(Number.isFinite(c.expected)).toBe(true);
+      expect(Number.isFinite(c.actual)).toBe(true);
+      expect(Number.isFinite(c.diff)).toBe(true);
+      expect(["ok", "warning", "blocking"]).toContain(c.status);
+    }
+    expect(checks.length).toBeGreaterThanOrEqual(5);
+    expect(checks.some((c) => c.id === "ap")).toBe(true); // équilibre actif = passif
+    expect(checks.some((c) => c.id === "unmapped")).toBe(true); // garde-fou anti-silence
+  });
+
   it("le dossier de démonstration ne déclenche aucun contrôle bloquant", () => {
     const st = buildStatements(seedRows());
     const blocking = runChecks(st).filter((c) => c.status === "blocking");

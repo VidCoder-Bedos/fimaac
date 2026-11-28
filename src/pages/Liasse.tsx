@@ -101,9 +101,20 @@ export default function Liasse() {
       const b = await parseBalance6(file);
       setBal6(b);
       setPrev(b.n1); setCur(b.n);
-      const dN = b.n.reduce((s, r) => s + r.debit, 0), cN = b.n.reduce((s, r) => s + r.credit, 0);
-      if (dN !== cN) toast(`Attention : Balance N déséquilibrée (écart ${fcfa(dN - cN)}).`);
-    } catch { toast("Impossible de lire la balance 6 colonnes. Format attendu : Compte · Libellé · SD N · SC N · SD N-1 · SC N-1."); }
+      // P22 — la lecture se raconte : ce qui a été reconnu, ce qui a été écarté,
+      // et ce qui n'a pas pu l'être. Un import muet est un import raté.
+      if (!b.ok || b.n.length === 0) {
+        toast("Balance illisible", "Aucune donnée reprise : rien n'a été remplacé.\n" + b.errors.join("\n"), "danger");
+        setLoading("");
+        return;
+      }
+      const lines = [
+        `${b.n.length} compte(s) lu(s) — ${b.layout === "positionnel" ? "disposition supposée" : b.layout === "solde" ? "soldes" : "mouvements"}`,
+        ...b.warnings,
+      ];
+      if (b.warnings.length > 0 || b.rejected.length > 0) toast("Balance lue avec réserves", lines.join("\n"), "warning");
+      else toast("Balance lue", lines.join("\n"), "success");
+    } catch (e) { toast("Impossible de lire la balance 6 colonnes", (e as Error)?.message || "Format attendu : Compte · Libellé · soldes.", "danger"); }
     setLoading("");
   };
 

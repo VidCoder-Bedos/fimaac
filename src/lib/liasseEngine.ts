@@ -1,5 +1,6 @@
 import type { BalanceRow } from "./liasse";
 import { loadXlsxSafe } from "./xlsx-sanitizer";
+import { parseBalance6Grid } from "./balance6";
 import { fillStateTemplateZip } from "./xlsx-filler";
 // ============================================================================
 // FIMAAC — Moteur d'états financiers & cohérence SYSCOHADA révisé (V0.7)
@@ -252,18 +253,20 @@ export function buildAggregate(prev: BalanceRow[], cur: BalanceRow[]): StateAggr
 }
 
 // ---------------- Import balance 6 colonnes ----------------
-export interface Balance6 { n: BalanceRow[]; n1: BalanceRow[]; subtotals: { label: string; debit: number; credit: number }[]; }
-
-function num(v: unknown): number {
-  if (v == null) return 0;
-  if (typeof v === "number") return v;
-  if (typeof v === "object" && typeof (v as { result?: unknown }).result === "number") return (v as { result: number }).result;
-  const s = String(v).replace(/\u00a0/g, "").replace(/\s/g, "").replace(",", ".");
-  const n = parseFloat(s);
-  return isNaN(n) ? 0 : Math.round(n);
+export interface Balance6 {
+  n: BalanceRow[];
+  n1: BalanceRow[];
+  subtotals: { label: string; debit: number; credit: number }[];
+  /** P22 — diagnostic de lecture, pour que l'écran puisse le montrer. */
+  ok: boolean;
+  layout: "entetes" | "positionnel" | "solde";
+  headerRow: number | null;
+  signals: string[];
+  warnings: string[];
+  errors: string[];
+  totals: { debitN: number; creditN: number; debitN1: number; creditN1: number; ecartN: number; ecartN1: number };
+  rejected: { row: number; reason: string; values: string[] }[];
 }
-
-function isTotal(label: string): boolean { return /total|sous.?total|classe|report|cumul/i.test(label); }
 
 function cellText(v: unknown): string {
   if (v == null) return "";
@@ -275,28 +278,38 @@ function cellText(v: unknown): string {
   return String(v);
 }
 
+/**
+ * P22 — La lecture d'une balance 6 colonnes passe désormais par le **même**
+ * lecteur que l'import robuste : en-têtes détectés (soldes préférés aux
+ * mouvements), repli positionnel annoncé, lignes écartées listées, refus
+ * explicite si rien n'est lisible. Le classeur Excel est converti en grille de
+ * texte, seule entrée du lecteur — ce qui le rend testable sans fichier.
+ */
 export async function parseBalance6(file: File): Promise<Balance6> {
   const wb = await loadXlsxSafe(file);
   const ws = wb.worksheets[0];
-  const n: BalanceRow[] = []; const n1: BalanceRow[] = []; const subtotals: { label: string; debit: number; credit: number }[] = [];
+  const grid: string[][] = [];
   for (let r = 1; r <= ws.rowCount; r++) {
     const row = ws.getRow(r);
-    const cells: unknown[] = [];
-    row.eachCell({ includeEmpty: true }, (c) => cells.push(c.value));
-    if (!cells.length) continue;
-    const code = cellText(cells[0]).trim();
-    const label = cellText(cells[1]).trim();
-    const nums = cells.slice(2).map((c) => num(c));
-    // skip headers
-    if (/compte|libell|n°/i.test(code) || /libell/i.test(label)) continue;
-    if (!code && !label) continue;
-    if (isTotal(label)) { subtotals.push({ label, debit: nums[0] || 0, credit: nums[1] || 0 }); continue; }
-    if (!/^\d/.test(code)) continue;
-    // Layout 6 col: [SD N, SC N, SD N-1, SC N-1]
-    n.push({ code, label, debit: nums[0] || 0, credit: nums[1] || 0 });
-    n1.push({ code, label, debit: nums[2] || 0, credit: nums[3] || 0 });
+    const cells: string[] = [];
+    row.eachCell({ includeEmpty: true }, (c, col) => { cells[col - 1] = cellText(c.value); });
+    for (let i = 0; i < cells.length; i++) if (cells[i] === undefined) cells[i] = "";
+    grid.push(cells);
   }
-  return { n, n1, subtotals };
+  const parsed = parseBalance6Grid(grid);
+  return {
+    n: parsed.n,
+    n1: parsed.n1,
+    subtotals: parsed.subtotals,
+    ok: parsed.ok,
+    layout: parsed.layout,
+    headerRow: parsed.headerRow,
+    signals: parsed.signals,
+    warnings: parsed.warnings,
+    errors: parsed.errors,
+    totals: parsed.totals,
+    rejected: parsed.rejected,
+  };
 }
 
 // ---------------- Contrôles de cohérence ----------------

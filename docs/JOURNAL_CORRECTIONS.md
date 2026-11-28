@@ -347,3 +347,12 @@
 | Livré | `taxRegime.ts` (`resolveTaxRule`, `ruleMatchesProfile`, `describeProfile`, `validateCategory`) ; `TaxRuleRef.regimes/categories` et `Company.taxCategory` ; gardes dans `generateTvaDeclaration` et `generateIsDeclaration` ; carte « Profil fiscal déclaré » et bandeaux dans Fiscalité ; audit `COMPANY_TAX_PROFILE_UPDATE`. |
 | Mesures | RSMI + règle RSMI → règle RSMI (`ok`) · règle RI seule + RSMI → `regime_missing`, message citant RI et RSMI · `exempt` → `shouldCompute = false`, montants « — », déclarations **refusées** · `exempt` avec règle propre → calculable · PME → règle PME, « Grande entreprise » → générique · redite de profil → aucune écriture d'audit |
 | Vérifications | `tsc` 0 erreur · `vitest` **292/292** (13 nouveaux) |
+
+## P22 — Balance 6 colonnes : un seul lecteur, un diagnostic (PR #37)
+| Point | Détail |
+|---|---|
+| Symptôme | `parseBalance6` gardait son propre lecteur et supposait la disposition « SD N · SC N · SD N-1 · SC N-1 ». Une balance « Débit · Crédit · Solde débiteur · Solde créditeur » voyait ses **mouvements** pris pour des soldes (bilan faux, sans un mot) ; les lignes au code non numérique étaient jetées en silence ; un fichier incompris renvoyait une balance **vide**. |
+| Décision | Un seul lecteur, dont l'entrée est une **grille de texte** : testable sans fichier, branchable ailleurs. Les **soldes** primen sur les mouvements, et tout ce qui est supposé ou écarté se dit. |
+| Livré | `balance6.ts` (`parseBalance6Grid`, `parseAmount`, `normalizeHeader`) ; `liasseEngine.parseBalance6` délègue et expose le diagnostic ; `Liasse.tsx` refuse explicitement et affiche les réserves ; 11 tests. |
+| Mesures | 4111 → **15 167 298 au débit** ; 601 soldé 9 000 000/9 000 000 → **0/0** (mouvements non confondus) · N-1 lu séparément · solde signé 520 000 → débit, −774 000 → crédit · totaux 15 167 298 / 15 000 000 → écart **167 298** annoncé · grille vide ou illisible → `ok: false` |
+| Vérifications | `tsc` 0 erreur · `vitest` **303/303** (11 nouveaux) |

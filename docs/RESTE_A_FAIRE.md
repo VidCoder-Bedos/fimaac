@@ -2,7 +2,7 @@
 
 > Registre tenu à jour à chaque lot livré. Il sert de point de reprise : tout ce
 > qui est ici est **non fait**, avec sa raison et son blocage éventuel.
-> Dernière mise à jour : 28/11/2026, après les PR #5 à #18.
+> Dernière mise à jour : 28/11/2026, après les PR #5 à #19.
 
 ## Déjà réglé (ne plus y revenir)
 
@@ -21,6 +21,7 @@
 | P1b | Liasse fiscale imprimable (modèle GUDEF) | #16 |
 | P3 | Export FEC conforme (18 colonnes, point décimal, contrôles) | #17 |
 | P4 | Échéances légales reportées aux jours ouvrés + calendrier affiché | #18 |
+| P5 | Ventilation de la TVA par taux (18 / 9 / exonéré) | #19 |
 
 ## 1. Bloqué par une décision d'infrastructure (à arbitrer par le porteur)
 
@@ -55,8 +56,11 @@ Ces points ne peuvent pas avancer sans base de données et hébergement d'API.
    dans un onglet « Calendrier légal ». Reste : **fêtes musulmanes** (Aïd el-Fitr,
    Aïd el-Adha) à paramétrer chaque année, **régimes réel / forfait** et
    prorogations exceptionnelles décidées par l'administration.
-9. **TVA à taux multiples** — exonéré, 9 %, 18 % : un seul taux normal
-   aujourd'hui. Impacte la déclaration et la grille.
+9. ~~**TVA à taux multiples**~~ — **fait (PR #19)** : ventilation par taux avec
+   résolution code taxe → taux effectif → exonération constatée, contrôles et
+   affichage dans la grille. Reste : **ventilation à la ligne** (une facture
+   mêlant deux taux est aujourd'hui signalée, pas éclatée) et **autoliquidation**
+   sur les achats intracommunautaires.
 10. **Cas 441 débiteur** — présenté en diminution des dettes fiscales ; un
     éclatement par sens du solde serait plus juste (sans effet sur l'équilibre).
 11. **IS : réintégrations / déductions** — le moteur les accepte, l'écran ne
